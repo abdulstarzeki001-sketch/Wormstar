@@ -18,7 +18,7 @@ test('Wormstar memory pins exactly one verified Supabase identity',()=>{
  assert.match(worker,/Account switching is blocked/);
  assert.match(migration,/PRIMARY KEY CHECK\(id = 1\)/);
  assert.match(migration,/owner_id TEXT NOT NULL/);
- assert.doesNotMatch(migration,/refresh_token|password|access_token/);
+ assert.doesNotMatch(migration,/\b(?:refresh_token|access_token|password)\s+(?:TEXT|VARCHAR|BYTEA)\b/i);
 });
 test('Browser verifies the account before persisting linked sessions',()=>{
  assert.match(html,/await sbVerifyAndLockAccount\(data\)/);

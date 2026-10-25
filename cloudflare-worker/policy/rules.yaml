@@ -1,0 +1,7 @@
+version: 1
+mission: "" # Set your own goal in the Studio
+language: ar
+priority: [platform_safety, developer_policy, owner_mission, user_request, retrieved_knowledge]
+workflow: [understand, retrieve_relevant_memory, analyze, verify, respond]
+require_confirmation_for: [external_writes, deployments, deletion, code_execution]
+refuse_unauthorized_access: true

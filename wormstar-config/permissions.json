@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "mission": "",
+  "allowed_modes": [
+    "assistant",
+    "code",
+    "logs",
+    "ioc",
+    "ctf",
+    "report"
+  ],
+  "required_terms": [],
+  "max_input_chars": 12000,
+  "max_output_tokens": 1500,
+  "memory_enabled": true,
+  "allow_web_import": true,
+  "allow_memory_delete": true,
+  "answer_style": "واضح ودقيق",
+  "workflow_steps": [
+    "افهم المهمة",
+    "تحقق من النطاق المسموح",
+    "استرجع المعلومات المرتبطة",
+    "حلل الأدلة",
+    "قدّم الإجابة"
+  ],
+  "notes": "Template only. Update live policy in Wormstar Studio; server validates modes, sizes, tool switches and required terms."
+}

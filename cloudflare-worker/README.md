@@ -93,3 +93,25 @@ No FastAPI Cloud service was provisioned or deployed. The existing cloud backend
 ### GitHub source
 
 The cloud application and database migration are versioned on the `feature/wormstar-private-cloud-lab` branch. Original Python/Ollama root files remain unchanged. Uploaded private training files and tokens are stored in hosting databases/session storage, not committed to GitHub.
+
+
+## Custom mission and enforceable owner policy
+
+The `wormstar-config/` directory contains nine editable templates for system instructions, rules, permissions, workflow, knowledge, JSONL demonstrations, corrections, automated checks and usage instructions.
+
+**These files do not alter permissions merely by being uploaded.** For active rules, open the deployed app, unlock the AI Studio, and use the **Owner-enforced Policy / اتجاه الذكاء والصلاحيات التشغيلية** panel:
+
+- **Mission:** owner-editable direction, inserted into the AI system prompt as a user preference.
+- **Allowed modes:** disabled modes are rejected server-side by `POST /api/chat`.
+- **Required terms:** optional one-of matching against the submitted question (literal phrase gate, not semantic topic classification).
+- **Limits:** maximum input characters (200–12000), model output tokens (128–1800).
+- **Memory use:** toggle whether saved D1 references can enter the model context.
+- **Web import and memory deletion:** toggles checked on the corresponding server endpoints.
+- **Workflow and style:** system-prompt instructions; model compliance is not guaranteed.
+- **Try the rules:** the UI calls `POST /api/studio/policy/evaluate` with unsaved draft settings; it does not invoke the AI model.
+
+The active policy is stored in the D1 `ai_policy` row and retrieved for every new AI request. Schema migration: `cloudflare-worker/migrations/0002_owner_policy.sql`. A server capability registry provides an additional baseline; the custom policy cannot enable shell execution, Python execution, active network scanning, or unrestricted remote code execution in the cloud companion.
+
+All policy endpoints require the existing Wormstar access token. Custom mission is intentionally blank until the owner supplies a single concrete direction. Current defaults retain all existing analysis modes, 12,000 input characters and 1,500 output tokens, and existing memory/web import/delete features; the owner may narrow them in the UI.
+
+Important: The separate legacy Python/Ollama entrypoints in the repository root have **not** been altered or brought under this Cloudflare policy.

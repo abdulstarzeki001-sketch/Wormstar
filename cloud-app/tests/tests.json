@@ -1,0 +1,83 @@
+[
+  {
+    "name": "Anonymous visitor sees a locked lab",
+    "sanity": true,
+    "viewport": "desktop",
+    "covers": [
+      "private sign-in gate",
+      "protected workspace",
+      "GET /api/session authorization"
+    ],
+    "description": "Confirms the public URL never exposes the private AI workspace to anonymous visitors.",
+    "steps": [
+      "Open Wormstar AI Lab in a fresh private browser session",
+      "Confirm the sign-in card is shown",
+      "Confirm the AI message composer is not available"
+    ],
+    "expected": "The visitor sees a sign-in prompt and cannot submit an AI request."
+  },
+  {
+    "name": "Non-owner account is denied access",
+    "viewport": "desktop",
+    "covers": [
+      "owner email allowlist",
+      "GET /api/session authorization",
+      "sign-out and account switching"
+    ],
+    "description": "Confirms that signing in is not enough to gain access without the configured owner email.",
+    "steps": [
+      "Sign in using a test account whose email differs from WORMSTAR_OWNER_EMAIL",
+      "Confirm the access-denied notice appears",
+      "Choose Change account and verify the sign-in screen returns"
+    ],
+    "expected": "No private workspace or AI conversation is shown for a non-owner account."
+  },
+  {
+    "name": "Owner performs an AI analysis and exports the result",
+    "viewport": "desktop",
+    "covers": [
+      "owner sign-in",
+      "POST /api/assist",
+      "AI response rendering",
+      "mode navigation",
+      "Markdown export"
+    ],
+    "description": "Confirms the configured owner can use the model and export a real visible answer.",
+    "steps": [
+      "Sign in as the configured owner email",
+      "Open the Code review mode",
+      "Paste a short intentionally insecure training snippet and submit it",
+      "Wait for an AI analysis to appear",
+      "Click Export Markdown"
+    ],
+    "expected": "An AI review is rendered and a Markdown report downloads with the conversation."
+  },
+  {
+    "name": "IOC mode previews indicators and handles service failure on mobile",
+    "viewport": "mobile",
+    "covers": [
+      "IOC local extraction",
+      "responsive navigation",
+      "POST /api/assist error handling"
+    ],
+    "description": "Confirms local IOC extraction and a visible failure message when the AI endpoint is unavailable.",
+    "qa_faults": [
+      {
+        "method": "POST",
+        "path": "/api/assist",
+        "status": 503,
+        "body_json": {
+          "error": "AI service is temporarily unavailable"
+        }
+      }
+    ],
+    "steps": [
+      "Sign in as the configured owner on a mobile viewport",
+      "Switch to Indicators of compromise mode",
+      "Paste the text 'Indicator: 8.8.8.8 and https://example.com/path'",
+      "Confirm both indicators are previewed",
+      "Submit the analysis"
+    ],
+    "expected": "The detected indicators appear locally and the simulated backend failure produces a visible retryable error."
+  }
+]

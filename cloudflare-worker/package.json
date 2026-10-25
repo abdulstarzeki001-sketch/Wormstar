@@ -1,0 +1,13 @@
+{
+  "name": "wormstar-cloudflare-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "policy:sync": "node tools/sync-policy.mjs",
+    "policy:check": "node tools/sync-policy.mjs --check",
+    "test": "node --check worker.js && node tools/sync-policy.mjs --check && node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

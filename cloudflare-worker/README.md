@@ -11,9 +11,9 @@ A Cloudflare-hosted browser interface for the Wormstar cybersecurity learning an
 - Scope: Arabic security assistant, code/log/IOC analysis, CTF tutoring, reporting. Text analysis only.
 - No original CLI/remote shell commands are exposed.
 
-## Required first-use configuration
+## Private access token
 
-**The web UI will remain locked until you create a Worker secret.**
+The deployed Worker currently reports a `WORMSTAR_ACCESS_TOKEN` secret binding. For a fresh deployment or credential rotation, set the secret before signing in.
 
 Cloudflare Dashboard -> Workers & Pages -> `wormstar-ai-lab` -> Settings -> Variables and Secrets -> Add secret.
 
@@ -44,7 +44,7 @@ Workers.dev is a persistent URL while the Cloudflare account and deployment rema
 
 ## Notes
 
-This is a separate Cloudflare Worker source of truth in `cloudflare-worker/worker.js`. Files in `cloud-app/` use an AppDeploy-specific SDK and should not be copied directly into Cloudflare Workers. User-requested external integrations are not yet connected inside the Worker. The original Wormstar project files remain unchanged.
+This is a separate Cloudflare Worker source of truth in `cloudflare-worker/worker.js`. Files in `cloud-app/` use an AppDeploy-specific SDK and should not be copied directly into Cloudflare Workers. The Worker includes owner-controlled Firecrawl import (requires its separate API key) and a browser-authenticated Supabase backup flow. Neither exposes the original CLI. The original Wormstar project files remain unchanged.
 
 ## AI Studio and persistent learning memory (D1)
 
@@ -58,7 +58,7 @@ The interface contains an AI Studio for editing its assistant name, instruction 
 - Saved profile and references persist across browser sessions; chat remains in-memory and may be exported separately.
 - Dashboard: open your Worker under Workers & Pages and confirm Workers AI, D1 and WORMSTAR_ACCESS_TOKEN are bound.
 
-**Note:** Previously documented first-run secret instructions remain valid if you have not set the access token. The site cannot unlock until the token binding is configured.
+**Note:** The presence of a secret binding was verified; its value was not retrieved or displayed. Use your own access token when signing in.
 
 ## Supabase persistent backup and versioned training — 2026-10-25
 
@@ -115,3 +115,26 @@ The active policy is stored in the D1 `ai_policy` row and retrieved for every ne
 All policy endpoints require the existing Wormstar access token. Custom mission is intentionally blank until the owner supplies a single concrete direction. Current defaults retain all existing analysis modes, 12,000 input characters and 1,500 output tokens, and existing memory/web import/delete features; the owner may narrow them in the UI.
 
 Important: The separate legacy Python/Ollama entrypoints in the repository root have **not** been altered or brought under this Cloudflare policy.
+
+## Server-enforced permissions and Supabase policy backup
+
+The **Cloudflare Worker enforces permissions on the server**. The immutable deployment manifest is `cloudflare-worker/permissions.json`, generated as `permissions-module.js` for direct Cloudflare module uploads. `worker.js` imports the generated module. The manifest is **deny by default** and keeps shell, Python, user-code execution, active network scanning, credential harvesting, and self-modifying deployments disabled. The original Python/Ollama CLI is unchanged.
+
+To edit technical capabilities, review `permissions.json`, then run:
+
+```bash
+cd cloudflare-worker
+node scripts/generate-permissions.mjs
+node scripts/verify-permissions.mjs
+npx wrangler deploy
+```
+
+In the **AI Studio → اتجاه الذكاء والصلاحيات التشغيلية**, the owner can edit a **narrower runtime policy** stored in D1 `ai_policy`: mission, answer style, allowed modes, required scope phrases, input/output limits, memory retrieval, webpage import, and knowledge deletion. Changes are validated and enforced by Cloudflare. The runtime policy **cannot grant capabilities denied by the deployment manifest**. Test drafts with the built-in policy evaluator before saving.
+
+A separate Supabase table `public.wormstar_owner_policies` now stores an owner-scoped backup of this runtime policy. Its RLS policies require the signed-in Supabase Auth user's `auth.uid()` to match `owner_id`; anonymous access grants were revoked. Database changes are recorded in:
+- `supabase/migrations/20261025_wormstar_owner_policy_backup.sql`
+- `supabase/migrations/20261025_wormstar_owner_policy_revoke_anon.sql`
+
+After signing in to Supabase **inside Wormstar AI Studio**, choose **نسخ ذاكرة Cloudflare إلى Supabase** to back up the current runtime policy alongside the profile and knowledge. Future edits to the runtime policy attempt automatic mirroring while signed in. Use **استعادة قيود التشغيل من Supabase** to restore a backup after an explicit confirmation; the server validates it and does not allow the restore to bypass `permissions.json`. The offline JSON export now includes the runtime policy.
+
+**Operational boundaries:** Supabase policy backup requires an active Supabase Auth session and is not an unconditional server-side replication process. The authoritative live runtime policy remains in Cloudflare D1. Firecrawl webpage import remains unavailable until a `FIRECRAWL_API_KEY` secret is configured. No remote shell is exposed.

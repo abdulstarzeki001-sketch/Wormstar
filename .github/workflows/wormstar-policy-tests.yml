@@ -2,6 +2,7 @@ name: Wormstar Cloud Policy Tests
 on:
   push:
     branches:
+      - main
       - feature/wormstar-private-cloud-lab
     paths:
       - 'policy/**'

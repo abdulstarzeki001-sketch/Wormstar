@@ -196,8 +196,32 @@ The launcher is a true SPA navigation layer on top of existing UI controls, so p
 - Worker entrypoint: `cloudflare-worker/worker.js`.
 - Hardened server permission module: `cloudflare-worker/permissions-module.js` generated from `cloudflare-worker/permissions.json`.
 - Visual shell module: `cloudflare-worker/future-ui.js`.
-- `wrangler.toml` bundles local imported ESM files during `npx wrangler deploy`. If uploading directly to the Cloudflare multipart API, include **all three** modules under their expected filenames.
+- `wrangler.toml` bundles local imported ESM files during `npx wrangler deploy`. If uploading directly to the Cloudflare multipart API, include **all four** modules (`worker.js`, `permissions-module.js`, `future-ui.js`, `app-icon.js`) under their exact filenames.
 - Cloudflare D1 binding `DB`, AI binding `AI`, and existing `WORMSTAR_ACCESS_TOKEN` secret must be preserved across deployments.
 - The frontend is intentionally isolated from remote code execution: styling, navigation, and routing do not elevate any tool permission.
 
 Public-page layout and latest deployment have been checked. Authenticated policy editing, Supabase sign-in and privileged data operations should be regression-tested with the account owner on the live site, rather than assuming that a successful public load tests those private flows.
+
+## Wormstar NEO iPhone Home Screen / PWA
+
+The iPhone icon is now **an actual server-served PNG**, not a mockup in a chat. The Worker serves:
+
+- `/apple-touch-icon.png`: real branded 96 x 96 PNG (generated from the original cyber shield design), served with image/png.
+- `/icon.svg`: scalable premium shield for standard browser icon and PWA.
+- `/manifest.webmanifest`: standalone app metadata with start URL, title, icon and theme color.
+- `/`: new cinematic zero-trust gateway visible **before** login, not only a dashboard that shows after unlocking the lab.
+
+The page head advertises `rel="apple-touch-icon"`, `rel="manifest"`, iOS standalone metadata and a versioned cache-busting icon URL. The Content Security Policy allows only same-origin icon images and same-origin manifest. Protected APIs remain behind the existing Bearer token.
+
+### iPhone installation
+
+1. Open **Safari** on iPhone (not an in-app browser) and visit `https://wormstar-ai-lab.abdulstarzeki001.workers.dev/`.
+2. Reload if the site is cached. Tap **Share** → **Add to Home Screen**; use the name **Wormstar NEO**.
+3. If an old shortcut was already installed, remove that Home Screen shortcut first, then repeat these steps. iOS may cache old icons and does not automatically replace an existing Web Clip icon when the website changes.
+4. Open the new icon. It launches the standalone home-screen web app; secure data remains protected by the login key.
+
+### Regression tests
+
+Run `cd cloudflare-worker && npm test`. Node's test suite now validates PNG headers and zlib-compressed pixels, SVG icon format, iOS/PWA links, route wiring, redesigned unauthenticated gateway, and the original security API contracts. GitHub Actions runs the test suite for the feature branch and pull requests.
+
+The application is a PWA/Home Screen web app, **not an App Store native iOS application**, and it does not bypass Cloudflare authentication or guarantee offline AI inference.

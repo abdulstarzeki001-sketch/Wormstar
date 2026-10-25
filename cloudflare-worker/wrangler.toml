@@ -5,3 +5,8 @@ workers_dev = true
 
 [ai]
 binding = "AI"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wormstar_ai_memory"
+database_id = "d9d08aa3-184f-47aa-bc2b-a9f53c0bd2aa"

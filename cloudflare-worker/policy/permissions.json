@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "default": "deny",
+  "capabilities": {
+    "chat": true,
+    "read_saved_memory": true,
+    "upload_text_memory": true,
+    "import_public_https_pages": false,
+    "execute_shell": false,
+    "execute_uploaded_code": false,
+    "deploy": false,
+    "delete_memory": false
+  },
+  "maxInputCharacters": 16000,
+  "maxDocumentCharacters": 60000,
+  "requireOwnerAuth": true
+}

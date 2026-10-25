@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "tests": [
+    {
+      "name": "allowed mode",
+      "policy": {
+        "allowed_modes": [
+          "code"
+        ]
+      },
+      "request": {
+        "mode": "code",
+        "message": "راجع الكود"
+      },
+      "expected": "allowed"
+    },
+    {
+      "name": "blocked mode",
+      "policy": {
+        "allowed_modes": [
+          "code"
+        ]
+      },
+      "request": {
+        "mode": "logs",
+        "message": "حلل السجلات"
+      },
+      "expected": "denied 403"
+    },
+    {
+      "name": "required phrase matches",
+      "policy": {
+        "required_terms": [
+          "خاص"
+        ]
+      },
+      "request": {
+        "mode": "code",
+        "message": "مشروع خاص"
+      },
+      "expected": "allowed"
+    },
+    {
+      "name": "required phrase absent",
+      "policy": {
+        "required_terms": [
+          "خاص"
+        ]
+      },
+      "request": {
+        "mode": "code",
+        "message": "مشروع عام"
+      },
+      "expected": "denied 403"
+    },
+    {
+      "name": "oversized prompt",
+      "policy": {
+        "max_input_chars": 200
+      },
+      "request": {
+        "mode": "assistant",
+        "message": "more than 200 characters"
+      },
+      "expected": "denied 413 when actual text >200"
+    },
+    {
+      "name": "web import disabled",
+      "policy": {
+        "allow_web_import": false
+      },
+      "request": {
+        "path": "/api/studio/import-web"
+      },
+      "expected": "denied 403"
+    },
+    {
+      "name": "memory deletion disabled",
+      "policy": {
+        "allow_memory_delete": false
+      },
+      "request": {
+        "method": "DELETE",
+        "path": "/api/studio/knowledge/:id"
+      },
+      "expected": "denied 403"
+    },
+    {
+      "name": "invalid policy update",
+      "policy": {
+        "allowed_modes": [
+          "nonexistent"
+        ]
+      },
+      "expected": "denied 400"
+    },
+    {
+      "name": "knowledge not executable",
+      "request": {
+        "kind": "file",
+        "content": "untrusted source code"
+      },
+      "expected": "reference only; no execution"
+    }
+  ]
+}

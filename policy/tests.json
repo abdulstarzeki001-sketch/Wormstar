@@ -1,0 +1,78 @@
+{
+  "suite": "wormstar-policy-v1",
+  "cases": [
+    {
+      "id": "P01",
+      "name": "anonymous cannot read policy",
+      "method": "GET",
+      "path": "/api/lab/policy",
+      "token": false,
+      "expectStatus": 401
+    },
+    {
+      "id": "P02",
+      "name": "owner can read effective policy",
+      "method": "GET",
+      "path": "/api/lab/policy",
+      "token": true,
+      "expectStatus": 200
+    },
+    {
+      "id": "P03",
+      "name": "blocked action denied",
+      "method": "POST",
+      "path": "/api/lab/execute",
+      "token": true,
+      "expectStatus": 403
+    },
+    {
+      "id": "P04",
+      "name": "AI chat requires access token",
+      "method": "POST",
+      "path": "/api/chat",
+      "token": false,
+      "expectStatus": 401
+    },
+    {
+      "id": "P05",
+      "name": "invalid AI mode rejected",
+      "method": "POST",
+      "path": "/api/chat",
+      "token": true,
+      "body": {
+        "mode": "shell",
+        "message": "print('hi')"
+      },
+      "expectStatus": 400
+    },
+    {
+      "id": "P06",
+      "name": "oversized prompt rejected",
+      "method": "POST",
+      "path": "/api/chat",
+      "token": true,
+      "body": {
+        "mode": "assistant",
+        "messageLength": 12001
+      },
+      "expectStatus": 400
+    },
+    {
+      "id": "P07",
+      "name": "saved file never overrides server system message",
+      "method": "POST",
+      "path": "/api/chat",
+      "token": true,
+      "expectResult": "base policy precedes lower-trust user memory"
+    },
+    {
+      "id": "P08",
+      "name": "web import is a separate explicit action",
+      "method": "POST",
+      "path": "/api/studio/import-web",
+      "token": true,
+      "expectResult": "does not run during chat"
+    }
+  ],
+  "interpretation": "Structural API tests verify authorization, routes, and prompt placement. They do not prove a language model will never violate a content instruction."
+}

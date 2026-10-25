@@ -95,3 +95,20 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .ws-text-button { background: transparent; color: #66dfce; border: 0; text-decoration: underline; }
 @media (max-width: 1050px) { .ws-sidebar { width: 220px; flex-basis: 220px; } .ws-workspace { padding: 32px 24px; } .ws-intro { flex-direction: column; align-items: stretch; } .ws-intro-actions { justify-content: flex-start; } .ws-user { justify-content: flex-start; } }
 @media (max-width: 760px) { .wormstar-app { flex-direction: column; } .ws-sidebar { width: 100%; flex: none; min-height: 0; padding: 13px 14px 11px; border-left: 0; border-bottom: 1px solid var(--line); } .ws-brand { padding: 0 0 12px; justify-content: flex-end; } .ws-section-label, .ws-sidebar-bottom, .ws-nav-item small, .ws-nav-chevron { display: none; } .ws-nav { display: flex; flex-direction: row; overflow-x: auto; gap: 6px; padding-bottom: 3px; } .ws-nav-item { min-width: max-content; width: auto; padding: 8px 11px; gap: 6px; } .ws-nav-item strong { font-size: 11px; } .ws-topbar { height: 54px; flex-basis: 54px; padding: 0 18px; } .ws-workspace { padding: 24px 12px 15px; gap: 18px; } .ws-console { min-height: 530px; } .ws-messages { padding: 18px 13px; } .ws-prompts { grid-template-columns: 1fr; } .ws-prompts button { min-height: 54px; flex-direction: row; align-items: center; } .ws-compose-wrap { padding: 0 10px 12px; } .ws-compose-footer { flex-wrap: wrap; } .ws-auth-card { padding: 30px 20px; } .ws-online { display: none; } }
+
+/* Mobile app viewport and iOS input sizing. */
+html{width:100%;overflow-x:hidden;overflow-x:clip;touch-action:pan-y;overscroll-behavior-x:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{min-width:0;width:100%;overflow-x:hidden;overflow-x:clip}
+#root,.wormstar-app,.ws-main,.ws-workspace{min-width:0;max-width:100%}
+@media(max-width:760px){
+ .wormstar-app{min-height:100svh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+ input,textarea,select,.ws-compose textarea{font-size:16px}
+ .ws-nav{flex-wrap:wrap;overflow-x:visible}
+ .ws-nav-item{min-width:0;flex:1 1 140px;min-height:44px}
+ .ws-message>div{min-width:0}
+ .ws-topbar{height:auto;min-height:54px;flex-wrap:wrap;gap:8px;padding-block:10px}
+ .ws-breadcrumb{min-width:0;flex-wrap:wrap}
+ .ws-user,.ws-intro p{overflow-wrap:anywhere}
+ button{touch-action:pan-y;min-height:44px}
+ .ws-compose textarea{resize:none}
+}

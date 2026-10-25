@@ -1,0 +1,16 @@
+# Python environments and caches
+.venv/
+.venv*/
+__pycache__/
+*.py[cod]
+
+# Local cloned projects and generated data
+AutoGPT/
+MetaGPT/
+langchain/
+PentestGPT/
+
+# Secrets and local environment files
+.env
+.env.*
+!.env.example

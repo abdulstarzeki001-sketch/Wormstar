@@ -90,6 +90,23 @@ async function studioRoutes(request,env,path){
       }catch(e){return json({error:e.message},400);}
     }
   }
+  if(path==='/api/studio/restore'&&request.method==='POST'){
+    try {
+      if(!body||typeof body!=='object'||!body.item) return json({error:'Missing memory item'},400);
+      const input=body.item;
+      const id=textInput(input,'id',36);
+      if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(id))return json({error:'Invalid identifier'},400);
+      const title=textInput(input,'title',130),content=textInput(input,'content',60000);
+      if(!title||!content) return json({error:'Missing title or content'},400);
+      const existing=await env.DB.prepare('SELECT id FROM knowledge WHERE id=?').bind(id).first();
+      if(existing)return json({imported:false,id,reason:'already present'});
+      const count=await env.DB.prepare('SELECT COUNT(*) AS n FROM knowledge').first();
+      if(Number(count?.n||0)>=120)return json({error:'Memory library is full'},409);
+      await env.DB.prepare('INSERT OR IGNORE INTO knowledge(id,title,kind,content) VALUES(?,?,?,?)')
+        .bind(id,title,modeKind(input.kind),content).run();
+      return json({imported:true,id});
+    }catch(e){return json({error:e.message},400);}
+  }
   if(path==='/api/studio/export'&&request.method==='GET'){
     const profile=await getProfile(env);
     const knowledge=(await env.DB.prepare('SELECT id,title,kind,content,created_at,updated_at FROM knowledge ORDER BY created_at DESC LIMIT 120').all()).results||[];

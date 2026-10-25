@@ -225,3 +225,14 @@ The page head advertises `rel="apple-touch-icon"`, `rel="manifest"`, iOS standal
 Run `cd cloudflare-worker && npm test`. Node's test suite now validates PNG headers and zlib-compressed pixels, SVG icon format, iOS/PWA links, route wiring, redesigned unauthenticated gateway, and the original security API contracts. GitHub Actions runs the test suite for the feature branch and pull requests.
 
 The application is a PWA/Home Screen web app, **not an App Store native iOS application**, and it does not bypass Cloudflare authentication or guarantee offline AI inference.
+
+## Wormstar NEO owner-locked persistent memory — 2026-10
+
+- Operational profile, active permissions, and references are stored in Cloudflare D1. The AI retrieves relevant excerpts; references do not alter model weights.
+- Supabase wormstar_starter_presets stores a reusable Cyber Architect profile/policy. The owner-neutral wormstar_starter_library has ten extra advanced modules, versioned in cloudflare-worker/knowledge/neo_advanced_library.json.
+- Private Supabase wormstar_* tables have owner-scoped RLS and remain empty for a user until that user signs in with Supabase Auth and chooses backup. A Supabase Dashboard account is not automatically a Supabase Auth user.
+- The Worker-only D1 supabase_owner_binding table stores just a verified Supabase Auth UUID, email, and initial binding timestamp. POST /api/studio/supabase-owner verifies the supplied access token with Supabase Auth before setting an unclaimed identity. An already-bound worker rejects another Auth account to avoid mixing memory across identities. The route requires Wormstar bearer authorization.
+- Optional Keep Supabase connected persists the browser session in localStorage and refreshes it on reopening. This is not a guarantee of perpetual authorization: sessions can be revoked, expire, or disappear when Safari website data is cleared. Disable on shared devices.
+- Lab logout does not delete a separately remembered Supabase login. Use Disconnect Supabase to end that session. Disconnecting does NOT transfer the permanently owner-locked memory to another Auth identity; documented admin transfer would be needed.
+- Importing missing starter references now mirrors them to Supabase if the user is authenticated. Still take periodic full JSON backups. No password, service_role key or refresh token is saved in D1 or GitHub.
+- Regression tests: cloudflare-worker/tests/owner-memory-binding.test.mjs. D1 migration: cloudflare-worker/migrations/20261025_supabase_owner_binding.sql.

@@ -1,0 +1,28 @@
+name: Wormstar Cloud Policy Tests
+on:
+  push:
+    branches:
+      - feature/wormstar-private-cloud-lab
+    paths:
+      - 'policy/**'
+      - 'cloudflare-worker/**'
+      - '.github/workflows/wormstar-policy-tests.yml'
+  pull_request:
+    paths:
+      - 'policy/**'
+      - 'cloudflare-worker/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  node-policy-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate policy and Worker behavior
+        run: npm test
+        working-directory: cloudflare-worker

@@ -7,6 +7,20 @@ const policy = JSON.parse(readFileSync(new URL('../../policy/permissions.json', 
 const examples = readFileSync(new URL('../../policy/training.jsonl', import.meta.url), 'utf8').trim().split('\n').map(JSON.parse);
 const TOKEN='local-test-token-not-deployed';
 
+const ownerPolicy = {
+  version:1,
+  mission:'مختبر أمن سيبراني متخصص',
+  allowed_modes:['assistant','code','logs','ioc','ctf','report'],
+  required_terms:[],
+  max_input_chars:12000,
+  max_output_tokens:1500,
+  memory_enabled:true,
+  allow_web_import:true,
+  allow_memory_delete:true,
+  answer_style:'واضح ودقيق',
+  workflow_steps:['فهم المهمة','مراجعة الأدلة','تقديم النتائج']
+};
+
 function makeEnv(onGenerate){
   return {
     WORMSTAR_ACCESS_TOKEN: TOKEN,
@@ -14,8 +28,22 @@ function makeEnv(onGenerate){
       onGenerate?.(model,params);
       return {response:'Mock model reply'};
     }},
+    DB: {
+      prepare(sql){
+        return {
+          bind(){return this;},
+          async first(){
+            if(sql.includes('FROM ai_policy'))return {policy_json:JSON.stringify(ownerPolicy)};
+            if(sql.includes('FROM ai_profile'))return {name:'Wormstar',instructions:'',constraints:''};
+            return null;
+          },
+          async all(){return {results:[]};},
+        };
+      },
+    },
   };
 }
+
 async function request(path,{method='GET',authenticated=false,body,env}={}){
   const headers = authenticated?{'Authorization':'Bearer '+TOKEN}:{};
   if(body!==undefined)headers['Content-Type']='application/json';

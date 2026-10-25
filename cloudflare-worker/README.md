@@ -59,3 +59,37 @@ The interface contains an AI Studio for editing its assistant name, instruction 
 - Dashboard: open your Worker under Workers & Pages and confirm Workers AI, D1 and WORMSTAR_ACCESS_TOKEN are bound.
 
 **Note:** Previously documented first-run secret instructions remain valid if you have not set the access token. The site cannot unlock until the token binding is configured.
+
+## Supabase persistent backup and versioned training — 2026-10-25
+
+The existing Supabase project now has independent Wormstar tables, with no changes to unrelated application tables:
+- `public.wormstar_ai_profiles`: owner-scoped instructions and constraints.
+- `public.wormstar_memory_items`: uploaded code, notes and documents.
+- `public.wormstar_memory_versions`: previous revisions retained after edits (deleted with their original item).
+- `public.wormstar_training_events`: owner-scoped corrections and feedback.
+
+All four tables have owner-isolated RLS policies. Schema: `supabase/migrations/20261025_wormstar_persistent_training_memory.sql`.
+
+### Connect and use
+
+1. Open the Cloudflare Wormstar AI Studio and unlock the lab.
+2. Under Supabase persistent memory, sign in as a Supabase Auth user of the linked Supabase project. A Supabase Dashboard admin is not necessarily an Auth user. Account creation is offered if signups are enabled.
+3. Press **Back up Cloudflare memory to Supabase** to sync existing D1 data. New changes and corrections attempt automatic mirroring while that browser session is linked.
+4. Use **Restore knowledge from Supabase** to rebuild D1 knowledge without overwriting existing item IDs. Restoring the AI profile requires separate confirmation.
+5. Keep offline JSON exports too. No cloud provider can guarantee data survives deliberate deletion, account closure, outages or billing disruptions.
+
+Client authentication uses only the public Supabase publishable API key and the user's Supabase Auth JWT. No service-role or secret database keys are included in the deployed source. Supabase sessions live in browser sessionStorage and are cleared when signing out of Wormstar.
+
+**Capacity:** D1 holds up to 120 notes of 60,000 characters. Uploaded files are capped at 80 KB each. Future AI prompts retrieve selected relevant excerpts; this is persistent retrieval, not neural-network weight training.
+
+### Firecrawl page import
+
+The **Import webpage via Firecrawl** action is available in the Studio. Activate it by saving a `FIRECRAWL_API_KEY` Cloudflare Worker secret in Settings → Variables and Secrets. When explicitly requested by the owner, Firecrawl imports a public HTTPS page as a reference in D1, and Supabase if connected.
+
+### FastAPI Cloud integration status
+
+No FastAPI Cloud service was provisioned or deployed. The existing cloud backend is Cloudflare Workers; a future FastAPI Cloud sidecar could process larger uploads/indexes once a target FastAPI Cloud app is selected and authorized. This is not necessary for current persistent text memory.
+
+### GitHub source
+
+The cloud application and database migration are versioned on the `feature/wormstar-private-cloud-lab` branch. Original Python/Ollama root files remain unchanged. Uploaded private training files and tokens are stored in hosting databases/session storage, not committed to GitHub.

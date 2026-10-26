@@ -36,7 +36,9 @@ export default {
     "deployment.self_modify": false,
     "memory.chats.read": true,
     "memory.chats.write": true,
-    "memory.chats.delete": true
+    "memory.chats.delete": true,
+    "agents.openclaw.status": true,
+    "agents.openclaw.chat": true
   },
   "limits": {
     "maxPromptCharacters": 12000,

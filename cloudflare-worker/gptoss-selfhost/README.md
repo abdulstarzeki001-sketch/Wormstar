@@ -77,6 +77,8 @@ Then add these Worker SECRETS in the Cloudflare dashboard; never commit them or 
 
 The Worker will issue HTTPS-only requests to /v1/chat/completions, add both the vLLM Bearer token and Cloudflare Access service token headers, and reject unsafe HTTP origins or redirects. When secrets are configured, the chat UI enables private-GPU choices for GPT-OSS 120B and 20B. The response includes a clearly marked selfhost/openai/gpt-oss-120b (or 20b) actual model name. Errors from the GPU NEVER silently fall back to Cloudflare-hosted weights for this explicitly selected self-hosted option.
 
+Optional Worker secret GPT_OSS_REASONING_EFFORT can be low, medium (default), or high. High reasoning consumes more generated tokens: raise the owner's allowed output budget deliberately only after performance testing. The private GPU connection requires all four endpoint/API/Access secrets; partial setup leaves GPU choices disabled.
+
 The /api/health field gpuSelfHostConfigured indicates only configuration, not successful GPU execution. After configuring new secrets, make sure subsequent deployments preserve their bindings with inherited Worker secret bindings.
 
 ## Full reasoning, context, and fine-tuning are different operations

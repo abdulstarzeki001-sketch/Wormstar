@@ -44,6 +44,10 @@ for setting in \
   docker compose run -T --rm --no-deps --entrypoint node openclaw-gateway \
     dist/index.js config set "$key" "$value"
 done
+docker compose run -T --rm --no-deps --entrypoint node openclaw-gateway \
+  dist/index.js config set tools.deny '["group:runtime","group:fs","browser","gateway","cron","nodes","write","edit","apply_patch"]' --strict-json
+docker compose run -T --rm --no-deps --entrypoint node openclaw-gateway \
+  dist/index.js config validate
 docker compose up -d openclaw-gateway
 echo "Gateway started on 127.0.0.1:18789. Run bash verify.sh."
 echo "Cloudflare Tunnel/Access hostname and Wormstar Worker secrets require owner setup."

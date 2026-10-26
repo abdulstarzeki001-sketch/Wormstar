@@ -98,9 +98,11 @@ test('all six legitimate modes can send analysis-only prompts',async()=>{
     const res=await request('/api/chat',{method:'POST',authenticated:true,body:{mode,message:'Explain defensive analysis'},env});
     assert.equal(res.status,200);
     assert.equal((await res.json()).answer,'Mock model reply');
-    assert.ok(captured.model.includes('llama'));
+    assert.ok(captured.model.startsWith('@cf/'));
+    if(mode==='code')assert.match(captured.model,/qwen2\.5-coder-32b/);
+    else assert.match(captured.model,/llama-3\.3-70b/);
     assert.equal(captured.parameters.messages[0].role,'system');
-    assert.match(captured.parameters.messages[0].content,/Wormstar AI Lab/);
+    assert.match(captured.parameters.messages[0].content,/Wormstar NEO/);
     assert.equal(captured.parameters.messages.at(-1).role,'user');
   }
 });
@@ -114,9 +116,11 @@ test('owner preferences are lower-priority than server policy',async()=>{
     history:[{role:'assistant',content:'Earlier explanation'}]
   }});
   assert.equal(res.status,200);
-  assert.match(captured.messages[0].content,/تعليمات النظام/);
-  assert.equal(captured.messages[1].role,'user');
-  assert.match(captured.messages[1].content,/OWNER PREFERENCES/);
+  assert.match(captured.messages[0].content,/OWNER WORKSPACE SETTINGS/);
+  assert.match(captured.messages[0].content,/subordinate to fixed server policy/);
+  assert.match(captured.messages[0].content,/Owner mission/);
+  assert.equal(captured.messages[1].role,'assistant');
+  assert.equal(captured.messages.at(-1).role,'user');
 });
 
 test('studio operations cannot be reached without authorization',async()=>{

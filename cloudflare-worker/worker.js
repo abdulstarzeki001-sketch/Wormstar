@@ -52,9 +52,17 @@ async function runOwnWeights(env,engine,messages,maxTokens){
      ||name==='localhost'||name.endsWith('.local')||name.endsWith('.internal')
      ||/^(127\.|10\.|192\.168\.|169\.254\.|0\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(name))
     throw Error('Owner GPU endpoint must be a secure HTTPS origin');
+  const accessId=env.GPT_OSS_ACCESS_CLIENT_ID;
+  const accessSecret=env.GPT_OSS_ACCESS_CLIENT_SECRET;
+  if(Boolean(accessId)!==Boolean(accessSecret))throw Error('Both Cloudflare Access service token secrets must be configured together');
+  const headers={'Content-Type':'application/json','Authorization':'Bearer '+env.GPT_OSS_GPU_TOKEN};
+  if(accessId&&accessSecret){
+    headers['CF-Access-Client-Id']=accessId;
+    headers['CF-Access-Client-Secret']=accessSecret;
+  }
   const remote=await fetch(endpoint.origin+'/v1/chat/completions',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+env.GPT_OSS_GPU_TOKEN},
+    headers,
     body:JSON.stringify({model:GPU_MODELS[engine],messages,max_tokens:maxTokens,temperature:0.2,stream:false}),
     redirect:'error',
     signal:AbortSignal.timeout(90000)

@@ -1,0 +1,9 @@
+# Local-only publication of OpenClaw ports.
+# Requires Docker Compose >= 2.24.4 (!override syntax).
+# Use authenticated private ingress (Cloudflare Tunnel + Access).
+services:
+  openclaw-gateway:
+    ports: !override
+      - "127.0.0.1:18789:18789"
+      - "127.0.0.1:18790:18790"
+      - "127.0.0.1:3978:3978"

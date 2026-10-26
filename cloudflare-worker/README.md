@@ -274,3 +274,16 @@ OpenAI's GPT-OSS models are Apache-2.0 licensed. If you later need to fine-tune 
 ### Run original GPT-OSS weight shards on an owner GPU
 
 For genuine self-hosted **openai/gpt-oss-120b** and **openai/gpt-oss-20b** checkpoints (not just hosted inference), see [gptoss-selfhost/README.md](gptoss-selfhost/README.md). It includes the real Hugging Face shard downloader, checkpoint verifier, Docker/vLLM setup, owner-only HTTPS Cloudflare Access tunnel, and opt-in GPU engine routing. This requires a separately provided GPU server; current Cloudflare Workers AI hosting remains active and no GPU has yet been provisioned.
+
+## OpenClaw remote-agent integration — 2026-10-26
+
+OpenClaw is available as a **separate, authenticated agent backend** in Wormstar's chat model selector and as its own mobile-friendly Control Studio page. The app checks the Gateway's real `/v1/models` response before making the option selectable. Default Workers AI GPT-OSS and the original CLI remain untouched.
+
+- Runtime API: `GET /api/openclaw/status` and the existing `POST /api/chat` with `engine: "openclaw-agent"`. Both require the Wormstar owner token and capabilities `agents.openclaw.status` / `agents.openclaw.chat` enforced by the Worker.
+- Secrets: `OPENCLAW_GATEWAY_URL`, `OPENCLAW_GATEWAY_TOKEN`, `OPENCLAW_ACCESS_CLIENT_ID`, `OPENCLAW_ACCESS_CLIENT_SECRET` must be set as Cloudflare Worker secrets, never hardcoded in the frontend or repository.
+- OpenClaw Gateway must be a separate trusted machine with a model provider, dedicated owner-operator credentials, chatCompletions endpoint, and Cloudflare Access-protected HTTPS tunnel.
+- The Worker does not implement shell, channel administration, cron modification, plugin installation or arbitrary OpenClaw operator RPC. OpenClaw's tools, channels, mobile nodes, memory and skills must be independently installed, allowed and audited on the host.
+- Source files and setup: `openclaw/config.template.json5`, `openclaw/README.md`, `openclaw/capabilities.json`, and `openclaw/knowledge.json`.
+- Tests: `cloudflare-worker/tests/openclaw-bridge.test.mjs`. Offline/connected status is validated in mocked integration tests. A live gateway is not connected yet.
+
+Security note: OpenClaw's chat-completions token grants powerful operator-level access; the Gateway must use a dedicated minimal tool profile, explicit Access authentication and separately approved tool permissions. The versioned template starts with shell and host filesystem operations denied.

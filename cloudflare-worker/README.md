@@ -251,3 +251,22 @@ Wormstar chat memory is **separate from the AI reference knowledge library**. Us
 - D1 migration: `cloudflare-worker/migrations/20261026_chat_archives.sql`, executed before deploying routes. Regression tests: `cloudflare-worker/tests/chat-archive.test.mjs`.
 
 Other application knowledge in D1, Supabase Auth, and the original Python/Ollama CLI are unchanged by this archive feature.
+
+## GPT-OSS engine integration — 26 October 2026
+
+**Wormstar NEO now defaults to GPT-OSS 120B, served through Cloudflare Workers AI.** Both `@cf/openai/gpt-oss-120b` and `@cf/openai/gpt-oss-20b` were independently tested against the owner's Cloudflare AI account and returned successful text completions. The iPhone chat composer exposes a model selector: GPT-OSS 120B (default), GPT-OSS 20B (faster), auto (code-sensitive), Qwen Coder, and Llama 3.3. A strict server-side allowlist prevents arbitrary model IDs, and the returned `modelUsed`/`fallbackUsed` metadata identifies the model that answered. Only the `choices[0].message.content` final answer is rendered, never the provider's reasoning fields.
+
+The GPT-OSS **weights are NOT copied into the Worker, Cloudflare D1, Supabase, or GitHub**. They are hosted/managed by Cloudflare's inference platform and are invoked as standalone trained models. They are **not merged into Llama or Qwen weights**. No fine-tuning of model parameters was performed; storing knowledge in D1 is retrieval-augmented reference storage, not parameter training.
+
+Official source catalogs are versioned in:
+- `knowledge/gpt_oss_official_models.json` — official Hugging Face root-file references for both open-weight models (including all listed .safetensors shard URLs, tokenizer, configs and licenses), with links to additional `metal` and `original` directories; these are *links only*, not raw file downloads.
+- `knowledge/gpt_oss_reference_pack.json` — eight researched Arabic technical notes, also mirrored to owner-neutral Supabase `wormstar_starter_library` and Cloudflare D1's existing knowledge library.
+
+Original sources:
+- https://github.com/openai/gpt-oss
+- https://huggingface.co/openai/gpt-oss-120b/tree/main
+- https://huggingface.co/openai/gpt-oss-20b/tree/main
+- https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/
+- https://developers.cloudflare.com/workers-ai/models/gpt-oss-20b/
+
+OpenAI's GPT-OSS models are Apache-2.0 licensed. If you later need to fine-tune the actual weights, first provision an appropriate GPU training environment, download the original checkpoint separately, prepare an authorized dataset and measurable evaluations, then train and deploy a separate adapter/checkpoint. A D1 or Supabase note insert **cannot** accomplish this. Hosted Workers AI inference may incur model usage charges.

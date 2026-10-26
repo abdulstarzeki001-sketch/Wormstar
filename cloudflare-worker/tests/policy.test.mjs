@@ -99,8 +99,7 @@ test('all six legitimate modes can send analysis-only prompts',async()=>{
     assert.equal(res.status,200);
     assert.equal((await res.json()).answer,'Mock model reply');
     assert.ok(captured.model.startsWith('@cf/'));
-    if(mode==='code')assert.match(captured.model,/qwen2\.5-coder-32b/);
-    else assert.match(captured.model,/llama-3\.3-70b/);
+    assert.equal(captured.model,'@cf/openai/gpt-oss-120b');
     assert.equal(captured.parameters.messages[0].role,'system');
     assert.match(captured.parameters.messages[0].content,/Wormstar NEO/);
     assert.equal(captured.parameters.messages.at(-1).role,'user');

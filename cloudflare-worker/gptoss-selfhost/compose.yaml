@@ -1,0 +1,50 @@
+# Run on a dedicated NVIDIA GPU Linux server with NVIDIA Container Toolkit.
+# Only one model is served at a time to avoid GPU VRAM overcommit.
+# The local port is NOT internet facing. Enforce Cloudflare Access at tunnel edge.
+name: wormstar-gptoss
+services:
+  vllm:
+    image: ${VLLM_IMAGE:-vllm/vllm-openai:latest}
+    restart: unless-stopped
+    ipc: host
+    shm_size: "16gb"
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      VLLM_API_KEY: "${GPU_API_TOKEN:?Set GPU_API_TOKEN in .env}"
+      HF_HUB_OFFLINE: "1"
+    volumes:
+      - "${MODEL_ROOT:?Set absolute model directory}:/models:ro"
+    command:
+      - "--model"
+      - "/models/${MODEL_VARIANT:?Set model name}"
+      - "--served-model-name"
+      - "${MODEL_VARIANT:?Set model name}"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8000"
+      - "--max-model-len"
+      - "${MAX_MODEL_LEN:-32768}"
+      - "--gpu-memory-utilization"
+      - "0.88"
+      - "--tensor-parallel-size"
+      - "1"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Optional. Requires a pre-created Cloudflare Tunnel mapped to http://vllm:8000
+  # and a Cloudflare Access service-token-only policy protecting ALL URL paths.
+  tunnel:
+    profiles: ["tunnel"]
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on: ["vllm"]
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: "${CF_TUNNEL_TOKEN:?Set CF_TUNNEL_TOKEN in .env}"

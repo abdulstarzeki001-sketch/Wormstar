@@ -15,7 +15,7 @@ test('embedded UI scripts compile without execution or access to browser globals
  assert.doesNotThrow(()=>new Function(FUTURE_UI.boot));
 });
 test('chat saving is optional, interactive and warns when local history may be lost',()=>{
- assert.match(html,/type="checkbox"[^>]*id="chatAutoBackup"/);
+ assert.match(html,/<input[^>]*id="chatAutoBackup"[^>]*type="checkbox"/);
  assert.match(html,/id="chatCloudSave"/);
  assert.match(html,/id="chatCloudRestore"/);
  assert.match(html,/id="chatCloudDelete"/);

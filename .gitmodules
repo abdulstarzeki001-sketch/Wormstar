@@ -10,3 +10,6 @@
 [submodule "langchain"]
 	path = langchain
 	url = https://github.com/langchain-ai/langchain.git
+[submodule "OpenClaw"]
+	path = OpenClaw
+	url = https://github.com/openclaw/openclaw.git

@@ -1,0 +1,53 @@
+name: OpenClaw Host Readiness
+on:
+  push:
+    branches: [main]
+    paths:
+      - "openclaw/host/**"
+      - ".github/workflows/openclaw-host-checks.yml"
+  pull_request:
+    paths:
+      - "openclaw/host/**"
+      - ".github/workflows/openclaw-host-checks.yml"
+  workflow_dispatch:
+
+jobs:
+  check-host-template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Linux bootstrap scripts parse
+        run: |
+          bash -n openclaw/host/bootstrap.sh
+          bash -n openclaw/host/verify.sh
+      - name: Validate Docker Compose without using real credentials
+        env:
+          OPENCLAW_GATEWAY_TOKEN: "000000000000000000000000000000000000000000000000"
+          OPENAI_API_KEY: "test-key-only-never-a-real-provider-credential"
+          CLOUDFLARE_TUNNEL_TOKEN: ""
+        run: docker compose -f openclaw/host/compose.yaml config --quiet
+      - name: Assert no public Gateway host port
+        env:
+          OPENCLAW_GATEWAY_TOKEN: "000000000000000000000000000000000000000000000000"
+          OPENAI_API_KEY: "test-key-only-never-a-real-provider-credential"
+          CLOUDFLARE_TUNNEL_TOKEN: ""
+        run: |
+          python3 - <<'PY'
+          import json, subprocess
+          config=json.loads(subprocess.check_output([
+            "docker","compose","-f","openclaw/host/compose.yaml",
+            "config","--format","json"
+          ],text=True))
+          server=config["services"]["openclaw-gateway"]
+          ports=server.get("ports",[])
+          assert len(ports)==1
+          assert ports[0]["host_ip"]=="127.0.0.1",ports
+          assert ports[0]["target"]==18789,ports
+          assert server.get("restart")=="unless-stopped"
+          assert "openclaw_state" in str(server.get("volumes"))
+          print("OpenClaw template is limited to loopback and has durable Docker state.")
+          PY
+      - name: Verify sensitive env is not committed
+        run: |
+          test ! -e openclaw/host/.env
+          test -f openclaw/host/.env.example

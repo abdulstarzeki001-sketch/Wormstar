@@ -1,0 +1,13 @@
+// Reference only: merge into OpenClaw's real config after onboarding.
+// Do not commit secrets. Set OPENCLAW_GATEWAY_TOKEN in host environment.
+{
+  gateway: { mode: "local", bind: "loopback",
+    auth: { mode: "token" },
+    http: { endpoints: { chatCompletions: { enabled: true }, responses: { enabled: false } } },
+  },
+  tools: {
+    profile: "minimal",
+    exec: { mode: "deny" },
+    deny: ["exec","process","group:runtime","group:fs","browser","gateway","cron","nodes","write","edit","apply_patch"],
+  },
+}

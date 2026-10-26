@@ -41,7 +41,9 @@ const GPU_MODELS = Object.freeze({
 });
 function ownGpuConfigured(env){
   return typeof env.GPT_OSS_GPU_ENDPOINT==='string'&&env.GPT_OSS_GPU_ENDPOINT.length>10
-    &&typeof env.GPT_OSS_GPU_TOKEN==='string'&&env.GPT_OSS_GPU_TOKEN.length>=20;
+    &&typeof env.GPT_OSS_GPU_TOKEN==='string'&&env.GPT_OSS_GPU_TOKEN.length>=20
+    &&typeof env.GPT_OSS_ACCESS_CLIENT_ID==='string'&&env.GPT_OSS_ACCESS_CLIENT_ID.length>3
+    &&typeof env.GPT_OSS_ACCESS_CLIENT_SECRET==='string'&&env.GPT_OSS_ACCESS_CLIENT_SECRET.length>=12;
 }
 async function runOwnWeights(env,engine,messages,maxTokens){
   if(!ownGpuConfigured(env))throw Error('Owner GPU backend is not configured');

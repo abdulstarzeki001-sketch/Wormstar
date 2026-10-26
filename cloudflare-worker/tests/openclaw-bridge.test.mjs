@@ -129,7 +129,8 @@ test('UI includes a functional OpenClaw page but remains disabled until actual c
   assert.match(html,/id="chatEngine"/);
   assert.match(html,/<option value="openclaw-agent"[^>]*disabled/);
   assert.match(html,/async function checkOpenClaw\(\)/);
-  assert.match(UI.boot,/cards.length!==6/);
+  assert.match(UI.boot,/cards.length!==7/);
+  assert.match(UI.boot,/'studio\/opencode'/);
   assert.match(UI.boot,/'studio\/openclaw'/);
   assert.equal(cap.hostRequired,true);
   assert.equal(cap.connected,false);

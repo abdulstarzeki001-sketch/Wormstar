@@ -1,0 +1,221 @@
+{
+  "name": "Wormstar GPT-OSS model source index",
+  "catalogVersion": "2026-10-26",
+  "purpose": "Reference paths for the official model files and the inference backends available through Cloudflare Workers AI; weights are NOT copied or mixed into another model.",
+  "downloadStatus": "links_only_no_weights_downloaded",
+  "deploymentStatus": "Cloudflare-hosted models tested via Cloudflare AI REST (HTTP 200)",
+  "models": [
+    {
+      "name": "gpt-oss-120b",
+      "id": "openai/gpt-oss-120b",
+      "cloudflareModel": "@cf/openai/gpt-oss-120b",
+      "weightParts": 15,
+      "parameterCountApprox": "116.8B total / 5.1B active per token",
+      "checkpointGiBApprox": 60.8,
+      "license": "Apache-2.0",
+      "source": "https://huggingface.co/openai/gpt-oss-120b",
+      "sourceCode": "https://github.com/openai/gpt-oss",
+      "files": [
+        {
+          "filename": ".gitattributes",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/.gitattributes"
+        },
+        {
+          "filename": "LICENSE",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/LICENSE"
+        },
+        {
+          "filename": "README.md",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/README.md"
+        },
+        {
+          "filename": "USAGE_POLICY",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/USAGE_POLICY"
+        },
+        {
+          "filename": "chat_template.jinja",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/chat_template.jinja"
+        },
+        {
+          "filename": "config.json",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/config.json"
+        },
+        {
+          "filename": "generation_config.json",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/generation_config.json"
+        },
+        {
+          "filename": "model.safetensors.index.json",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model.safetensors.index.json"
+        },
+        {
+          "filename": "special_tokens_map.json",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/special_tokens_map.json"
+        },
+        {
+          "filename": "tokenizer.json",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/tokenizer.json"
+        },
+        {
+          "filename": "tokenizer_config.json",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/tokenizer_config.json"
+        },
+        {
+          "filename": "model-00000-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00000-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00001-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00001-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00002-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00002-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00003-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00003-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00004-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00004-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00005-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00005-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00006-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00006-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00007-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00007-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00008-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00008-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00009-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00009-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00010-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00010-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00011-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00011-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00012-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00012-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00013-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00013-of-00014.safetensors"
+        },
+        {
+          "filename": "model-00014-of-00014.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/resolve/main/model-00014-of-00014.safetensors"
+        }
+      ],
+      "nestedDirectories": [
+        {
+          "name": "metal",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/tree/main/metal"
+        },
+        {
+          "name": "original",
+          "url": "https://huggingface.co/openai/gpt-oss-120b/tree/main/original"
+        }
+      ]
+    },
+    {
+      "name": "gpt-oss-20b",
+      "id": "openai/gpt-oss-20b",
+      "cloudflareModel": "@cf/openai/gpt-oss-20b",
+      "weightParts": 3,
+      "parameterCountApprox": "20.9B total / 3.6B active per token",
+      "checkpointGiBApprox": 12.8,
+      "license": "Apache-2.0",
+      "source": "https://huggingface.co/openai/gpt-oss-20b",
+      "sourceCode": "https://github.com/openai/gpt-oss",
+      "files": [
+        {
+          "filename": ".gitattributes",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/.gitattributes"
+        },
+        {
+          "filename": "LICENSE",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/LICENSE"
+        },
+        {
+          "filename": "README.md",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/README.md"
+        },
+        {
+          "filename": "USAGE_POLICY",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/USAGE_POLICY"
+        },
+        {
+          "filename": "chat_template.jinja",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/chat_template.jinja"
+        },
+        {
+          "filename": "config.json",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/config.json"
+        },
+        {
+          "filename": "generation_config.json",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/generation_config.json"
+        },
+        {
+          "filename": "model.safetensors.index.json",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/model.safetensors.index.json"
+        },
+        {
+          "filename": "special_tokens_map.json",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/special_tokens_map.json"
+        },
+        {
+          "filename": "tokenizer.json",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/tokenizer.json"
+        },
+        {
+          "filename": "tokenizer_config.json",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/tokenizer_config.json"
+        },
+        {
+          "filename": "model-00000-of-00002.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/model-00000-of-00002.safetensors"
+        },
+        {
+          "filename": "model-00001-of-00002.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/model-00001-of-00002.safetensors"
+        },
+        {
+          "filename": "model-00002-of-00002.safetensors",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/resolve/main/model-00002-of-00002.safetensors"
+        }
+      ],
+      "nestedDirectories": [
+        {
+          "name": "metal",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/tree/main/metal"
+        },
+        {
+          "name": "original",
+          "url": "https://huggingface.co/openai/gpt-oss-20b/tree/main/original"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "Root file listings reflect the official Hugging Face model repositories. Nested directories are linked rather than exhaustively enumerated.",
+    "For self-hosting or fine-tuning, provision separate suitable GPU storage and use the official model tooling. D1, Supabase tables, and GitHub source control are not appropriate for raw multi-GB model checkpoints.",
+    "A GPT-OSS request invokes the independently trained model weights hosted by Cloudflare. It does NOT mutate Llama model parameters, train GPT-OSS, or grant execution privileges.",
+    "No proprietary credentials, private conversations, or user-specific training examples are stored in this public source catalog."
+  ]
+}

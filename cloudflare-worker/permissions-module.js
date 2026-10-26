@@ -33,7 +33,10 @@ export default {
     "execution.user_code": false,
     "network.active_scan": false,
     "credentials.harvest": false,
-    "deployment.self_modify": false
+    "deployment.self_modify": false,
+    "memory.chats.read": true,
+    "memory.chats.write": true,
+    "memory.chats.delete": true
   },
   "limits": {
     "maxPromptCharacters": 12000,

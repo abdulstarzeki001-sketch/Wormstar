@@ -74,5 +74,31 @@
     "No OpenClaw daemon was started in Cloudflare Workers",
     "No channel or plugin was auto-installed",
     "Full OpenClaw functionality depends on a persistent host, model provider and individual permissions"
-  ]
+  ],
+  "upstreamSource": {
+    "repository": "https://github.com/openclaw/openclaw",
+    "type": "git-submodule",
+    "path": "OpenClaw",
+    "pin": "cd3bcc01765305ff1a44f70ca187734269183965",
+    "linkedToMain": true,
+    "fullUpstreamSourceWhenCloned": true
+  },
+  "deployment": {
+    "prepared": true,
+    "started": false,
+    "hostReachable": false,
+    "setupScript": "integrations/openclaw/setup.sh",
+    "apiActivation": "integrations/openclaw/enable-wormstar-api.sh",
+    "documentation": "integrations/openclaw/README_AR.md",
+    "hostLimitations": [
+      "Cloudflare Containers requires Workers Paid on current account",
+      "No connected DigitalOcean Droplet or Desktop Commander host"
+    ],
+    "secretsRequired": [
+      "OPENCLAW_GATEWAY_URL",
+      "OPENCLAW_GATEWAY_TOKEN",
+      "OPENCLAW_ACCESS_CLIENT_ID",
+      "OPENCLAW_ACCESS_CLIENT_SECRET"
+    ]
+  }
 }

@@ -16,6 +16,8 @@ function studioCapability(path,method) {
   if(path==='/api/studio/profile')return {GET:'memory.profile.read',PUT:'memory.profile.write'}[method]||null;
   if(path==='/api/studio/supabase-owner')return {GET:'memory.profile.read',POST:'memory.profile.write'}[method]||null;
   if(path==='/api/studio/chat-archive')return {GET:'memory.chats.read',PUT:'memory.chats.write',DELETE:'memory.chats.delete'}[method]||null;
+  if(path==='/api/studio/opencode/session')return {GET:'agents.opencode.sessions.read',POST:'agents.opencode.sessions.create'}[method]||null;
+  if(path==='/api/studio/opencode/prompt')return method==='POST'?'agents.opencode.prompt':null;
   if(path==='/api/studio/knowledge')return {GET:'memory.items.read',POST:'memory.items.create'}[method]||null;
   if(path==='/api/studio/export')return method==='GET'?'memory.export':null;
   if(path==='/api/studio/restore')return method==='POST'?'memory.restore':null;
@@ -97,6 +99,62 @@ async function invokeOpenClaw(env,mode,messages,maxTokens){
   return answer.trim();
 }
 
+
+/* OpenCode is hosted outside the Worker. Expose a minimal, protected,
+ * allowlisted subset of its HTTP agent API. Never expose arbitrary shell,
+ * filesystem writes, PTY, global config, MCP setup or permissions RPC.
+ * Source: anomalyco/opencode/packages/protocol/src/groups/session.ts (dev).
+ */
+function openCodeConfigured(env){
+ return typeof env.OPENCODE_BASE_URL==='string'&&env.OPENCODE_BASE_URL.length>12
+  &&typeof env.OPENCODE_SERVER_PASSWORD==='string'&&env.OPENCODE_SERVER_PASSWORD.length>=20
+  &&typeof env.OPENCODE_ACCESS_CLIENT_ID==='string'&&env.OPENCODE_ACCESS_CLIENT_ID.length>3
+  &&typeof env.OPENCODE_ACCESS_CLIENT_SECRET==='string'&&env.OPENCODE_ACCESS_CLIENT_SECRET.length>=12;
+}
+function openCodeOrigin(env){
+ if(!openCodeConfigured(env))throw Error('OpenCode server is not configured');
+ const url=new URL(env.OPENCODE_BASE_URL);
+ const host=url.hostname.toLowerCase();
+ if(url.protocol!=='https:'||!host.includes('.')||host==='localhost'||host.endsWith('.local')||
+    host.endsWith('.internal')||url.username||url.password||url.search||url.hash||
+    (url.pathname!=='/'&&url.pathname!=='')||(url.port&&url.port!=='443')||
+    /^\d+\.\d+\.\d+\.\d+$/.test(host)||host.includes(':'))
+  throw Error('OpenCode requires an HTTPS domain root, protected by Cloudflare Access');
+ return url.origin;
+}
+function openCodeHeaders(env){
+ const password=env.OPENCODE_SERVER_PASSWORD;
+ const basic=btoa('opencode:'+password);
+ return {
+   'Authorization':'Basic '+basic,
+   'CF-Access-Client-Id':env.OPENCODE_ACCESS_CLIENT_ID,
+   'CF-Access-Client-Secret':env.OPENCODE_ACCESS_CLIENT_SECRET,
+   'Accept':'application/json',
+   'Content-Type':'application/json'
+ };
+}
+async function openCodeRequest(env,path,method='GET',payload){
+ const r=await fetch(openCodeOrigin(env)+path,{
+  method,headers:openCodeHeaders(env),
+  ...(payload===undefined?{}:{body:JSON.stringify(payload)}),
+  redirect:'error',cache:'no-store',signal:AbortSignal.timeout(12000)
+ });
+ if(!r.ok)throw Error('OpenCode server HTTP '+r.status);
+ const data=await r.json();
+ return data?.data??data;
+}
+function openCodeSessionId(input){
+ const id=String(input||'');
+ if(!/^ses_[a-zA-Z0-9_-]{8,100}$/.test(id))throw Error('Invalid OpenCode session ID');
+ return id;
+}
+async function openCodeStatus(env){
+ if(!openCodeConfigured(env))return {configured:false,connected:false,project:'Wormstar'};
+ try{
+  const response=await openCodeRequest(env,'/api/session?limit=1');
+  return {configured:true,connected:Array.isArray(response)||Array.isArray(response?.data),project:'Wormstar',repository:'anomalyco/opencode'};
+ }catch{return {configured:true,connected:false,project:'Wormstar',repository:'anomalyco/opencode'};}
+}
 const GPU_MODELS = Object.freeze({
   'gpt-oss-120b-gpu':'gpt-oss-120b',
   'gpt-oss-20b-gpu':'gpt-oss-20b'
@@ -271,6 +329,27 @@ async function studioRoutes(request,env,path){
 
 
 
+  if(path==='/api/studio/opencode/session'||path==='/api/studio/opencode/prompt'){
+    if(!openCodeConfigured(env))return json({error:'OpenCode server is not connected; configure a private OpenCode service first'},503);
+    try{
+      if(path==='/api/studio/opencode/session'&&request.method==='GET'){
+        const rows=await openCodeRequest(env,'/api/session?limit=15');
+        return json({sessions:Array.isArray(rows)?rows:Array.isArray(rows?.data)?rows.data:[]});
+      }
+      if(path==='/api/studio/opencode/session'&&request.method==='POST'){
+        const title=textInput(body,'title',100).trim()||'Wormstar coding session';
+        const agent=await openCodeRequest(env,'/api/session','POST',{title});
+        return json({session:agent});
+      }
+      if(path==='/api/studio/opencode/prompt'&&request.method==='POST'){
+        const id=openCodeSessionId(body?.sessionID);
+        const input=textInput(body,'text',10000).trim();
+        if(!input)return json({error:'Prompt is required'},400);
+        const admitted=await openCodeRequest(env,'/api/session/'+encodeURIComponent(id)+'/prompt','POST',{text:input});
+        return json({accepted:true,sessionID:id,message:admitted});
+      }
+    }catch(e){return json({error:'OpenCode integration failed',reason:String(e?.message||'Unknown failure').slice(0,150)},502);}
+  }
   if(path==='/api/studio/chat-archive'){
     const target=request.method==='GET'||request.method==='DELETE'
       ?new URL(request.url).searchParams.get('mode')
@@ -474,6 +553,11 @@ export default {
       return new Response(JSON.stringify({id:'/',name:'Wormstar NEO — AI Mission Control',short_name:'Wormstar NEO',description:'Private cyber intelligence and AI memory command center',start_url:'/?source=homescreen',scope:'/',display:'standalone',orientation:'any',background_color:'#060c19',theme_color:'#070c19',dir:'rtl',lang:'ar',icons:[{src:'/apple-touch-icon.png?v=20261025b',sizes:'96x96',type:'image/png',purpose:'any'},{src:'/icon.svg?v=20261025b',sizes:'any',type:'image/svg+xml',purpose:'any maskable'}]}),{headers:{'Content-Type':'application/manifest+json;charset=utf-8','Cache-Control':'no-cache','X-Content-Type-Options':'nosniff'}});
     }
     if(request.method==='GET'&&url.pathname==='/api/health')return json({ok:true,service:'wormstar-cloudflare-lab',model:'gpt-oss-120b',modelBackend:'@cf/openai/gpt-oss-120b',fastModel:'@cf/openai/gpt-oss-20b',codeModel:'qwen2.5-coder-32b-instruct',fallbackModel:'llama-3.1-8b-instruct-fast',aiConfigured:!!env.AI,gpuSelfHostConfigured:ownGpuConfigured(env)});
+    if(request.method==='GET'&&url.pathname==='/api/opencode/status'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      if(!capabilityEnabled('agents.opencode.status'))return permissionDenied('agents.opencode.status');
+      return json(await openCodeStatus(env));
+    }
     if(request.method==='GET'&&url.pathname==='/api/openclaw/status'){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
       if(!capabilityEnabled('agents.openclaw.status'))return permissionDenied('agents.openclaw.status');

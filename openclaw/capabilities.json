@@ -1,0 +1,78 @@
+{
+  "name": "OpenClaw × Wormstar NEO",
+  "version": "2026-10-26",
+  "officialDocs": "https://docs.openclaw.ai",
+  "implementedNow": [
+    "Authenticated Cloudflare Worker proxy to Gateway /v1/chat/completions",
+    "Authenticated Gateway /v1/models health check",
+    "Per-analysis-mode stable owner session key",
+    "OpenClaw model selector on Wormstar iPhone UI, disabled until connected",
+    "OpenClaw control center with real connection state",
+    "Enforced ai.chat and agents.openclaw.chat/status permission manifest",
+    "No browser-exposed operator token or arbitrary admin tool RPC"
+  ],
+  "hostRequired": true,
+  "connected": false,
+  "installationLocation": "separate always-on OpenClaw host",
+  "features": [
+    {
+      "id": "agent_chat",
+      "detail": "Gateway required; chat proxy implemented"
+    },
+    {
+      "id": "sessions",
+      "detail": "Gateway-managed session per Wormstar mode"
+    },
+    {
+      "id": "skills",
+      "detail": "Install approved skills on Gateway host after manual audit"
+    },
+    {
+      "id": "plugins",
+      "detail": "Review and install trusted plugins on Gateway host"
+    },
+    {
+      "id": "channels",
+      "detail": "Configure pairing/allowlists for Telegram/WhatsApp/Slack/etc"
+    },
+    {
+      "id": "cron",
+      "detail": "Enable only approved schedules on Gateway host"
+    },
+    {
+      "id": "browser",
+      "detail": "Disabled by default pending isolation and approval"
+    },
+    {
+      "id": "exec",
+      "detail": "Disabled by default pending sandbox and approval"
+    },
+    {
+      "id": "media",
+      "detail": "Depends on Gateway providers/channels and consent"
+    },
+    {
+      "id": "mobile_nodes",
+      "detail": "Requires device pairing and OS permissions"
+    },
+    {
+      "id": "memory",
+      "detail": "Separate from Wormstar D1; not auto-synced"
+    }
+  ],
+  "security": {
+    "gatewayToken": "Cloudflare secret only",
+    "browserTokenExposure": false,
+    "gatewayHttpAdminProxy": false,
+    "allowExternalModelOverrides": false,
+    "defaultToolPolicy": "minimal",
+    "exec": "deny",
+    "pluginInstall": "manual",
+    "accountOwnerOnly": true
+  },
+  "notes": [
+    "No OpenClaw daemon was started in Cloudflare Workers",
+    "No channel or plugin was auto-installed",
+    "Full OpenClaw functionality depends on a persistent host, model provider and individual permissions"
+  ]
+}

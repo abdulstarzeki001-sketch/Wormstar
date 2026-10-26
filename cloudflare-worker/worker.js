@@ -19,6 +19,8 @@ function studioCapability(path,method) {
   if(path==='/api/studio/opencode/session')return {GET:'agents.opencode.sessions.read',POST:'agents.opencode.sessions.create'}[method]||null;
   if(path==='/api/studio/opencode/prompt')return method==='POST'?'agents.opencode.prompt':null;
   if(path==='/api/studio/opencode/messages')return method==='GET'?'agents.opencode.messages.read':null;
+  if(path==='/api/studio/opencode/progress')return method==='GET'?'agents.opencode.progress':null;
+  if(path==='/api/studio/opencode/interrupt')return method==='POST'?'agents.opencode.interrupt':null;
   if(path==='/api/studio/knowledge')return {GET:'memory.items.read',POST:'memory.items.create'}[method]||null;
   if(path==='/api/studio/export')return method==='GET'?'memory.export':null;
   if(path==='/api/studio/restore')return method==='POST'?'memory.restore':null;
@@ -141,6 +143,7 @@ async function openCodeRequest(env,path,method='GET',payload){
   redirect:'error',cache:'no-store',signal:AbortSignal.timeout(12000)
  });
  if(!r.ok)throw Error('OpenCode server HTTP '+r.status);
+ if(r.status===204)return {ok:true};
  const data=await r.json();
  return data?.data??data;
 }
@@ -330,7 +333,7 @@ async function studioRoutes(request,env,path){
 
 
 
-  if(path==='/api/studio/opencode/session'||path==='/api/studio/opencode/prompt'||path==='/api/studio/opencode/messages'){
+  if(path==='/api/studio/opencode/session'||path==='/api/studio/opencode/prompt'||path==='/api/studio/opencode/messages'||path==='/api/studio/opencode/progress'||path==='/api/studio/opencode/interrupt'){
     if(!openCodeConfigured(env))return json({error:'OpenCode server is not connected; configure a private OpenCode service first'},503);
     try{
       if(path==='/api/studio/opencode/session'&&request.method==='GET'){
@@ -358,6 +361,34 @@ async function studioRoutes(request,env,path){
           return null;
         }).filter(x=>x&&x.text.trim());
         return json({sessionID:id,messages:messages.reverse()});
+      }
+      if(path==='/api/studio/opencode/progress'&&request.method==='GET'){
+        const id=openCodeSessionId(new URL(request.url).searchParams.get('sessionID'));
+        const session=await openCodeRequest(env,'/api/session/'+encodeURIComponent(id));
+        const checks=await Promise.allSettled([
+          openCodeRequest(env,'/api/session/active'),
+          openCodeRequest(env,'/api/session/'+encodeURIComponent(id)+'/diff?context=3')
+        ]);
+        const active=checks[0].status==='fulfilled'&&checks[0].value&&typeof checks[0].value==='object'
+          ?Boolean(checks[0].value[id]):false;
+        const changes=checks[1].status==='fulfilled'
+          ?(Array.isArray(checks[1].value)?checks[1].value:Array.isArray(checks[1].value?.data)?checks[1].value.data:[]):[];
+        const files=changes.slice(0,30).map(change=>{
+          const path=String(change?.file||change?.path||change?.filename||'').slice(0,250);
+          const before=String(change?.before||change?.oldContent||'');
+          const after=String(change?.after||change?.newContent||'');
+          const patch=String(change?.patch||change?.diff||'').slice(0,5000);
+          return {path,added:Number(change?.additions||0)||0,removed:Number(change?.deletions||0)||0,
+            patch:patch||((before||after)?'Diff metadata available in agent workspace; full file content hidden.':'')};
+        });
+        return json({sessionID:id,running:active,session:{id,title:String(session?.title||'').slice(0,120)},
+          files,filesTruncated:changes.length>30,checks:{status:checks[0].status==='fulfilled',diff:checks[1].status==='fulfilled'}});
+      }
+      if(path==='/api/studio/opencode/interrupt'&&request.method==='POST'){
+        const id=openCodeSessionId(body?.sessionID);
+        if(body?.confirm!==true)return json({error:'Interrupt needs explicit owner confirmation'},400);
+        const result=await openCodeRequest(env,'/api/session/'+encodeURIComponent(id)+'/interrupt','POST');
+        return json({sessionID:id,interrupted:result?.interrupted===true});
       }
       if(path==='/api/studio/opencode/prompt'&&request.method==='POST'){
         const id=openCodeSessionId(body?.sessionID);

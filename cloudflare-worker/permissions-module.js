@@ -42,7 +42,8 @@ export default {
     "agents.opencode.status": true,
     "agents.opencode.sessions.read": true,
     "agents.opencode.sessions.create": true,
-    "agents.opencode.prompt": true
+    "agents.opencode.prompt": true,
+    "agents.opencode.messages.read": true
   },
   "limits": {
     "maxPromptCharacters": 12000,

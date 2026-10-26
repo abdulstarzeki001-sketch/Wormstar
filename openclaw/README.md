@@ -78,3 +78,9 @@ Feature list is in openclaw/capabilities.json. Feature inventory is NOT evidence
 Run cd cloudflare-worker && npm test. The OpenClaw regression suite tests missing configuration, auth, payload filtering and mocked Gateway responses. These deterministic tests do not prove a running physical Gateway. Cloudflare D1 references and Supabase owner data are unchanged by the bridge. The original Ollama/Python CLI is untouched.
 
 Source and license: https://github.com/openclaw/openclaw (MIT).
+
+## Ready-to-run persistent OpenClaw host
+
+A production-oriented **standalone Docker Compose Gateway** is now under [`openclaw/host/`](./host/README.md). It includes an official OpenClaw container, persistent state volume, optional secure Cloudflare Tunnel, a one-time bootstrap helper, local real-Gateway verification, security policy hardening and GitHub Actions syntax checks. This host is separate from Wormstar's current Cloudflare Worker; it keeps GPT-OSS and D1 operational even while the remote Gateway is unavailable.
+
+**Connection status is still DISCONNECTED:** the owner's current Cloudflare account rejects Containers (Workers Paid required), contains no configured `OPENCLAW_*` Worker secrets, and has no running VPS/Droplet or connected desktop. GitHub files and passing CI checks do not start an OpenClaw daemon. Provision a paid Cloudflare container (for the official experimental [moltworker](https://github.com/cloudflare/moltworker) setup), or run [the host package](./host/README.md) on an owner-controlled Docker server, then configure Cloudflare Access and the four Worker secrets. Only a live authenticated Gateway probe can mark it connected.

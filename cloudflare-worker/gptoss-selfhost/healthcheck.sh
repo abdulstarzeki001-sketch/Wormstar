@@ -18,6 +18,6 @@ echo "Requesting inference from ORIGINAL locally loaded checkpoint..."
 curl --fail --show-error --silent --max-time 120 \
   -H "Authorization: Bearer ${GPU_API_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d '{"model":"${MODEL_VARIANT}","messages":[{"role":"user","content":"اكتب جملة واحدة: تم تشغيل أوزان GPT-OSS الأصلية بنجاح."}],"max_tokens":128}' \
+  -d "$(printf '{\"model\":\"%s\",\"messages\":[{\"role\":\"user\",\"content\":\"Confirm the original GPT-OSS checkpoint is running.\"}],\"max_tokens\":256}' \"$MODEL_VARIANT\")" \
   http://127.0.0.1:8000/v1/chat/completions
 echo

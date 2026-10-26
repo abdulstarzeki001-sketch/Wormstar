@@ -1,0 +1,12 @@
+[submodule "AutoGPT"]
+	path = AutoGPT
+	url = https://github.com/Significant-Gravitas/AutoGPT.git
+[submodule "MetaGPT"]
+	path = MetaGPT
+	url = https://github.com/FoundationAgents/MetaGPT.git
+[submodule "PentestGPT"]
+	path = PentestGPT
+	url = https://github.com/GreyDGL/PentestGPT.git
+[submodule "langchain"]
+	path = langchain
+	url = https://github.com/langchain-ai/langchain.git

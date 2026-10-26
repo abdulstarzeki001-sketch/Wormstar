@@ -358,6 +358,7 @@ export default {
       }
       const selected=[];
       if(memoryIds.length){
+        if(!policy.memory_enabled)return json({error:'Memory retrieval is disabled by the owner policy'},403);
         if(!env.DB)return json({error:'Saved file retrieval is unavailable'},503);
         for(const id of memoryIds){
           const file=await env.DB.prepare('SELECT id,title,kind,content FROM knowledge WHERE id=?').bind(id).first();

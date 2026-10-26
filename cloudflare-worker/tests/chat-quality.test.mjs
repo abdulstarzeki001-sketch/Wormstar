@@ -38,14 +38,17 @@ async function chat(body,env){
  });
  return worker.fetch(request,env,{});
 }
-test('AI model routing upgrades generic responses and specializes code review',async()=>{
+test('GPT-OSS 120B is the default while explicit GPT-OSS 20B and Qwen choices work',async()=>{
  let selected;
  const env=makeEnv(async(model)=>{selected=model;return {response:'تمت المراجعة'};});
  let result=await chat({mode:'assistant',message:'اشرح المشروع'},env);
  assert.equal(result.status,200);
- assert.match(selected,/llama-3\.3-70b/);
+ assert.equal(selected,'@cf/openai/gpt-oss-120b');
  assert.equal((await result.json()).modelUsed,selected);
- result=await chat({mode:'code',message:'اشرح الدالة'},env);
+ result=await chat({mode:'assistant',message:'اشرح الدالة',engine:'gpt-oss-20b'},env);
+ assert.equal(result.status,200);
+ assert.equal(selected,'@cf/openai/gpt-oss-20b');
+ result=await chat({mode:'code',message:'اشرح الدالة',engine:'qwen-coder'},env);
  assert.equal(result.status,200);
  assert.match(selected,/qwen2\.5-coder-32b/);
 });
@@ -75,13 +78,28 @@ test('Primary model failure falls back without claiming a larger model was used'
  const r=await chat({mode:'assistant',message:'احلل المدخلات'},env);
  assert.equal(r.status,200);
  const data=await r.json();
- assert.equal(data.modelUsed,'@cf/meta/llama-3.1-8b-instruct-fast');
+ assert.equal(data.modelUsed,'@cf/openai/gpt-oss-20b');
+ assert.equal(data.fallbackUsed,true);
+ assert.equal(data.engineRequested,'gpt-oss-120b');
  assert.equal(seen.length,2);
 });
+test('No unsupported model IDs can be injected into the Workers AI backend',async()=>{
+ const result=await chat({mode:'assistant',message:'اختبار',engine:'@cf/untrusted/arbitrary'},makeEnv());
+ assert.equal(result.status,400);
+});
+test('GPT-OSS completion returns only final answer, not model reasoning',async()=>{
+ const env=makeEnv(async()=>({choices:[{message:{content:'الإجابة النهائية',reasoning_content:'internal reasoning is not UI text'}}]}));
+ const result=await chat({mode:'assistant',message:'اختبار',engine:'gpt-oss-120b'},env);
+ assert.equal(result.status,200);
+ const data=await result.json();
+ assert.equal(data.answer,'الإجابة النهائية');
+ assert.ok(!JSON.stringify(data).includes('internal reasoning'));
+});
 test('Chat composer includes explicit memory file picker and avoids hidden iOS controls',()=>{
- for(const id of ['chatMemoryFile','refreshChatFiles','chatContextStatus','prompt','submit'])
+ for(const id of ['chatEngine','chatMemoryFile','refreshChatFiles','chatContextStatus','prompt','submit'])
   assert.ok(html.includes('id="'+id+'"'),id+' present');
  assert.match(html,/memoryIds:el\('chatMemoryFile'\)/);
+ assert.match(html,/engine:el\('chatEngine'\)\.value/);
  assert.match(ui.boot,/ws-chat-screen/);
  assert.match(ui.css,/body\.ws-chat-screen #lab \.panel\{/);
  assert.match(ui.css,/body\.ws-chat-screen #lab \.messages\{/);

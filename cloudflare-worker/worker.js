@@ -65,7 +65,7 @@ async function runOwnWeights(env,engine,messages,maxTokens){
   const remote=await fetch(endpoint.origin+'/v1/chat/completions',{
     method:'POST',
     headers,
-    body:JSON.stringify({model:GPU_MODELS[engine],messages,max_tokens:maxTokens,temperature:0.2,stream:false}),
+    body:JSON.stringify({model:GPU_MODELS[engine],messages,max_tokens:maxTokens,temperature:0.2,stream:false,reasoning_effort:['low','medium','high'].includes(env.GPT_OSS_REASONING_EFFORT)?env.GPT_OSS_REASONING_EFFORT:'medium'}),
     redirect:'error',
     signal:AbortSignal.timeout(90000)
   });

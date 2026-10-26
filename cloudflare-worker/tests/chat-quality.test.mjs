@@ -20,7 +20,7 @@ const source='function add(a,b){return a+b;}';
 function makeEnv(run){
  return {
   WORMSTAR_ACCESS_TOKEN:TOKEN,
-  AI:{run:run||async()=>({response:'الملف يحتوي على دالة add تجمع رقمين.'})},
+  AI:{run:run||(async()=>({response:'الملف يحتوي على دالة add تجمع رقمين.'}))},
   DB:{prepare(sql){return {bind(){return this;},
    async first(){
     if(sql.includes('FROM ai_policy'))return {policy_json:JSON.stringify(activePolicy)};

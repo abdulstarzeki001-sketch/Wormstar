@@ -270,3 +270,7 @@ Original sources:
 - https://developers.cloudflare.com/workers-ai/models/gpt-oss-20b/
 
 OpenAI's GPT-OSS models are Apache-2.0 licensed. If you later need to fine-tune the actual weights, first provision an appropriate GPU training environment, download the original checkpoint separately, prepare an authorized dataset and measurable evaluations, then train and deploy a separate adapter/checkpoint. A D1 or Supabase note insert **cannot** accomplish this. Hosted Workers AI inference may incur model usage charges.
+
+### Run original GPT-OSS weight shards on an owner GPU
+
+For genuine self-hosted **openai/gpt-oss-120b** and **openai/gpt-oss-20b** checkpoints (not just hosted inference), see [gptoss-selfhost/README.md](gptoss-selfhost/README.md). It includes the real Hugging Face shard downloader, checkpoint verifier, Docker/vLLM setup, owner-only HTTPS Cloudflare Access tunnel, and opt-in GPU engine routing. This requires a separately provided GPU server; current Cloudflare Workers AI hosting remains active and no GPU has yet been provisioned.

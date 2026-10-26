@@ -1,0 +1,30 @@
+# Systemd template only; review and adapt paths and permissions before installation.
+# Create a dedicated non-root wormstar-agent user and private directories.
+[Unit]
+Description=Wormstar OpenCode Coding Agent (owner workspace)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wormstar-agent
+Group=wormstar-agent
+WorkingDirectory=/srv/wormstar-agent/workspace
+EnvironmentFile=/etc/wormstar-opencode.env
+ExecStart=/usr/local/bin/opencode serve --hostname 127.0.0.1 --port 4096
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadWritePaths=/srv/wormstar-agent/workspace /var/lib/wormstar-agent
+Environment=HOME=/var/lib/wormstar-agent
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

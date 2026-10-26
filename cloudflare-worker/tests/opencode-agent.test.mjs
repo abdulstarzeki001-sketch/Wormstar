@@ -99,3 +99,50 @@ test('mobile interface has separate OpenCode tab and uses textContent for result
  assert.match(UI.boot,/'studio\/opencode'/);
  assert.match(UI.css,/ode-results/);
 });
+
+
+test('owner can inspect real OpenCode v2 session execution and file diff without raw secrets',async()=>{
+ const original=globalThis.fetch,seen=[];
+ globalThis.fetch=async(url,init)=>{
+  const path=new URL(String(url)).pathname;seen.push(path);
+  if(path==='/api/session/ses_abcdefghijkl')return Response.json({data:{id:'ses_abcdefghijkl',title:'Wormstar audit'}});
+  if(path==='/api/session/active')return Response.json({data:{ses_abcdefghijkl:{type:'running'}}});
+  if(path.endsWith('/diff'))return Response.json({data:[{file:'src/worker.js',additions:3,deletions:1,patch:'@@ -1 +1 @@\n+const ok=true;'}]});
+  throw Error('Unexpected upstream OpenCode route '+path);
+ };
+ try{
+  const response=await request('/api/studio/opencode/progress?sessionID=ses_abcdefghijkl','GET',undefined,env(true));
+  assert.equal(response.status,200);
+  const result=await response.json();
+  assert.equal(result.running,true);
+  assert.equal(result.files[0].path,'src/worker.js');
+  assert.equal(result.files[0].added,3);
+  assert.deepEqual(seen,['/api/session/ses_abcdefghijkl','/api/session/active','/api/session/ses_abcdefghijkl/diff']);
+  assert.doesNotMatch(JSON.stringify(result),/Basic |cf-access-secret/);
+ }finally{globalThis.fetch=original;}
+});
+test('OpenCode session interrupt is opt-in, owner authenticated, and scoped to one session',async()=>{
+ const original=globalThis.fetch,paths=[];
+ globalThis.fetch=async(url,init)=>{paths.push({url:String(url),method:init.method});return Response.json({interrupted:true});};
+ try{
+  const configured=env(true);
+  assert.equal((await request('/api/studio/opencode/interrupt','POST',{sessionID:'ses_abcdefghijkl',confirm:true},configured,false)).status,401);
+  assert.equal((await request('/api/studio/opencode/interrupt','POST',{sessionID:'ses_abcdefghijkl'},configured)).status,400);
+  assert.equal((await request('/api/studio/opencode/interrupt','POST',{sessionID:'../../private',confirm:true},configured)).status,502);
+  const resp=await request('/api/studio/opencode/interrupt','POST',{sessionID:'ses_abcdefghijkl',confirm:true},configured);
+  assert.equal(resp.status,200);
+  assert.equal((await resp.json()).interrupted,true);
+  assert.equal(paths.length,1);
+  assert.equal(paths[0].url,'https://opencode-private.example.com/api/session/ses_abcdefghijkl/interrupt');
+  assert.equal(paths[0].method,'POST');
+ }finally{globalThis.fetch=original;}
+});
+test('OpenCode permissions and mobile monitor render with controlled text only',()=>{
+ for(const capability of ['agents.opencode.progress','agents.opencode.interrupt'])assert.equal(policy.serverCapabilities[capability],true);
+ const raw=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+ const html=JSON.parse(raw.match(/^const HTML = (.+);$/m)[1]);
+ for(const id of ['odeInspect','odeInterrupt','odeProgress','odeAutoPoll'])assert.ok(html.includes('id="'+id+'"'),id);
+ assert.match(html,/pre.textContent=String\(file.patch\)/);
+ assert.match(html,/getBoundingClientRect\(\)\.height>0/);
+ assert.match(UI.css,/ode-monitor-controls/);
+});

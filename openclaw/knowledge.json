@@ -1,0 +1,40 @@
+{
+  "name": "Wormstar OpenClaw knowledge",
+  "version": "2026.10",
+  "ownerNeutral": true,
+  "instructionsPrivilege": false,
+  "entries": [
+    {
+      "slug": "openclaw-gateway-session",
+      "title": "OpenClaw — بوابة الوكيل والجلسات داخل Wormstar",
+      "category": "agent_systems",
+      "kind": "note",
+      "version": "2026.10",
+      "content": "OpenClaw هو نظام Gateway مستقل لتشغيل وكلاء الذكاء؛ لا يعمل كخادم كامل داخل Cloudflare Worker.\nWormstar يحمي /api/openclaw/status وطلبات المحادثة برمز دخول المالك وسياسة القدرات الثابتة.\nخادم OpenClaw يوفّر POST /v1/chat/completions بعد تفعيل gateway.http.endpoints.chatCompletions.enabled=true، وGET /v1/models لإثبات الاتصال.\nيُستخدم model=openclaw/default ومعرّف user=wormstar:owner:<analysis mode> لتفريق الجلسات.\nلا يُعرض رمز OpenClaw في متصفح الآيفون؛ يُحفظ في Cloudflare Secrets مع Cloudflare Access service token.\nيفصل التطبيق بين ذاكرة D1 الخاصة بـWormstar وذاكرة OpenClaw الخاصة بالخادم؛ لا توجد مزامنة تلقائية بينهما.\nمصادر: https://docs.openclaw.ai/gateway/openai-http-api و https://docs.openclaw.ai/gateway/config-gateway"
+    },
+    {
+      "slug": "openclaw-plugins-channels",
+      "title": "OpenClaw — القنوات والمهارات والإضافات والأدوات",
+      "category": "agent_systems",
+      "kind": "note",
+      "version": "2026.10",
+      "content": "تتيح بنية OpenClaw بوابة لقنوات المراسلة مثل Telegram وWhatsApp وSlack وDiscord وغيرها عند تهيئة الإضافات الرسمية.\nتُثبت الإضافات والمهارات على خادم OpenClaw فقط، ولا تنشأ تلقائياً عند اختيار محرك OpenClaw من داخل Wormstar.\nيُطلب تفعيل pairing وقوائم السماح للمرسلين لتجنب دخول أطراف غير مخوّلة.\nكل إضافة طرف ثالث برمجية يُحتمل أن تحصل على صلاحيات؛ راجع مصدرها، ثبت إصداراً مناسباً، وشغّل فحص OpenClaw الأمني بعد تغييرها.\nيجب إبقاء أدوات shell والكتابة والمتصفح والوصول إلى الأجهزة معطلة في قالب Wormstar الأولي حتى تُمنح موافقة صريحة وعزل مناسب.\nوثائق: https://docs.openclaw.ai/tools و https://docs.openclaw.ai/help/faq/security-and-access-control"
+    },
+    {
+      "slug": "openclaw-automations-nodes",
+      "title": "OpenClaw — المهام المجدولة والوسائط واقتران الأجهزة",
+      "category": "agent_systems",
+      "kind": "note",
+      "version": "2026.10",
+      "content": "يدعم OpenClaw ميزات الجدولة (cron) والخطافات والتنبيهات والجلسات، لكن لا تُفعّل تلقائياً في بوابة Wormstar.\nتشغيل أدوات المتصفح أو أوامر النظام عبر وكيل OpenClaw قد يُحدث آثاراً حقيقية؛ يلزم عزل وطلب موافقة عند الأفعال الحساسة.\nيمكن للخادم دعم صور وصوت وفيديو ومستندات بحسب النموذج والإضافات والقنوات المتصلة؛ لا يُعد عرض قائمة الخصائص دليلاً على جاهزيتها.\nتتطلب عقد الهاتف/الحاسوب تثبيت التطبيق أو الخدمة المعنية واقتران الجهاز وموافقات نظام التشغيل.\nفصل أجهزة iPhone وإدارة النسخ الاحتياطية والصلاحيات يتم من خلال أدوات OpenClaw الرسمية لا عبر API إدارة حر في Wormstar.\nمصادر: https://docs.openclaw.ai و https://docs.openclaw.ai/gateway/security/running-the-audit"
+    },
+    {
+      "slug": "openclaw-security-boundary",
+      "title": "OpenClaw — نموذج الحماية ومنع تضارب الصلاحيات",
+      "category": "agent_systems",
+      "kind": "note",
+      "version": "2026.10",
+      "content": "يؤكد توثيق OpenClaw أن رمز المصادقة لواجهة Chat Completions يعادل صلاحية المشغل؛ لذلك استخدم Gateway مخصصاً منخفض الصلاحيات خلف Cloudflare Access.\nتجبر سياسة Wormstar الخادم على التحقق من رمز المالك وأنماط التحليل وحدود الإدخال، ولا تسمح هذه الواجهة باستدعاء RPC أو تثبيت مكونات على خادم الوكيل.\nتحافظ قواعد OpenClaw المستقلة على tools.profile=minimal و tools.exec.mode=deny في البداية.\nسياسة tools.allow/tools.deny تعمل قبل الدعوات؛ رفض exec بالسياسة يمنع أداة التشغيل حتى لو حاول النص المستورد أمرها.\nأوصي بـ openclaw security audit --deep بعد ضبط الاتصال والتغييرات، وفصل بيانات الحسابات والمفاتيح عن ملفات GitHub العامة.\nإذا لم يوجد خادم حقيقي أو انقطع الاتصال، يرد Wormstar بحالة عدم الاتصال، ولا يزعم أن أوامر أو مهام قد نُفذت.\nمصادر: https://docs.openclaw.ai/gateway/openai-http-api و https://docs.openclaw.ai/gateway/config-tools/tool-policy"
+    }
+  ]
+}

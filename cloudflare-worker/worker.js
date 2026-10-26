@@ -15,6 +15,7 @@ function studioCapability(path,method) {
   if(path==='/api/studio/policy/evaluate')return method==='POST'?'ai.policy.evaluate':null;
   if(path==='/api/studio/profile')return {GET:'memory.profile.read',PUT:'memory.profile.write'}[method]||null;
   if(path==='/api/studio/supabase-owner')return {GET:'memory.profile.read',POST:'memory.profile.write'}[method]||null;
+  if(path==='/api/studio/chat-archive')return {GET:'memory.chats.read',PUT:'memory.chats.write',DELETE:'memory.chats.delete'}[method]||null;
   if(path==='/api/studio/knowledge')return {GET:'memory.items.read',POST:'memory.items.create'}[method]||null;
   if(path==='/api/studio/export')return method==='GET'?'memory.export':null;
   if(path==='/api/studio/restore')return method==='POST'?'memory.restore':null;
@@ -156,6 +157,46 @@ async function studioRoutes(request,env,path){
     try{body=await request.json();}catch{return json({error:'Invalid JSON'},400);}
   }
 
+
+
+  if(path==='/api/studio/chat-archive'){
+    const target=request.method==='GET'||request.method==='DELETE'
+      ?new URL(request.url).searchParams.get('mode')
+      :body?.mode;
+    if(!POLICY_MODES.includes(target))return json({error:'Invalid conversation mode'},400);
+    if(request.method==='GET'){
+      const row=await env.DB.prepare('SELECT transcript,revision,updated_at FROM chat_archives WHERE mode=?').bind(target).first();
+      if(!row)return json({found:false,mode:target,revision:0,messages:[]});
+      return json({found:true,mode:target,revision:row.revision,updated_at:row.updated_at,messages:JSON.parse(row.transcript)});
+    }
+    if(request.method==='DELETE'){
+      const result=await env.DB.prepare('DELETE FROM chat_archives WHERE mode=?').bind(target).run();
+      return json({ok:true,deleted:Number(result.meta?.changes||0)>0,mode:target});
+    }
+    if(request.method==='PUT'){
+      const messages=body?.messages;
+      const revision=body?.revision;
+      if(!Number.isSafeInteger(revision)||revision<0)return json({error:'Invalid archive revision'},400);
+      if(!Array.isArray(messages)||messages.length>18)return json({error:'Archive must contain at most 18 messages'},400);
+      let total=0;
+      const safe=[];
+      for(const entry of messages){
+        if(!entry||typeof entry!=='object'||!['user','assistant'].includes(entry.role)||typeof entry.content!=='string'||!entry.content.trim()||entry.content.length>5000)
+          return json({error:'Invalid conversation message'},400);
+        total+=entry.content.length;
+        if(total>26000)return json({error:'Archive exceeds 26000 characters'},413);
+        const memory=Array.isArray(entry.memoryUsed)?entry.memoryUsed.slice(0,4).filter(item=>item&&typeof item.title==='string'&&typeof item.id==='string').map(item=>({id:item.id.slice(0,64),title:item.title.slice(0,180)})):[];
+        safe.push({role:entry.role,content:entry.content,modelUsed:typeof entry.modelUsed==='string'?entry.modelUsed.slice(0,120):'',memoryUsed:memory});
+      }
+      const payload=JSON.stringify(safe);
+      if(payload.length>80000)return json({error:'Archive payload too large'},413);
+      const result=revision===0
+        ?await env.DB.prepare('INSERT OR IGNORE INTO chat_archives(mode,transcript) VALUES(?,?)').bind(target,payload).run()
+        :await env.DB.prepare('UPDATE chat_archives SET transcript=?,revision=revision+1,updated_at=CURRENT_TIMESTAMP WHERE mode=? AND revision=?').bind(payload,target,revision).run();
+      if(Number(result.meta?.changes||0)!==1)return json({error:'This conversation changed in another session. Restore or refresh before saving to avoid overwriting it.',code:'ARCHIVE_CONFLICT'},409);
+      return json({ok:true,mode:target,revision:revision+1,stored:safe.length,characters:total});
+    }
+  }
 
   if(path==='/api/studio/supabase-owner'){
     if(request.method==='GET'){

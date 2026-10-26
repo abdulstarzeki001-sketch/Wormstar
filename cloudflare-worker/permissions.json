@@ -36,7 +36,11 @@
     "memory.chats.write": true,
     "memory.chats.delete": true,
     "agents.openclaw.status": true,
-    "agents.openclaw.chat": true
+    "agents.openclaw.chat": true,
+    "agents.opencode.status": true,
+    "agents.opencode.sessions.read": true,
+    "agents.opencode.sessions.create": true,
+    "agents.opencode.prompt": true
   },
   "limits": {
     "maxPromptCharacters": 12000,

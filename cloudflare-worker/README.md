@@ -236,3 +236,18 @@ The application is a PWA/Home Screen web app, **not an App Store native iOS appl
 - Lab logout does not delete a separately remembered Supabase login. Use Disconnect Supabase to end that session. Disconnecting does NOT transfer the permanently owner-locked memory to another Auth identity; documented admin transfer would be needed.
 - Importing missing starter references now mirrors them to Supabase if the user is authenticated. Still take periodic full JSON backups. No password, service_role key or refresh token is saved in D1 or GitHub.
 - Regression tests: cloudflare-worker/tests/owner-memory-binding.test.mjs. D1 migration: cloudflare-worker/migrations/20261025_supabase_owner_binding.sql.
+
+## Private chat history (owner opt-in)
+
+Wormstar chat memory is **separate from the AI reference knowledge library**. User conversations are not automatically converted into knowledge or model training samples.
+
+- In the chat composer, open **☁ سجل المحادثات السحابي** to explicitly save, restore or delete a per-mode transcript from **Cloudflare D1**.
+- The **automatic backup** checkbox is off by default on a new device. Once opted in on that device, it saves after a successful model reply. Only the preference toggle is stored in browser localStorage; conversation text is not stored there.
+- The private `/api/studio/chat-archive?mode=...` endpoint supports GET and DELETE; `PUT /api/studio/chat-archive` stores a transcript. All require the Wormstar owner access token and explicit server permission capabilities: `memory.chats.read`, `memory.chats.write`, `memory.chats.delete`.
+- Saved transcripts are bounded to the last 18 messages / 26,000 characters per analysis mode, and each mode has a revision counter. If another browser updates a record first, the Worker rejects stale updates with HTTP 409 rather than silently overwriting them.
+- Cloudflare D1 holds chat archive content; this is **not end-to-end encrypted**. Avoid entering credentials, secrets or personal details in chats, and delete unwanted cloud transcripts with the in-app control.
+- **جلسة جديدة** clears local visible messages for that mode but deliberately does not erase its previous cloud backup. A distinct confirmation is required to delete the archive.
+- Chat requests use timeout-based network failure handling: unsuccessful sends restore the unsent prompt and remove the speculative user bubble instead of creating duplicate history.
+- D1 migration: `cloudflare-worker/migrations/20261026_chat_archives.sql`, executed before deploying routes. Regression tests: `cloudflare-worker/tests/chat-archive.test.mjs`.
+
+Other application knowledge in D1, Supabase Auth, and the original Python/Ollama CLI are unchanged by this archive feature.

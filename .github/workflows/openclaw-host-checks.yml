@@ -20,6 +20,10 @@ jobs:
         run: |
           bash -n openclaw/host/bootstrap.sh
           bash -n openclaw/host/verify.sh
+      - name: Run secret-safe host readiness checks (CI is not a live Gateway)
+        run: |
+          python3 -m py_compile openclaw/host/preflight.py
+          python3 openclaw/host/preflight.py --ci --json
       - name: Validate Docker Compose without using real credentials
         env:
           OPENCLAW_GATEWAY_TOKEN: "000000000000000000000000000000000000000000000000"

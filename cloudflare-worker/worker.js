@@ -42,7 +42,9 @@ const WORMSTAR_ENGINES = Object.freeze({
    shell, plugins and channels are intentionally NOT exposed as HTTP routes. */
 function openClawConfigured(env){
   return typeof env.OPENCLAW_GATEWAY_URL==='string'&&env.OPENCLAW_GATEWAY_URL.length>11
-      &&typeof env.OPENCLAW_GATEWAY_TOKEN==='string'&&env.OPENCLAW_GATEWAY_TOKEN.length>=20;
+      &&typeof env.OPENCLAW_GATEWAY_TOKEN==='string'&&env.OPENCLAW_GATEWAY_TOKEN.length>=20
+      &&typeof env.OPENCLAW_ACCESS_CLIENT_ID==='string'&&env.OPENCLAW_ACCESS_CLIENT_ID.length>=5
+      &&typeof env.OPENCLAW_ACCESS_CLIENT_SECRET==='string'&&env.OPENCLAW_ACCESS_CLIENT_SECRET.length>=12;
 }
 function openClawTarget(env){
   if(!openClawConfigured(env))throw Error('OpenClaw Gateway not connected');

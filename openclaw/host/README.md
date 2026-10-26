@@ -62,3 +62,32 @@ Only chat/status are proxied through Wormstar. Installing skills, connecting Tel
 **Alternative: Cloudflare-native container deployment.** The official experimental [Cloudflare moltworker](https://github.com/cloudflare/moltworker) project runs a complete OpenClaw daemon in Cloudflare Sandbox. It requires a **Workers Paid** account; persistent state across restarts should use R2 backups. The currently connected account has neither Containers access nor R2 enabled. Enabling paid Containers or supplying a separately funded VPS is an account-owner action; this repository does not attempt to change billing.
 
 Official references: [Docker installation](https://docs.openclaw.ai/install/docker), [Gateway HTTP API](https://docs.openclaw.ai/gateway/openai-http-api), [OpenClaw security](https://docs.openclaw.ai/gateway/security), [Cloudflare moltworker](https://github.com/cloudflare/moltworker).
+
+## Verify this host before installing
+
+Run the read-only diagnostic first:
+
+```bash
+cd openclaw/host
+python3 preflight.py --json
+```
+
+This checks whether Docker Compose, the Docker daemon, the private `.env`,
+disk, RAM, optional NVIDIA GPUs, and Cloudflare Tunnel prerequisites are
+available. It reports booleans and capacities, **never the values of credentials**.
+CI uses `python3 preflight.py --ci --json`, which checks source integrity
+but explicitly **does not claim a real Gateway is running**.
+
+For this project's current accounts (verified 2026-10-26), Cloudflare
+Containers API returned `401 Workers Paid required`, R2 returned
+`403 please enable R2`, and Remote Desktop Commander had no device online.
+The owner must enable a billed compute option or connect an authorized always-on
+device before the standalone Gateway can start. We do not automatically
+activate a paid plan or spend cloud credits. After a host exists,
+run `bash bootstrap.sh` and `bash verify.sh` from the same directory,
+then use the protected Wormstar OpenClaw status check.
+
+**NVIDIA GPU:** not necessary for the OpenClaw Gateway. If you want to
+run GPT-OSS 120B checkpoint weights on your own GPU, that is a separate
+large-memory inference server managed in `cloudflare-worker/gptoss-selfhost/`.
+It can subsequently be configured as a provider for OpenClaw if supported.

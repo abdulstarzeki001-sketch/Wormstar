@@ -18,6 +18,7 @@ function studioCapability(path,method) {
   if(path==='/api/studio/chat-archive')return {GET:'memory.chats.read',PUT:'memory.chats.write',DELETE:'memory.chats.delete'}[method]||null;
   if(path==='/api/studio/opencode/session')return {GET:'agents.opencode.sessions.read',POST:'agents.opencode.sessions.create'}[method]||null;
   if(path==='/api/studio/opencode/prompt')return method==='POST'?'agents.opencode.prompt':null;
+  if(path==='/api/studio/opencode/messages')return method==='GET'?'agents.opencode.messages.read':null;
   if(path==='/api/studio/knowledge')return {GET:'memory.items.read',POST:'memory.items.create'}[method]||null;
   if(path==='/api/studio/export')return method==='GET'?'memory.export':null;
   if(path==='/api/studio/restore')return method==='POST'?'memory.restore':null;
@@ -329,7 +330,7 @@ async function studioRoutes(request,env,path){
 
 
 
-  if(path==='/api/studio/opencode/session'||path==='/api/studio/opencode/prompt'){
+  if(path==='/api/studio/opencode/session'||path==='/api/studio/opencode/prompt'||path==='/api/studio/opencode/messages'){
     if(!openCodeConfigured(env))return json({error:'OpenCode server is not connected; configure a private OpenCode service first'},503);
     try{
       if(path==='/api/studio/opencode/session'&&request.method==='GET'){
@@ -340,6 +341,23 @@ async function studioRoutes(request,env,path){
         const title=textInput(body,'title',100).trim()||'Wormstar coding session';
         const agent=await openCodeRequest(env,'/api/session','POST',{title});
         return json({session:agent});
+      }
+      if(path==='/api/studio/opencode/messages'&&request.method==='GET'){
+        const id=openCodeSessionId(new URL(request.url).searchParams.get('sessionID'));
+        const rows=await openCodeRequest(env,'/api/session/'+encodeURIComponent(id)+'/message?limit=20&order=desc');
+        const data=Array.isArray(rows)?rows:Array.isArray(rows?.data)?rows.data:[];
+        // Do not expose hidden reasoning, command arguments, internal tool inputs,
+        // untrusted file snapshots, provider metadata or secrets in the mobile UI.
+        const messages=data.slice(0,20).map(item=>{
+          if(item?.type==='user'&&typeof item.text==='string')
+            return {role:'user',text:item.text.slice(0,3200)};
+          if(item?.type==='assistant'){
+            const parts=Array.isArray(item.content)?item.content.filter(p=>p?.type==='text'&&typeof p.text==='string').slice(-5):[];
+            return {role:'assistant',text:parts.map(p=>p.text).join('\n').slice(0,5500)};
+          }
+          return null;
+        }).filter(x=>x&&x.text.trim());
+        return json({sessionID:id,messages:messages.reverse()});
       }
       if(path==='/api/studio/opencode/prompt'&&request.method==='POST'){
         const id=openCodeSessionId(body?.sessionID);

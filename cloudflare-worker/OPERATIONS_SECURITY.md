@@ -1,8 +1,12 @@
 # Wormstar Cloudflare operations: caching, security and monitoring
 
-Last reviewed: 2026-10-27. Applies to the existing Worker wormstar-ai-lab
-and optional external WormGPT API engine. This is a source-code configuration
-guide, not evidence that a new Worker version was deployed.
+Last reviewed: 2026-10-27. Applies to Worker wormstar-ai-lab and the optional
+external WormGPT API. **Production state verified:** Cloudflare Worker version
+37 (`ba618134-5c38-4d65-8e38-6a998a7cb044`) deployed to 100% of traffic
+on 2026-10-27. Previous working version 36 (`f1dd59b2-9edc-47a2-ac6d-ebff11b5bd78`)
+remains available for rollback. TinyFish checked the protected dashboard,
+`/api/health` JSON (`ok: true`) and `/icon.svg` (HTTP 200) after deployment.
+The browser-based test could not directly read HTTP response headers.
 
 ## Caching: intentionally separate public assets and private APIs
 
@@ -57,16 +61,16 @@ Reference: https://developers.cloudflare.com/kv/get-started/
   required for this URL.
 - The Worker already checks the WORMSTAR_ACCESS_TOKEN bearer secret on
   protected API routes. This code change keeps that check in place.
-- Cloudflare Access can now protect a single Worker including workers.dev
-  directly. Enable it under Workers & Pages -> wormstar-ai-lab -> Access
-  after identifying the intended owner identity (e.g. exact email address
-  and identity provider). Require that identity; do not use an Everyone
-  allow rule. If API clients need unattended access, configure a scoped
-  Cloudflare Access service token and preserve the Worker bearer check.
+- Cloudflare Access **is enabled** for precisely this Worker, including its
+  `workers.dev` and preview addresses (Worker destination); it allows only
+  the account owner's exact verified email through the existing Cloudflare
+  identity provider, with an 8-hour session. It does not grant access to
+  other Workers. An Everyone allow rule is not present.
+- This Access layer applies in addition to the Worker bearer-token check.
+  If API clients need unattended access, configure a scoped Access service
+  token and a separate Service Auth policy; none has been created yet.
 - Existing Access applications on this Cloudflare account belong to other
   services. Do not reuse their policies or risk locking out the owner.
-- Access was not enabled because the intended owner identity and
-  service-token policy have not been provided.
 
 Reference: https://developers.cloudflare.com/workers/configuration/cloudflare-access/
 
@@ -86,20 +90,24 @@ until both provider secrets are configured and verified.
 ## Observability and alerts
 
 - wrangler.toml enables Workers Logs with 10% sampling,
-  invocation_logs = false, redact_query_string = true, and traces disabled
-  to reduce collection of request metadata. The Cloudflare Worker settings
-  API was also updated and read back successfully on 2026-10-27; the live
-  settings preserved AI, DB and WORMSTAR_ACCESS_TOKEN bindings. This does
-  not mean the newly merged application code was deployed.
+  invocation_logs = false, redact_query_string = true, and traces disabled;
+  `[observability.issues] enabled = true` groups production failures.
+  Cloudflare's Worker settings API was updated and verified live on
+  2026-10-27. The version 37 deployment retained bindings AI, DB and
+  WORMSTAR_ACCESS_TOKEN, including the original secret without revealing it.
 - Explicit model-backend failure events contain only an event name, fixed
   provider identifier and HTTP status. They deliberately omit user prompts,
   chat history, owner identity, IP, Authorization headers, tokens and
   upstream error messages.
-- After deployment, review Worker -> Observability -> Logs, Metrics and
-  Errors for 5xx rate, backend failures and latency. Workers analytics
-  already exists independently of Sentry.
-- To create Cloudflare Notifications alerts, choose an approved recipient
-  and thresholds first. No alert was created without a destination.
+- Worker -> Observability -> Logs, Metrics and Issues provides native
+  failure diagnostics; Issues has been enabled for wormstar-ai-lab.
+- A Cloudflare Notifications policy named **Wormstar / Workers real-time
+  errors** (`d9307de36e4f43a2acb276721a07a7c1`) is **enabled**, sending
+  `workers_observability_real_time_issue` notices to the account owner's
+  already verified email. This notification type is account-level: it may
+  include issues in other Workers. Do not claim a per-Worker filter or alert
+  delivery confirmation without independent testing.
+- There is no separate Sentry account integration or DSN.
 - Sentry was not installed because no approved DSN, data-handling policy
   or privacy scrubber was provided. If added later, strip prompts, messages,
   Authorization, cookies and attached knowledge from captured events.
@@ -117,9 +125,10 @@ Offline checks run in GitHub Actions and can be run from a trusted checkout:
     cd cloudflare-worker
     npm test
 
-A successful GitHub test does not deploy to Cloudflare. Deploy only after
-reviewing the changes and confirming the existing D1, Workers AI and owner
-secret bindings are preserved:
+CI tests alone do not deploy to Cloudflare. Version 37 was uploaded by the
+Cloudflare Versions API and separately deployed; its D1, AI and secret
+bindings were checked before and after. For subsequent changes, validate
+all bindings before deployment and keep a rollback version:
 
     cd cloudflare-worker
     npx wrangler deploy
@@ -131,3 +140,19 @@ Then check the deployed HTTPS Worker:
 - GET / -> 200, no-store, CSP, X-Frame-Options: DENY.
 - With an authorized owner token, verify the existing Workers AI chat still
   works. Do not send real private data to an unverified external provider.
+
+## Remaining external dependencies and known limits
+
+- The health endpoint advertises the public model label `gpt-oss-120b`, but
+  its reported actual Cloudflare model backend is `@cf/openai/gpt-oss-20b`.
+  Do not claim a self-hosted 120B model or GPU inference; `gpuSelfHostConfigured`
+  currently reports `false`.
+- The external WormGPT API remains disabled pending verified provider
+  credentials and model ID. OpenCode requires a separately provisioned
+  private host; Cloudflare Pages/Worker alone does not run its server.
+- Sentry requires an explicitly authorized DSN and privacy review and is
+  intentionally not enabled. Worker native Issues and Cloudflare Logs are
+  operating instead.
+- No KV namespace or global one-hour edge cache rule was created. D1 already
+  stores private memory; public asset cache response headers are deliberately
+  narrow and have not been separately confirmed as edge cache HITs.

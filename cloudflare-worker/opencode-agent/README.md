@@ -46,3 +46,11 @@ The OpenCode application requires a Bun/Node runtime, filesystem, process execut
 Official references: https://github.com/anomalyco/opencode · https://opencode.ai/v2/docs · https://opencode.ai/v2/docs/agents · https://opencode.ai/v2/docs/api
 
 **OpenCode host still needs provisioning and four Cloudflare secrets**. Its model provider credentials are configured separately from Wormstar Workers AI.
+
+## Ready-to-run host preparation and CI verification
+
+- [HOST_SETUP.md](HOST_SETUP.md): dedicated Linux host, official pinned v2 CLI, systemd, Cloudflare Tunnel/Access and required secrets.
+- [bootstrap-host.sh](bootstrap-host.sh): install the reviewed `@opencode/cli@2.1.4` package on the **host** as a non-root user; it does not expose or start a server.
+- `.github/workflows/opencode-v2-protocol-smoke.yml`: GitHub Actions isolated local server smoke test. It does not verify production connectivity or execute model prompts.
+
+Do not mark the live agent as connected until the host, Access policy and all four Cloudflare Worker secrets are configured and verified.

@@ -1,0 +1,69 @@
+name: OpenCode v2 Protocol Smoke
+
+on:
+  pull_request:
+    paths:
+      - 'cloudflare-worker/opencode-agent/**'
+      - '.github/workflows/opencode-v2-protocol-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'cloudflare-worker/opencode-agent/**'
+      - '.github/workflows/opencode-v2-protocol-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-opencode-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          submodules: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download pinned official OpenCode CLI
+        run: |
+          npm install --global --prefix "$RUNNER_TEMP/opencode" --no-audit --no-fund @opencode/cli@2.1.4
+          "$RUNNER_TEMP/opencode/bin/opencode" --version
+      - name: Verify private server, auth and v2 session endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$RUNNER_TEMP/opencode/bin:$PATH"
+          export OPENCODE_SERVER_PASSWORD="$(openssl rand -hex 32)"
+          echo "::add-mask::$OPENCODE_SERVER_PASSWORD"
+          mkdir -p "$RUNNER_TEMP/opencode-smoke"
+          cd "$RUNNER_TEMP/opencode-smoke"
+          git init -q
+          opencode serve --hostname 127.0.0.1 --port 4096 > "$RUNNER_TEMP/opencode-smoke.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent --show-error --max-time 3 --basic --user "opencode:$OPENCODE_SERVER_PASSWORD" 'http://127.0.0.1:4096/api/session?limit=1' >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          if [[ "$ready" != 1 ]]; then
+            echo "OpenCode server failed to become ready."
+            tail -n 80 "$RUNNER_TEMP/opencode-smoke.log"
+            exit 1
+          fi
+          bash "$GITHUB_WORKSPACE/cloudflare-worker/opencode-agent/verify-v2.sh"
+          unauth_code="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 5 'http://127.0.0.1:4096/api/session?limit=1')"
+          if [[ "$unauth_code" != 401 ]]; then
+            echo "Expected HTTP 401 without Basic Auth; got $unauth_code" >&2
+            exit 1
+          fi
+          echo "OpenCode v2 local smoke checks passed. No model prompts or production resources were used."

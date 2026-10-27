@@ -487,13 +487,23 @@ async function studioRoutes(request,env,path){
     }catch(e){return json({error:'Invalid test policy: '+e.message},400);}
   }
   if(path==='/api/studio/profile'){
-    if(request.method==='GET')return json(await getProfile(env));
+    if(request.method==='GET'){
+      if(new URL(request.url).searchParams.get('history')==='1'){
+        const history=(await env.DB.prepare("SELECT id,payload,saved_at FROM wormstar_config_history WHERE kind='profile' ORDER BY id DESC LIMIT 20").all()).results||[];
+        return json({revisions:history});
+      }
+      return json(await getProfile(env));
+    }
     if(request.method==='PUT'){
       try{
         const name=textInput(body,'name',90)||'Wormstar';
         const instructions=textInput(body,'instructions',11000);
         const constraints=textInput(body,'constraints',6000);
-        await env.DB.prepare('UPDATE ai_profile SET name=?,instructions=?,constraints=?,updated_at=CURRENT_TIMESTAMP WHERE id=1').bind(name,instructions,constraints).run();
+        const previous=await getProfile(env);
+        await env.DB.batch([
+          env.DB.prepare('INSERT INTO wormstar_config_history(kind,payload) VALUES(?,?)').bind('profile',JSON.stringify(previous)),
+          env.DB.prepare('UPDATE ai_profile SET name=?,instructions=?,constraints=?,updated_at=CURRENT_TIMESTAMP WHERE id=1').bind(name,instructions,constraints)
+        ]);
         return json({saved:true});
       }catch(e){return json({error:e.message},400);}
     }
@@ -573,20 +583,43 @@ async function studioRoutes(request,env,path){
   if(match){
     const id=match[1];
     if(request.method==='GET'){
+      if(new URL(request.url).searchParams.get('history')==='1'){
+        const revisions=(await env.DB.prepare('SELECT id,title,kind,saved_at FROM knowledge_revisions WHERE item_id=? ORDER BY id DESC LIMIT 15').bind(id).all()).results||[];
+        return json({revisions});
+      }
       const row=await env.DB.prepare('SELECT * FROM knowledge WHERE id=?').bind(id).first();
       return row?json(row):json({error:'Not found'},404);
     }
     if(request.method==='PUT'){
       try{
-        const title=textInput(body,'title',130),content=textInput(body,'content',60000);
-        if(!title||!content)return json({error:'Title and content are required'},400);
-        const result=await env.DB.prepare('UPDATE knowledge SET title=?,content=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title,content,id).run();
-        return result.meta?.changes?json({updated:true}):json({error:'Not found'},404);
-      }catch(e){return json({error:e.message},400);}
+        let title,content,kind;
+        if(body?.restore_revision!==undefined){
+          if(!Number.isSafeInteger(body.restore_revision)||body.restore_revision<=0)return json({error:'Invalid revision ID'},400);
+          const old=await env.DB.prepare('SELECT title,kind,content FROM knowledge_revisions WHERE id=? AND item_id=?').bind(body.restore_revision,id).first();
+          if(!old)return json({error:'Revision was not found'},404);
+          title=old.title;content=old.content;kind=old.kind;
+        }else{
+          title=textInput(body,'title',130);content=textInput(body,'content',60000);
+          if(!title||!content)return json({error:'Title and content are required'},400);
+        }
+        const current=await env.DB.prepare('SELECT id FROM knowledge WHERE id=?').bind(id).first();
+        if(!current)return json({error:'Not found'},404);
+        const statements=[
+          env.DB.prepare('INSERT INTO knowledge_revisions(item_id,title,kind,content) SELECT id,title,kind,content FROM knowledge WHERE id=?').bind(id),
+          kind
+            ?env.DB.prepare('UPDATE knowledge SET title=?,kind=?,content=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title,kind,content,id)
+            :env.DB.prepare('UPDATE knowledge SET title=?,content=?,updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(title,content,id)
+        ];
+        const result=await env.DB.batch(statements);
+        return result[1]?.meta?.changes?json({updated:true,restored:!!kind}):json({error:'Not found'},404);
+      }catch(e){return json({error:'Could not update knowledge item'},400);}
     }
     if(request.method==='DELETE'){
       if(!(await getPolicy(env)).allow_memory_delete)return json({error:'Knowledge deletion is disabled by the owner policy'},403);
-      await env.DB.prepare('DELETE FROM knowledge WHERE id=?').bind(id).run();
+      await env.DB.batch([
+        env.DB.prepare('DELETE FROM knowledge_revisions WHERE item_id=?').bind(id),
+        env.DB.prepare('DELETE FROM knowledge WHERE id=?').bind(id)
+      ]);
       return json({deleted:true});
     }
   }

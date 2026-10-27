@@ -1,4 +1,5 @@
 
+import {termsFor,rankKnowledge} from './rag-engine.js';
 import LAB_POLICY_MANIFEST from './permissions-module.js';
 import FUTURE_UI from './future-ui.js';
 import { invokeWormGPT, wormgptConfigured } from './wormgpt-provider.js';
@@ -254,38 +255,16 @@ function modeKind(v){return ['file','note','correction'].includes(v)?v:'note';}
 async function getProfile(env){
   return (await env.DB.prepare('SELECT name,instructions,constraints,updated_at FROM ai_profile WHERE id=1').first())||{name:'Wormstar',instructions:'',constraints:''};
 }
-function termsFor(query){
-  const stop=new Set(['انا','أَنا','أنت','انت','هذا','هذه','ذلك','تلك','هذي','من','في','على','الى','إلى','عن','مع','ماذا','كيف','هل','كل','ذلك','قمت','قمتُ','قام','شيء','اخر','أخرى','عندي','هناك','انه','أنها','التي','الذي','الذين','بما','بعد','عند','تم','تحت','لقد','كان','صار','هو','هي','نعم','لا','ok','yes','the','and','for','you','are','with','from','this','that','please','can','did','done','has','have','was','file','files']);
-  const terms=query.toLowerCase().replace(/[\u064B-\u065F\u0670]/g,'').split(/[^a-zA-Z0-9_\u0600-\u06ff]+/g).filter(t=>t.length>=2&&t.length<=45&&!stop.has(t));
-  return [...new Set(terms)].slice(0,15);
-}
 async function relevantKnowledge(env,query){
   const terms=termsFor(query);
   if(!terms.length)return [];
-  const rows=(await env.DB.prepare('SELECT id,title,content,kind FROM knowledge ORDER BY updated_at DESC LIMIT 120').all()).results||[];
-  const scored=rows.map(row=>{
-    const title=String(row.title||'').toLowerCase(),body=String(row.content||'').toLowerCase();
-    let points=0,hits=0,titleMatches=0;
-    for(const term of terms){
-      const t=term.replace(/^ال(?=[\u0600-\u06ff]{3,})/,'');
-      const keys=t!==term?[term,t]:[term];
-      const inTitle=keys.some(k=>title.includes(k)),inBody=keys.some(k=>body.includes(k));
-      if(inTitle){points+=10;titleMatches++;hits++;}
-      else if(inBody){points+=3;hits++;}
-    }
-    return {row,points,hits,titleMatches};
-  }).filter(x=>x.titleMatches>=1||x.hits>=2).sort((a,b)=>b.points-a.points).slice(0,3);
-  let budget=8300;
-  return scored.map(({row})=>{
-    const lines=String(row.content||'').split('\n'),matches=[];
-    for(let i=0;i<lines.length;i++)if(terms.some(t=>lines[i].toLowerCase().includes(t)))matches.push(i);
-    const indices=new Set();
-    for(let i=0;i<Math.min(4,lines.length);i++)indices.add(i);
-    for(const i of matches.slice(0,9))for(let j=Math.max(0,i-1);j<=Math.min(lines.length-1,i+1);j++)indices.add(j);
-    const excerpt=[...indices].sort((a,b)=>a-b).map(i=>lines[i]).join('\n').slice(0,Math.min(2800,budget));
-    budget-=excerpt.length;
-    return {id:row.id,title:row.title,kind:row.kind,content:excerpt};
-  }).filter(x=>x.content);
+  // Search the full library, not only the newest 120 items.
+  const sqlTerms=[...new Set(terms.slice(0,8).flatMap(t=>t.startsWith('ال')&&t.length>4?[t,t.slice(2)]:[t]))].slice(0,12);
+  const clause=sqlTerms.map(()=>'(instr(lower(title), ?) > 0 OR instr(lower(content), ?) > 0)').join(' OR ');
+  const params=sqlTerms.flatMap(t=>[t,t]);
+  const sql='SELECT id,title,kind,content,updated_at FROM knowledge WHERE '+clause+' ORDER BY updated_at DESC LIMIT 160';
+  const rows=(await env.DB.prepare(sql).bind(...params).all()).results||[];
+  return rankKnowledge(rows,query,{limit:4,budget:8500});
 }
 
 const POLICY_MODES=['assistant','code','logs','ioc','ctf','report'];
@@ -521,7 +500,7 @@ async function studioRoutes(request,env,path){
   }
   if(path==='/api/studio/knowledge'){
     if(request.method==='GET'){
-      const rows=(await env.DB.prepare("SELECT id,title,kind,substr(content,1,140) AS preview,created_at,updated_at FROM knowledge ORDER BY updated_at DESC LIMIT 120").all()).results||[];
+      const rows=(await env.DB.prepare("SELECT id,title,kind,substr(content,1,140) AS preview,created_at,updated_at FROM knowledge ORDER BY updated_at DESC LIMIT 500").all()).results||[];
       return json({items:rows});
     }
     if(request.method==='POST'){
@@ -529,7 +508,9 @@ async function studioRoutes(request,env,path){
         const title=textInput(body,'title',130),content=textInput(body,'content',60000);
         if(!title||!content)return json({error:'Title and content are required'},400);
         const count=await env.DB.prepare('SELECT count(*) AS n FROM knowledge').first();
-        if(Number(count?.n||0)>=120)return json({error:'Memory limit reached (120 entries)'},409);
+        if(Number(count?.n||0)>=500)return json({error:'Memory limit reached (500 entries)'},409);
+        const existing=await env.DB.prepare('SELECT id FROM knowledge WHERE title=? AND content=? LIMIT 1').bind(title,content).first();
+        if(existing)return json({id:existing.id,title,saved:true,duplicate:true});
         const id=crypto.randomUUID();
         await env.DB.prepare('INSERT INTO knowledge(id,title,kind,content) VALUES(?,?,?,?)').bind(id,title,modeKind(body.kind),content).run();
         return json({id,title,saved:true},201);
@@ -547,7 +528,7 @@ async function studioRoutes(request,env,path){
       const existing=await env.DB.prepare('SELECT id FROM knowledge WHERE id=?').bind(id).first();
       if(existing)return json({imported:false,id,reason:'already present'});
       const count=await env.DB.prepare('SELECT COUNT(*) AS n FROM knowledge').first();
-      if(Number(count?.n||0)>=120)return json({error:'Memory library is full'},409);
+      if(Number(count?.n||0)>=500)return json({error:'Memory library is full'},409);
       await env.DB.prepare('INSERT OR IGNORE INTO knowledge(id,title,kind,content) VALUES(?,?,?,?)')
         .bind(id,title,modeKind(input.kind),content).run();
       return json({imported:true,id});
@@ -565,7 +546,7 @@ async function studioRoutes(request,env,path){
          /^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))
         return json({error:'A public HTTPS webpage is required'},400);
       const count=await env.DB.prepare('SELECT COUNT(*) AS n FROM knowledge').first();
-      if(Number(count?.n||0)>=120)return json({error:'The knowledge library is full'},409);
+      if(Number(count?.n||0)>=500)return json({error:'The knowledge library is full'},409);
       const result=await fetch('https://api.firecrawl.dev/v2/scrape',{
         method:'POST',
         headers:{'Authorization':'Bearer '+env.FIRECRAWL_API_KEY,'Content-Type':'application/json'},
@@ -585,7 +566,7 @@ async function studioRoutes(request,env,path){
   }
   if(path==='/api/studio/export'&&request.method==='GET'){
     const profile=await getProfile(env);
-    const knowledge=(await env.DB.prepare('SELECT id,title,kind,content,created_at,updated_at FROM knowledge ORDER BY created_at DESC LIMIT 120').all()).results||[];
+    const knowledge=(await env.DB.prepare('SELECT id,title,kind,content,created_at,updated_at FROM knowledge ORDER BY created_at DESC LIMIT 500').all()).results||[];
     return json({version:2,exported_at:new Date().toISOString(),profile,policy:await getPolicy(env),knowledge});
   }
   const match=/^\/api\/studio\/knowledge\/([a-f0-9-]{36})$/.exec(path);
@@ -625,7 +606,7 @@ export default {
     if(request.method==='GET'&&url.pathname==='/manifest.webmanifest'){
       return new Response(JSON.stringify({id:'/',name:'Wormstar NEO — AI Mission Control',short_name:'Wormstar NEO',description:'Private cyber intelligence and AI memory command center',start_url:'/?source=homescreen',scope:'/',display:'standalone',orientation:'any',background_color:'#060c19',theme_color:'#070c19',dir:'rtl',lang:'ar',icons:[{src:'/apple-touch-icon.png?v=20261025b',sizes:'96x96',type:'image/png',purpose:'any'},{src:'/icon.svg?v=20261025b',sizes:'any',type:'image/svg+xml',purpose:'any maskable'}]}),{headers:{...PUBLIC_ASSET_HEADERS,'Content-Type':'application/manifest+json;charset=utf-8'}});
     }
-    if(request.method==='GET'&&url.pathname==='/api/health')return json({ok:true,service:'wormstar-cloudflare-lab',model:'gpt-oss-120b',modelBackend:'@cf/openai/gpt-oss-120b',fastModel:'@cf/openai/gpt-oss-20b',codeModel:'qwen2.5-coder-32b-instruct',fallbackModel:'llama-3.1-8b-instruct-fast',aiConfigured:!!env.AI,gpuSelfHostConfigured:ownGpuConfigured(env),wormgptConfigured:wormgptConfigured(env)});
+    if(request.method==='GET'&&url.pathname==='/api/health')return json({ok:true,service:'wormstar-cloudflare-lab',model:'gpt-oss-120b',modelBackend:'@cf/openai/gpt-oss-120b',fastModel:'@cf/openai/gpt-oss-20b',codeModel:'qwen2.5-coder-32b-instruct',fallbackModel:'llama-3.1-8b-instruct-fast',backendSelection:'preferred only; /api/chat.modelUsed reports actual model',aiConfigured:!!env.AI,gpuSelfHostConfigured:ownGpuConfigured(env),wormgptConfigured:wormgptConfigured(env)});
     if(request.method==='GET'&&url.pathname==='/api/opencode/status'){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
       if(!capabilityEnabled('agents.opencode.status'))return permissionDenied('agents.opencode.status');
@@ -749,16 +730,18 @@ export default {
         models.unshift('@cf/qwen/qwen2.5-coder-32b-instruct');
       }
       let lastError=null;
+      const attemptedModels=[];
       for(const model of models){
+        attemptedModels.push(model);
         try{
           const response=await env.AI.run(model,{messages,max_tokens:policy.max_output_tokens,temperature:0.2});
           const answer=typeof response==='string'?response:response?.response||response?.choices?.[0]?.message?.content||response?.output_text||'';
           if(typeof answer!=='string'||!answer.trim())throw Error('Empty response');
-          return json({answer:answer.trim(),modelUsed:model,engineRequested:engine,fallbackUsed:model!==models[0],memoryUsed:used.map(r=>({id:r.id,title:r.title,selected:selected.some(a=>a.id===r.id)}))});
+          return json({answer:answer.trim(),modelUsed:model,engineRequested:engine,fallbackUsed:model!==models[0],modelsTried:attemptedModels,memoryUsed:used.map(r=>({id:r.id,title:r.title,selected:selected.some(a=>a.id===r.id)}))});
         }catch(e){lastError=e;}
       }
       logModelFailure('workers-ai',503);
-      return json({error:'AI service unavailable; all approved model backends failed',engineRequested:engine,hint:lastError?.message?.slice(0,120)||''},503);
+      return json({error:'AI service unavailable; all approved model backends failed',engineRequested:engine,modelsTried:attemptedModels},503);
     }
     if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))return new Response(FUTURE_HTML,{headers:{
       ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',

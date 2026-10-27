@@ -3,7 +3,7 @@ import unittest
 from email.message import Message
 from io import BytesIO
 
-from wormgpt_provider import ENDPOINT, chat
+from wormgpt_provider import ENDPOINT, _NoRedirect, chat
 
 
 class FakeResponse:
@@ -50,6 +50,13 @@ class WormGPTProviderTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "invalid chat completion"):
             chat(self.messages, environ=self.settings,
                  opener=lambda *args, **kwargs: FakeResponse({"response": "wrong shape"}))
+
+    def test_redirects_are_never_followed(self):
+        self.assertIsNone(_NoRedirect().redirect_request(None, None, 302, 'redirect', {}, 'https://attacker.invalid'))
+
+    def test_newline_in_api_key_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'WORMGPT_API_KEY'):
+            chat(self.messages, environ={**self.settings, 'WORMGPT_API_KEY': 'x' * 20 + '\\nBearer stolen'})
 
     def test_invalid_model_id_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "WORMGPT_MODEL_ID"):

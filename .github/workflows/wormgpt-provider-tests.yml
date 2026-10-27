@@ -33,6 +33,8 @@ jobs:
           node-version: '22'
       - name: Python adapter mock tests
         run: python3 -m unittest discover -s tests -p 'test_wormgpt_provider.py'
+      - name: Syntax-check optional self-hosted AI validator (no downloads)
+        run: python3 -m py_compile cloudflare-worker/tools/validate_selfhosted_ai.py
       - name: Cloudflare adapter and policy tests
         run: npm test
         working-directory: cloudflare-worker

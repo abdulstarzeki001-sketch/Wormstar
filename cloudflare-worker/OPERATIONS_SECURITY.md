@@ -85,8 +85,12 @@ until both provider secrets are configured and verified.
 
 ## Observability and alerts
 
-- wrangler.toml enables Workers Logs with 10% sampling and
-  invocation_logs = false to reduce collection of request metadata.
+- wrangler.toml enables Workers Logs with 10% sampling,
+  invocation_logs = false, redact_query_string = true, and traces disabled
+  to reduce collection of request metadata. The Cloudflare Worker settings
+  API was also updated and read back successfully on 2026-10-27; the live
+  settings preserved AI, DB and WORMSTAR_ACCESS_TOKEN bindings. This does
+  not mean the newly merged application code was deployed.
 - Explicit model-backend failure events contain only an event name, fixed
   provider identifier and HTTP status. They deliberately omit user prompts,
   chat history, owner identity, IP, Authorization headers, tokens and

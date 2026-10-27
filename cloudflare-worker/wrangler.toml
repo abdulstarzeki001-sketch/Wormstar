@@ -7,6 +7,10 @@ workers_dev = true
 # invocation logs to reduce risk of recording sensitive request metadata.
 [observability]
 enabled = true
+redact_query_string = true
+
+[observability.traces]
+enabled = false
 
 [observability.logs]
 enabled = true

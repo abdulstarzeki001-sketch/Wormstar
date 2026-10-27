@@ -107,3 +107,51 @@ test('Chat composer includes explicit memory file picker and avoids hidden iOS c
  assert.match(ui.css,/height:calc\(100% - 72px - env\(safe-area-inset-bottom/);
  assert.match(ui.css,/min\(100dvh,var\(--ws-visual-height,100dvh\)\)/);
 });
+
+
+test('Wormstar Pro is a working Workers AI route without WormGPT secrets or model ID',async()=>{
+ const invoked=[];
+ const env=makeEnv(async(model,inputs)=>{invoked.push({model,inputs});return {response:'خدمة Wormstar Pro تعمل عبر Cloudflare'};});
+ assert.equal(Object.hasOwn(env,'WORMGPT_API_KEY'),false);
+ assert.equal(Object.hasOwn(env,'WORMGPT_MODEL_ID'),false);
+ const response=await chat({mode:'assistant',message:'اختبار بسيط',engine:'wormstar-pro'},env);
+ assert.equal(response.status,200);
+ const body=await response.json();
+ assert.equal(body.engineRequested,'wormstar-pro');
+ assert.equal(body.modelUsed,'@cf/openai/gpt-oss-120b');
+ assert.equal(body.modelHost,'cloudflare-workers-ai');
+ assert.equal(body.fallbackUsed,false);
+ assert.equal(body.answer,'خدمة Wormstar Pro تعمل عبر Cloudflare');
+ assert.equal(invoked.length,1);
+ assert.match(invoked[0].inputs.messages[0].content,/not WormGPT v5\.1/);
+});
+
+test('Wormstar Pro falls back to GPT-OSS 20B and reports exact model identity',async()=>{
+ const seen=[];
+ const env=makeEnv(async(model)=>{
+  seen.push(model);
+  if(model==='@cf/openai/gpt-oss-120b')throw Error('Preferred model unavailable');
+  return {response:'تم الرد عبر البديل'};
+ });
+ const result=await chat({mode:'assistant',message:'اختبر البديل',engine:'wormstar-pro'},env);
+ assert.equal(result.status,200);
+ const reply=await result.json();
+ assert.equal(reply.engineRequested,'wormstar-pro');
+ assert.equal(reply.modelUsed,'@cf/openai/gpt-oss-20b');
+ assert.equal(reply.modelHost,'cloudflare-workers-ai');
+ assert.equal(reply.fallbackUsed,true);
+ assert.deepEqual(reply.modelsTried,seen);
+ assert.equal(seen.length,2);
+});
+
+test('Wormstar Pro UI is available while real WormGPT API remains a separate disabled provider',async()=>{
+ const html=JSON.parse(readFileSync(new URL('../worker.js',import.meta.url),'utf8').match(/^const HTML = (.+);$/m)[1]);
+ assert.match(html,/<option value="wormstar-pro">Wormstar Pro/);
+ assert.match(html,/بدون مفتاح WormGPT/);
+ assert.match(html,/const ENGINE_CHOICES=\['wormstar-pro'/);
+ assert.match(html,/<option value="wormgpt-v51" data-wormgpt-model disabled>/);
+ const env=makeEnv();
+ const res=await chat({mode:'assistant',message:'Hello',engine:'wormgpt-v51'},env);
+ assert.equal(res.status,503);
+ assert.match((await res.json()).error,/not configured|not confirmed/);
+});

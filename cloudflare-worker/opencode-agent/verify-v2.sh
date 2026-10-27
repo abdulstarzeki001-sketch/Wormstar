@@ -3,8 +3,9 @@
 set -euo pipefail
 : "${OPENCODE_SERVER_PASSWORD:?Set your OpenCode HTTP Basic Auth password}"
 command -v curl >/dev/null || { echo 'curl is required' >&2; exit 1; }
-command -v opencode >/dev/null || { echo 'OpenCode v2 executable not installed' >&2; exit 1; }
-echo "Installed OpenCode version: $(opencode --version)"
+OPENCODE_BIN="${OPENCODE_BIN:-opencode}"
+command -v "$OPENCODE_BIN" >/dev/null || { echo 'OpenCode v2 executable not installed' >&2; exit 1; }
+echo "Installed OpenCode version: $("$OPENCODE_BIN" --version)"
 check() {
   local route="$1"
   local code

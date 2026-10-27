@@ -104,9 +104,12 @@ until both provider secrets are configured and verified.
 - A Cloudflare Notifications policy named **Wormstar / Workers real-time
   errors** (`d9307de36e4f43a2acb276721a07a7c1`) is **enabled**, sending
   `workers_observability_real_time_issue` notices to the account owner's
-  already verified email. This notification type is account-level: it may
-  include issues in other Workers. Do not claim a per-Worker filter or alert
-  delivery confirmation without independent testing.
+  already verified email. Its notification type is account-level, but a
+  separate enabled Workers Issues automation (`97378f44-e14e-448c-bae8-4eaa7c77cd55`)
+  is scoped to service `wormstar-ai-lab` and fires on the first issue
+  occurrence, routing through that policy. Other account-level uses of
+  the same notification type could still generate unrelated notices.
+  Actual email delivery has not yet been tested.
 - There is no separate Sentry account integration or DSN.
 - Sentry was not installed because no approved DSN, data-handling policy
   or privacy scrubber was provided. If added later, strip prompts, messages,

@@ -62,7 +62,7 @@ test('chat-first Wormstar navigation matches the approved first-party routes',()
 
 test('crimson identity is selectable, responsive and cannot expose secret-bound context',()=>{
  assert.match(ui.boot,/let wsTheme='crimson'/);
- assert.match(ui.boot,/wormstar-visual-theme-v2/);
+ assert.match(ui.boot,/wormstar-visual-theme-v3/);
  assert.match(ui.css,/data-ws-theme="crimson"/);
  assert.match(ui.css,/#wsNewChat/);
  assert.match(ui.css,/#workspaceSidebar/);
@@ -79,8 +79,8 @@ test('Wormstar standalone manifest reflects new first-party black workspace',asy
  const r=await worker.fetch(new Request('https://wormstar.test/manifest.webmanifest'),{},{});
  assert.equal(r.status,200);
  const manifest=await r.json();
- assert.equal(manifest.background_color,'#08090d');
- assert.equal(manifest.theme_color,'#08090d');
+ assert.equal(manifest.background_color,'#070407');
+ assert.equal(manifest.theme_color,'#070407');
  assert.equal(manifest.name.startsWith('Wormstar'),true);
 });
 
@@ -110,4 +110,39 @@ test('chat shortcuts display active route and accessible aria-current',()=>{
  assert.match(ui.boot,/b\.classList\.toggle\('active',active\)/);
  assert.match(ui.boot,/b\.setAttribute\('aria-current',active\?'page':'false'\)/);
  assert.doesNotThrow(()=>new Script(ui.boot));
+});
+
+
+test('owner archive-derived royal-glass palette is consistently present across core screens',()=>{
+ assert.match(ui.css,/v45 ROYAL BLOOD GLASS/);
+ assert.match(ui.css,/--ws-back:#070407/);
+ assert.match(ui.css,/--ws-surface:#16090f/);
+ assert.match(ui.css,/--ws-highlight:#e5003c/);
+ assert.match(ui.css,/\.ws-studio-card/);
+ assert.match(ui.css,/#sbPanel/);
+ assert.match(ui.css,/\.ws-openclaw-panel/);
+ assert.match(ui.css,/\.ws-command/);
+ assert.match(ui.css,/\.ws-gate-access/);
+ assert.match(ui.css,/#lab \.message\.user \.bubble/);
+ assert.match(ui.css,/\.ws-code-snippet/);
+ assert.match(ui.css,/@media\(max-width:760px\)/);
+ assert.doesNotMatch(ui.css,/@import\s+url/);
+});
+
+test('rendered code fences use DOM text, never HTML evaluation or external script assets',async()=>{
+ const fs=await import('node:fs/promises');
+ const source=await fs.readFile(new URL('../worker.js',import.meta.url),'utf8');
+ assert.match(source,/function wsRenderCodeSnippets/);
+ assert.match(source,/wsRenderCodeSnippets\(bubble,m\.content\)/);
+ assert.match(source,/code\.textContent=snippet/);
+ assert.match(source,/navigator\.clipboard\.writeText\(snippet\)/);
+ assert.doesNotMatch(source,/eval\(\s*snippet|new Function\(\s*snippet/);
+ assert.doesNotMatch(source,/wormgpt-logo\.png|wg-device-fingerprint/);
+});
+
+test('royal palette retains non-royal alternative color themes',()=>{
+ for(const name of ['crimson','ember','amethyst','aurora'])assert.ok(ui.boot.includes("['"+name+"'"),name);
+ assert.match(ui.css,/data-ws-theme="amethyst"/);
+ assert.match(ui.css,/data-ws-theme="aurora"/);
+ assert.match(ui.css,/not\(\[data-ws-theme="crimson"\]\)/);
 });

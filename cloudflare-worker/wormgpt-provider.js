@@ -1,10 +1,12 @@
 // Optional, explicitly selected external model provider. No dynamic endpoint URLs.
 export const WORMGPT_ENDPOINT = 'https://api.wormgpt.live/v1/chat/completions';
 const MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,95}$/;
+// No newline/control characters, surrounding whitespace, or non-ASCII bearer credentials.
+const API_KEY = /^[\x21-\x7e]{16,512}$/;
 
 export function wormgptConfigured(env) {
   return typeof env?.WORMGPT_API_KEY === 'string'
-    && env.WORMGPT_API_KEY.length >= 16
+    && API_KEY.test(env.WORMGPT_API_KEY)
     && typeof env.WORMGPT_MODEL_ID === 'string'
     && MODEL_ID.test(env.WORMGPT_MODEL_ID);
 }

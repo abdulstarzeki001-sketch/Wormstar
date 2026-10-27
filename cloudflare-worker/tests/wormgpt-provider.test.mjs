@@ -57,3 +57,50 @@ test('rejects malformed completions and oversized conversations', async () => {
       throw new Error('must not call');
     }), /Invalid provider conversation/);
 });
+
+
+test('external provider key with whitespace, CRLF, non-ASCII or extreme length is rejected before network', async () => {
+  const badKeys = [
+    env.WORMGPT_API_KEY + '\nInjected: value',
+    env.WORMGPT_API_KEY + '\r',
+    ' ' + env.WORMGPT_API_KEY,
+    env.WORMGPT_API_KEY + ' ',
+    'أ'.repeat(30),
+    'a'.repeat(513),
+    'tiny'
+  ];
+  for (const WORMGPT_API_KEY of badKeys) {
+    const bad = { ...env, WORMGPT_API_KEY };
+    assert.equal(wormgptConfigured(bad), false);
+    await assert.rejects(
+      () => invokeWormGPT(bad, messages, 500, () => {
+        throw new Error('MUST_NOT_SEND_INVALID_KEY');
+      }), /not configured/
+    );
+  }
+});
+
+test('external provider cannot follow redirects, cache private data or accept HTML', async () => {
+  await assert.rejects(() => invokeWormGPT(env, messages, 500, async (url, init) => {
+    assert.equal(url, WORMGPT_ENDPOINT);
+    assert.equal(init.redirect, 'error');
+    assert.equal(init.cache, 'no-store');
+    return new Response('<html>login</html>', { status: 200, headers: { 'content-type': 'text/html' } });
+  }), /unexpected content type/);
+});
+
+test('model ID is not inferred from promotional version label', () => {
+  assert.equal(wormgptConfigured({ ...env, WORMGPT_MODEL_ID: '' }), false);
+  assert.equal(wormgptConfigured({ ...env, WORMGPT_MODEL_ID: 'v5.1 unverified' }), false);
+  assert.equal(wormgptConfigured({ ...env, WORMGPT_MODEL_ID: '../unapproved  model' }), false);
+});
+
+
+test('UI never represents an unverified WormGPT v5.1 model as installed', async () => {
+  const { readFileSync } = await import('node:fs');
+  const code=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+  const html=JSON.parse(code.match(/^const HTML = (.+);$/m)[1]);
+  assert.match(html, /WormGPT API · خارجي/);
+  assert.doesNotMatch(html, /WormGPT v5\.1 · خارجي/);
+  assert.match(code, /if\(wormgpt&&!wormgptConfigured\(env\)\)/);
+});

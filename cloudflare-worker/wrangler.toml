@@ -3,6 +3,16 @@ main = "worker.js"
 compatibility_date = "2026-10-25"
 workers_dev = true
 
+# Sample only 10% of deliberately sanitized application logs; omit automatic
+# invocation logs to reduce risk of recording sensitive request metadata.
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = false
+head_sampling_rate = 0.1
+
 [ai]
 binding = "AI"
 

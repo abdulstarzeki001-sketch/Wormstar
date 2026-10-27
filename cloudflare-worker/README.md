@@ -287,3 +287,8 @@ OpenClaw is available as a **separate, authenticated agent backend** in Wormstar
 - Tests: `cloudflare-worker/tests/openclaw-bridge.test.mjs`. Offline/connected status is validated in mocked integration tests. A live gateway is not connected yet.
 
 Security note: OpenClaw's chat-completions token grants powerful operator-level access; the Gateway must use a dedicated minimal tool profile, explicit Access authentication and separately approved tool permissions. The versioned template starts with shell and host filesystem operations denied.
+
+
+## Edge security, safe caching and operations (2026-10-27)
+
+See [OPERATIONS_SECURITY.md](OPERATIONS_SECURITY.md) for the reviewed one-hour public-asset cache headers, no-store API and chat responses, sampled privacy-conscious Workers Logs, HTTPS, Cloudflare Access prerequisites, and the decision not to add a KV cache or Sentry without a safe use case and approved configuration. These source changes require a reviewed Worker deployment; GitHub merge alone does not change the live Worker.

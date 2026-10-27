@@ -232,6 +232,42 @@ const PUBLIC_ASSET_HEADERS = Object.freeze({
   'Strict-Transport-Security':'max-age=31536000'
 });
 function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{...PRIVATE_HEADERS,'Content-Type':'application/json;charset=utf-8'}});}
+
+// Bound request bytes even when clients omit or forge Content-Length.
+// The stream is consumed only once; messages and attachments never enter logs.
+async function readBoundedJson(request,maxBytes){
+  const declared=request.headers.get('Content-Length');
+  if(declared!==null&&(!/^\d+$/.test(declared)||Number(declared)>maxBytes)){
+    const error=new Error('Request too large');error.status=413;throw error;
+  }
+  const reader=request.body?.getReader();
+  if(!reader){
+    const error=new Error('Invalid JSON');error.status=400;throw error;
+  }
+  let length=0;const chunks=[];
+  try{
+    for(;;){
+      const {value,done}=await reader.read();
+      if(done)break;
+      if(value){
+        length+=value.byteLength;
+        if(length>maxBytes){
+          await reader.cancel().catch(()=>{});
+          const error=new Error('Request too large');error.status=413;throw error;
+        }
+        chunks.push(value);
+      }
+    }
+  }finally{reader.releaseLock();}
+  const buffer=new Uint8Array(length);
+  let cursor=0;
+  for(const chunk of chunks){buffer.set(chunk,cursor);cursor+=chunk.byteLength;}
+  try{return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(buffer));}
+  catch{
+    const error=new Error('Invalid JSON');error.status=400;throw error;
+  }
+}
+
 function logModelFailure(provider,status){
   // Deliberately omit prompt, chat history, identity, tokens, IP and upstream errors.
   console.error(JSON.stringify({event:'wormstar_model_failure',provider,status}));
@@ -332,8 +368,7 @@ async function studioRoutes(request,env,path){
   if(!env.DB)return json({error:'Persistent memory is not configured'},503);
   let body;
   if(['POST','PUT'].includes(request.method)){
-    if(Number(request.headers.get('Content-Length')||0)>125000)return json({error:'Request exceeds storage size limit'},413);
-    try{body=await request.json();}catch{return json({error:'Invalid JSON'},400);}
+    try{body=await readBoundedJson(request,125000);}catch(error){return json({error:error.status===413?'Request exceeds storage size limit':'Invalid JSON'},error.status===413?413:400);}
   }
 
 
@@ -670,9 +705,7 @@ export default {
     if(request.method==='POST'&&url.pathname==='/api/chat'){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
       if(!capabilityEnabled('ai.chat'))return permissionDenied('ai.chat');
-      const len=Number(request.headers.get('Content-Length')||0);
-      if(len>LAB_POLICY.limits.maxRequestBytes)return json({error:'Request too large'},413);
-      let body;try{body=await request.json();}catch{return json({error:'Invalid JSON'},400);}
+      let body;try{body=await readBoundedJson(request,LAB_POLICY.limits.maxRequestBytes);}catch(error){return json({error:error.status===413?'Request too large':'Invalid JSON'},error.status===413?413:400);}
       if(!body||typeof body.message!=='string'||!body.message.trim()||body.message.length>LAB_POLICY.limits.maxPromptCharacters||!LAB_POLICY.allowedModes.includes(body.mode)||!Object.hasOwn(PROFILES,body.mode))return json({error:'Invalid input'},400);
       const engine=body.engine===undefined?'gpt-oss-120b':body.engine;
       if(typeof engine!=='string'||!Object.hasOwn(WORMSTAR_ENGINES,engine))return json({error:'Unknown model engine'},400);

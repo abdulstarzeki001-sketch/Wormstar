@@ -1,0 +1,38 @@
+name: WormGPT Optional Provider Tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'wormgpt_provider.py'
+      - 'wormgpt.py'
+      - 'tests/test_wormgpt_provider.py'
+      - 'cloudflare-worker/wormgpt-provider.js'
+      - 'cloudflare-worker/tests/wormgpt-provider.test.mjs'
+      - '.github/workflows/wormgpt-provider-tests.yml'
+  pull_request:
+    paths:
+      - 'wormgpt_provider.py'
+      - 'wormgpt.py'
+      - 'tests/test_wormgpt_provider.py'
+      - 'cloudflare-worker/**'
+      - '.github/workflows/wormgpt-provider-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-provider-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Python adapter mock tests
+        run: python3 -m unittest discover -s tests -p 'test_wormgpt_provider.py'
+      - name: Cloudflare adapter and policy tests
+        run: npm test
+        working-directory: cloudflare-worker

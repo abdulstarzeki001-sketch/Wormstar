@@ -1,6 +1,7 @@
 import http.client
 import ipaddress
 import json
+import os
 import socket
 import ssl
 import subprocess
@@ -104,6 +105,12 @@ def check_website(url):
 
 
 def chat(messages):
+    provider = os.environ.get("WORMSTAR_MODEL_PROVIDER", "ollama").strip().lower()
+    if provider == "wormgpt-api":
+        from wormgpt_provider import chat as remote_chat
+        return remote_chat(messages)
+    if provider != "ollama":
+        raise ValueError("Unsupported WORMSTAR_MODEL_PROVIDER")
     payload = {
         "model": MODEL,
         "messages": messages,

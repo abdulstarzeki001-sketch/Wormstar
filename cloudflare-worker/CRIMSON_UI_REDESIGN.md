@@ -31,3 +31,13 @@ Existing PWA metadata uses `#08090d` for dark browser chrome. The underlying app
 - Do not execute uploaded third-party minified JavaScript, import another app's global CSS reset, or copy third-party images and logos.
 - `tests/upload-theme.test.mjs` verifies boot syntax, routes, palette, mobile safety and PWA metadata. The full GitHub Actions suite must pass prior to merging.
 - A full authenticated browser smoke test is recommended but should not be represented as completed without session-backed evidence.
+
+## Unified layout repair (v43.1)
+
+A second CSS pass uses **semantic visual tokens** consistently across the auth gateway, overview, chat, policy, identity, knowledge, memory, Supabase, OpenClaw, OpenCode and command-search overlay. It overrides legacy blue/teal panel fills and keeps the selected palette in all sections instead of only the sidebar/chat page.
+
+- Shared CSS variables: `--ws-ui-bg`, `--ws-ui-surface`, `--ws-ui-outline`, `--ws-ui-strong`, `--ws-ui-subtle`, `--ws-ui-accent`, `--ws-ui-tint`.
+- Fixed styling of studio tabs, form fields, buttons, modal command list, cloud cards, OpenClaw headers and OpenCode output containers. No external resources.
+- Improved route highlighting in contextual chat shortcuts, including `aria-current="page"`.
+- Preserve the original seven studio cards, authentic routes and mobile drawer. No storage migrations, security policy changes, or access token exposure.
+- Added automated checks for all major pages, shared tokens and route accessibility; production browser testing behind the owner-only login is still necessary for visual acceptance.

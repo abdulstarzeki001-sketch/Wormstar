@@ -83,3 +83,31 @@ test('Wormstar standalone manifest reflects new first-party black workspace',asy
  assert.equal(manifest.theme_color,'#08090d');
  assert.equal(manifest.name.startsWith('Wormstar'),true);
 });
+
+
+test('all Wormstar pages share one token-based color language',()=>{
+ for(const page of ['#studio','.ws-studio-tabs','.ws-studio-card','#policyControlPanel','#sbPanel','.ws-openclaw-panel','.ode-panel','.ws-command','.ws-gateway','.ws-overview-hero','#lab']){
+  assert.ok(ui.css.includes(page),page+' must be styled');
+ }
+ for(const token of ['--ws-ui-surface','--ws-ui-accent','--ws-ui-strong','--ws-ui-outline','--ws-ui-subtle','--ws-ui-tint']){
+  assert.ok(ui.css.includes(token),token+' must be defined');
+ }
+ assert.match(ui.css,/Wormstar v43\.1/);
+ assert.match(ui.css,/\.sb-hero,\.oc-head/);
+ assert.match(ui.css,/\.ws-gate-access/);
+ assert.match(ui.css,/\.ode-body/);
+ assert.match(ui.css,/\.ws-command/);
+ assert.match(ui.css,/\.ws-mobile-studio-picker/);
+ assert.match(ui.css,/prefers-reduced-motion/);
+ assert.match(ui.css,/max-width:760px/);
+});
+
+test('chat shortcuts display active route and accessible aria-current',()=>{
+ assert.match(ui.boot,/data-ws-shortcut="assistant"/);
+ assert.match(ui.boot,/data-ws-shortcut="code"/);
+ assert.match(ui.boot,/data-ws-shortcut="logs"/);
+ assert.match(ui.boot,/data-ws-shortcut="studio\/library"/);
+ assert.match(ui.boot,/b\.classList\.toggle\('active',active\)/);
+ assert.match(ui.boot,/b\.setAttribute\('aria-current',active\?'page':'false'\)/);
+ assert.doesNotThrow(()=>new Script(ui.boot));
+});

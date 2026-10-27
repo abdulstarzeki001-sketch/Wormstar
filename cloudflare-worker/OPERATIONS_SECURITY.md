@@ -103,10 +103,14 @@ until both provider secrets are configured and verified.
   Sentry. On 2026-10-27 the Cloudflare Notifications policy
   `Wormstar / Workers real-time errors` was created and enabled, with
   delivery to the verified owner email. IMPORTANT: this policy's
-  `workers_observability_real_time_issue` event applies to the ACCOUNT's
-  Workers issues, not solely the Wormstar script. Delivery has not been
-  tested. Do not claim Sentry is enabled or that a custom 5xx threshold
-  exists.
+  `workers_observability_real_time_issue` policy is an account-level
+  notification destination, but an ENABLED Workers Issues automation
+  (ID `97378f44-e14e-448c-bae8-4eaa7c77cd55`) scopes triggering
+  to service `wormstar-ai-lab` on the first occurrence. The worker's
+  `observability.issues.enabled` was independently verified true on the
+  live account; wrangler.toml now explicitly preserves this after future
+  Wrangler deploys. Delivery has not been tested. Do not claim Sentry is
+  enabled or that a custom HTTP 5xx percentage threshold exists.
 - Sentry was not installed because no approved DSN, data-handling policy
   or privacy scrubber was provided. If added later, strip prompts, messages,
   Authorization, cookies and attached knowledge from captured events.

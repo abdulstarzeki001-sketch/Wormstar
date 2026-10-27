@@ -4,10 +4,13 @@ A Cloudflare-hosted browser interface for the Wormstar cybersecurity learning an
 
 ## Deployment
 
+**Audit and hardening (2026-10-28):** see [CROSS_PLATFORM_AUDIT_20261028.md](./CROSS_PLATFORM_AUDIT_20261028.md) for verified Cloudflare Access, D1, Supabase RLS/advisors, source/CI findings, and outstanding tasks. Server JSON requests are bounded by streamed UTF-8 byte counts, not solely the `Content-Length` header.
+
+
 - Cloudflare Worker: `wormstar-ai-lab`
 - Route: `https://wormstar-ai-lab.abdulstarzeki001.workers.dev/`
 - API: `GET /api/health`, `POST /api/auth`, `POST /api/chat`
-- Model: Cloudflare Workers AI `@cf/meta/llama-3.1-8b-instruct-fast`
+- Models: Cloudflare Workers AI GPT-OSS 120B (preferred), GPT-OSS 20B and configured fallbacks; `/api/chat.modelUsed` reports the model that actually answered. Proprietary WormGPT, OpenClaw, OpenCode and self-hosted GPU backends remain optional and require verified external credentials.
 - Scope: Arabic security assistant, code/log/IOC analysis, CTF tutoring, reporting. Text analysis only.
 - No original CLI/remote shell commands are exposed.
 
@@ -27,7 +30,7 @@ cd cloudflare-worker
 npx wrangler secret put WORMSTAR_ACCESS_TOKEN
 ```
 
-The prompt allows you to securely enter the new value. Anyone with that value can use the text-analysis API. Cloudflare Access can be enabled separately for stronger identity-based protection.
+The prompt allows you to securely enter the new value. Anyone with that value can use the text-analysis API. Cloudflare Access is already enabled for this Worker as an owner-only, exact-email application; keep both the Access policy and the independent Worker Bearer secret enabled.
 
 ## Local deployment
 
@@ -52,10 +55,10 @@ The interface contains an AI Studio for editing its assistant name, instruction 
 
 - D1 binding name: `DB`. The `wrangler.toml` configuration includes the database identifier.
 - Tables: `ai_profile` for editable AI preferences and `knowledge` for uploaded code/text/notes.
-- Allowed file types include text, Markdown, source code, CSV, JSON, and logs. Frontend caps individual files at 80 KB; server caps individual content at 60,000 characters and the library at 120 entries.
+- Allowed file types include text, Markdown, source code, CSV, JSON, and logs. Frontend caps individual files at 80 KB; server caps individual content at 60,000 characters and the library at 500 entries (enforced from `permissions.json`).
 - Every studio API request requires the existing `WORMSTAR_ACCESS_TOKEN` credential; no automatic remote shell execution.
 - AI model parameters stay unchanged; saving knowledge changes retrieved context, not the underlying neural-network weights.
-- Saved profile and references persist across browser sessions; chat remains in-memory and may be exported separately.
+- Saved profile and references persist across browser sessions. Chat is held in the browser and can optionally be archived in D1 per analysis mode; automatic archival is opt-in and uses a revision check.
 - Dashboard: open your Worker under Workers & Pages and confirm Workers AI, D1 and WORMSTAR_ACCESS_TOKEN are bound.
 
 **Note:** The presence of a secret binding was verified; its value was not retrieved or displayed. Use your own access token when signing in.
@@ -78,9 +81,9 @@ All four tables have owner-isolated RLS policies. Schema: `supabase/migrations/2
 4. Use **Restore knowledge from Supabase** to rebuild D1 knowledge without overwriting existing item IDs. Restoring the AI profile requires separate confirmation.
 5. Keep offline JSON exports too. No cloud provider can guarantee data survives deliberate deletion, account closure, outages or billing disruptions.
 
-Client authentication uses only the public Supabase publishable API key and the user's Supabase Auth JWT. No service-role or secret database keys are included in the deployed source. Supabase sessions live in browser sessionStorage and are cleared when signing out of Wormstar.
+Client authentication uses only the public Supabase publishable API key and the user's Supabase Auth JWT. No service-role or secret database keys are included in the deployed source. Supabase sessions use browser sessionStorage or localStorage according to the explicit Remember choice and can be cleared by signing out of Supabase inside Wormstar. The separate Wormstar access token is session-scoped.
 
-**Capacity:** D1 holds up to 120 notes of 60,000 characters. Uploaded files are capped at 80 KB each. Future AI prompts retrieve selected relevant excerpts; this is persistent retrieval, not neural-network weight training.
+**Capacity:** D1 holds up to 500 notes of 60,000 characters. Uploaded files are capped at 80 KB each. Future AI prompts retrieve selected relevant excerpts; this is persistent retrieval, not neural-network weight training.
 
 ### Firecrawl page import
 
@@ -92,7 +95,7 @@ No FastAPI Cloud service was provisioned or deployed. The existing cloud backend
 
 ### GitHub source
 
-The cloud application and database migration are versioned on the `feature/wormstar-private-cloud-lab` branch. Original Python/Ollama root files remain unchanged. Uploaded private training files and tokens are stored in hosting databases/session storage, not committed to GitHub.
+The deployed cloud application and database migration are versioned on the `main` branch; changes are reviewed through pull requests. Original Python/Ollama root files remain unchanged. Uploaded private training files and tokens are stored in hosting databases/session storage, not committed to GitHub.
 
 
 ## Custom mission and enforceable owner policy
@@ -181,7 +184,7 @@ The module contains responsive CSS and a progressive client-side navigation shel
 | `#/studio/library` | Search/edit/delete the saved memory library |
 | `#/studio/cloud` | Supabase identity and backup / restore actions |
 
-The launcher is a true SPA navigation layer on top of existing UI controls, so pages do **not** become new unauthenticated API endpoints. On initial successful lab login, the dashboard is the default; the site preserves a valid `#/...` route for refresh/back/forward navigation. Any protected API still requires the `WORMSTAR_ACCESS_TOKEN` Bearer credential. Saved chat contents remain session-scoped.
+The launcher is a true SPA navigation layer on top of existing UI controls, so pages do **not** become new unauthenticated API endpoints. On initial successful lab login, the chat-first workspace is the default; the site preserves a valid `#/...` route for refresh/back/forward navigation. Any protected API still requires the `WORMSTAR_ACCESS_TOKEN` Bearer credential. Saved chat contents remain session-scoped.
 
 ### Navigation and accessibility
 

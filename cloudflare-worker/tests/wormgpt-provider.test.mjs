@@ -94,3 +94,13 @@ test('model ID is not inferred from promotional version label', () => {
   assert.equal(wormgptConfigured({ ...env, WORMGPT_MODEL_ID: 'v5.1 unverified' }), false);
   assert.equal(wormgptConfigured({ ...env, WORMGPT_MODEL_ID: '../unapproved  model' }), false);
 });
+
+
+test('UI never represents an unverified WormGPT v5.1 model as installed', async () => {
+  const { readFileSync } = await import('node:fs');
+  const code=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+  const html=JSON.parse(code.match(/^const HTML = (.+);$/m)[1]);
+  assert.match(html, /WormGPT API · خارجي/);
+  assert.doesNotMatch(html, /WormGPT v5\.1 · خارجي/);
+  assert.match(code, /if\(wormgpt&&!wormgptConfigured\(env\)\)/);
+});

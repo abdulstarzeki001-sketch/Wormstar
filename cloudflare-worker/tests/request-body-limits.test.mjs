@@ -95,13 +95,13 @@ test('source-of-truth and generated permission policies agree on 500 entries',()
 });
 
 
-test('owner bearer comparison respects UTF-8 byte length for non-ASCII tokens',async()=>{
+test('owner bearer comparison respects UTF-8 byte length for non-ASCII Latin-1 HTTP tokens',async()=>{
  const env=fixture();
- env.WORMSTAR_ACCESS_TOKEN='owner-🔐-private';
- const valid=new Request(ORIGIN+'/api/auth',{method:'POST',headers:{Authorization:'Bearer owner-🔐-private'}});
+ env.WORMSTAR_ACCESS_TOKEN='owner-é-private';
+ const valid=new Request(ORIGIN+'/api/auth',{method:'POST',headers:{Authorization:'Bearer owner-é-private'}});
  const accepted=await worker.fetch(valid,env,{});
  assert.equal(accepted.status,200);
- const invalid=new Request(ORIGIN+'/api/auth',{method:'POST',headers:{Authorization:'Bearer owner-🔑-private'}});
+ const invalid=new Request(ORIGIN+'/api/auth',{method:'POST',headers:{Authorization:'Bearer owner-x-private'}});
  const denied=await worker.fetch(invalid,env,{});
  assert.equal(denied.status,401);
 });

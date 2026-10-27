@@ -12,6 +12,10 @@ redact_query_string = true
 [observability.traces]
 enabled = false
 
+# Keep production Issues detection enabled across Wrangler deployments.
+[observability.issues]
+enabled = true
+
 [observability.logs]
 enabled = true
 invocation_logs = false

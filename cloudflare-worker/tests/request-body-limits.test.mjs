@@ -105,3 +105,12 @@ test('owner bearer comparison respects UTF-8 byte length for non-ASCII tokens',a
  const denied=await worker.fetch(invalid,env,{});
  assert.equal(denied.status,401);
 });
+
+
+test('authorized policy API advertises the same memory cap enforced by the Worker',async()=>{
+ const request=new Request(ORIGIN+'/api/lab/policy',{headers:{Authorization:'Bearer '+TOKEN}});
+ const res=await worker.fetch(request,fixture(),{});
+ assert.equal(res.status,200);
+ const data=await res.json();
+ assert.equal(data.limits.maxKnowledgeEntries,500);
+});

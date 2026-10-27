@@ -269,9 +269,9 @@ async function allow(request,env) {
   if(!h.startsWith('Bearer '))return false;
   const given=h.slice(7);
   const intended=env.WORMSTAR_ACCESS_TOKEN;
-  if(given.length!==intended.length)return false;
   const a=new TextEncoder().encode(given),b=new TextEncoder().encode(intended);
-  let delta=0;for(let i=0;i<a.length;i++)delta|=a[i]^b[i];return delta===0;
+  if(a.byteLength!==b.byteLength)return false;
+  let delta=0;for(let i=0;i<a.byteLength;i++)delta|=a[i]^b[i];return delta===0;
 }
 
 function textInput(data,field,max){

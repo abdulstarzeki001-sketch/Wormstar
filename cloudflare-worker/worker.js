@@ -210,7 +210,29 @@ const PROFILES = {
   ctf: 'Be a tutor for sandboxed CTF challenges. Teach general security concepts and reasoning within legal labs.',
   report: 'Write a concise professional Arabic security report with scope, evidence, key findings, risk, and mitigations.'
 };
-function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json;charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});}
+// Never store authenticated API, model, memory, status, or error responses in shared caches.
+const PRIVATE_HEADERS = Object.freeze({
+  'Cache-Control':'private, no-store, max-age=0',
+  'CDN-Cache-Control':'no-store',
+  'Cloudflare-CDN-Cache-Control':'no-store',
+  'X-Content-Type-Options':'nosniff',
+  'Referrer-Policy':'no-referrer',
+  'X-Frame-Options':'DENY',
+  'Permissions-Policy':'camera=(), microphone=(), geolocation=()',
+  'Strict-Transport-Security':'max-age=31536000'
+});
+// Only fixed, anonymous public assets may be cached for one hour.
+const PUBLIC_ASSET_HEADERS = Object.freeze({
+  'Cache-Control':'public, max-age=3600, s-maxage=3600',
+  'X-Content-Type-Options':'nosniff',
+  'Referrer-Policy':'no-referrer',
+  'Strict-Transport-Security':'max-age=31536000'
+});
+function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{...PRIVATE_HEADERS,'Content-Type':'application/json;charset=utf-8'}});}
+function logModelFailure(provider,status){
+  // Deliberately omit prompt, chat history, identity, tokens, IP and upstream errors.
+  console.error(JSON.stringify({event:'wormstar_model_failure',provider,status}));
+}
 async function allow(request,env) {
   if(typeof env.WORMSTAR_ACCESS_TOKEN!=='string'||!env.WORMSTAR_ACCESS_TOKEN)return false;
   const h=request.headers.get('Authorization')||'';
@@ -595,13 +617,13 @@ export default {
     const url=new URL(request.url);
     if(request.method==='GET'&&(url.pathname==='/apple-touch-icon.png'||url.pathname==='/icon.png'||url.pathname==='/favicon.png')){
       const decoded=atob(APP_ICON_PNG_B64);const bytes=Uint8Array.from(decoded,c=>c.charCodeAt(0));
-      return new Response(bytes,{headers:{'Content-Type':'image/png','Content-Length':String(bytes.byteLength),'Cache-Control':'public, max-age=86400','X-Content-Type-Options':'nosniff'}});
+      return new Response(bytes,{headers:{...PUBLIC_ASSET_HEADERS,'Content-Type':'image/png','Content-Length':String(bytes.byteLength)}});
     }
     if(request.method==='GET'&&(url.pathname==='/icon.svg'||url.pathname==='/favicon.svg')){
-      return new Response(APP_ICON_SVG,{headers:{'Content-Type':'image/svg+xml;charset=utf-8','Cache-Control':'public, max-age=86400','X-Content-Type-Options':'nosniff'}});
+      return new Response(APP_ICON_SVG,{headers:{...PUBLIC_ASSET_HEADERS,'Content-Type':'image/svg+xml;charset=utf-8'}});
     }
     if(request.method==='GET'&&url.pathname==='/manifest.webmanifest'){
-      return new Response(JSON.stringify({id:'/',name:'Wormstar NEO — AI Mission Control',short_name:'Wormstar NEO',description:'Private cyber intelligence and AI memory command center',start_url:'/?source=homescreen',scope:'/',display:'standalone',orientation:'any',background_color:'#060c19',theme_color:'#070c19',dir:'rtl',lang:'ar',icons:[{src:'/apple-touch-icon.png?v=20261025b',sizes:'96x96',type:'image/png',purpose:'any'},{src:'/icon.svg?v=20261025b',sizes:'any',type:'image/svg+xml',purpose:'any maskable'}]}),{headers:{'Content-Type':'application/manifest+json;charset=utf-8','Cache-Control':'no-cache','X-Content-Type-Options':'nosniff'}});
+      return new Response(JSON.stringify({id:'/',name:'Wormstar NEO — AI Mission Control',short_name:'Wormstar NEO',description:'Private cyber intelligence and AI memory command center',start_url:'/?source=homescreen',scope:'/',display:'standalone',orientation:'any',background_color:'#060c19',theme_color:'#070c19',dir:'rtl',lang:'ar',icons:[{src:'/apple-touch-icon.png?v=20261025b',sizes:'96x96',type:'image/png',purpose:'any'},{src:'/icon.svg?v=20261025b',sizes:'any',type:'image/svg+xml',purpose:'any maskable'}]}),{headers:{...PUBLIC_ASSET_HEADERS,'Content-Type':'application/manifest+json;charset=utf-8'}});
     }
     if(request.method==='GET'&&url.pathname==='/api/health')return json({ok:true,service:'wormstar-cloudflare-lab',model:'gpt-oss-120b',modelBackend:'@cf/openai/gpt-oss-120b',fastModel:'@cf/openai/gpt-oss-20b',codeModel:'qwen2.5-coder-32b-instruct',fallbackModel:'llama-3.1-8b-instruct-fast',aiConfigured:!!env.AI,gpuSelfHostConfigured:ownGpuConfigured(env),wormgptConfigured:wormgptConfigured(env)});
     if(request.method==='GET'&&url.pathname==='/api/opencode/status'){
@@ -693,6 +715,7 @@ export default {
             engineRequested:engine,externalProvider:true,fallbackUsed:false,
             memoryUsed:used.map(r=>({id:r.id,title:r.title,selected:selected.some(a=>a.id===r.id)}))});
         }catch(e){
+          logModelFailure('wormgpt-api',502);
           return json({error:'External WormGPT API unavailable. No fallback model was called.',
             hint:String(e?.message||'Provider error').slice(0,130)},502);
         }
@@ -734,11 +757,11 @@ export default {
           return json({answer:answer.trim(),modelUsed:model,engineRequested:engine,fallbackUsed:model!==models[0],memoryUsed:used.map(r=>({id:r.id,title:r.title,selected:selected.some(a=>a.id===r.id)}))});
         }catch(e){lastError=e;}
       }
+      logModelFailure('workers-ai',503);
       return json({error:'AI service unavailable; all approved model backends failed',engineRequested:engine,hint:lastError?.message?.slice(0,120)||''},503);
     }
     if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))return new Response(FUTURE_HTML,{headers:{
-      'Content-Type':'text/html;charset=utf-8','Cache-Control':'no-cache','X-Content-Type-Options':'nosniff',
-      'Referrer-Policy':'no-referrer',
+      ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',
       'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; connect-src 'self' https://xwigjsrbalbjwwjkxyma.supabase.co; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
     }});
     return json({error:'Not found'},404);

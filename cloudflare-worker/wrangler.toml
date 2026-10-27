@@ -12,6 +12,10 @@ redact_query_string = true
 [observability.traces]
 enabled = false
 
+# Group unhandled exceptions, Worker failures and 5xx into actionable issues.
+[observability.issues]
+enabled = true
+
 [observability.logs]
 enabled = true
 invocation_logs = false

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../worker.js';
@@ -57,4 +58,13 @@ test('external model remains disabled without verified provider secrets', async 
   const body = await response.json();
   assert.equal(body.wormgptConfigured, false);
   assert.equal(response.headers.get('Cache-Control').includes('no-store'), true);
+});
+
+test('production monitoring config enables Issues while limiting collection', () => {
+  const config = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
+  assert.match(config, /\[observability\.issues\]\s*enabled\s*=\s*true/);
+  assert.match(config, /\[observability\.logs\][\s\S]*?invocation_logs\s*=\s*false/);
+  assert.match(config, /\[observability\.traces\]\s*enabled\s*=\s*false/);
+  assert.match(config, /\[observability\.logs\][\s\S]*?head_sampling_rate\s*=\s*0\.1/);
+  assert.match(config, /redact_query_string\s*=\s*true/);
 });

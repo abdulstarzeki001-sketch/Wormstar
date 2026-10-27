@@ -93,3 +93,15 @@ test('source-of-truth and generated permission policies agree on 500 entries',()
  assert.equal(base.limits.maxKnowledgeEntries,500);
  assert.equal(live.limits.maxKnowledgeEntries,500);
 });
+
+
+test('owner bearer comparison respects UTF-8 byte length for non-ASCII tokens',async()=>{
+ const env=fixture();
+ env.WORMSTAR_ACCESS_TOKEN='owner-🔐-private';
+ const valid=new Request(ORIGIN+'/api/auth',{method:'POST',headers:{Authorization:'Bearer owner-🔐-private'}});
+ const accepted=await worker.fetch(valid,env,{});
+ assert.equal(accepted.status,200);
+ const invalid=new Request(ORIGIN+'/api/auth',{method:'POST',headers:{Authorization:'Bearer owner-🔑-private'}});
+ const denied=await worker.fetch(invalid,env,{});
+ assert.equal(denied.status,401);
+});

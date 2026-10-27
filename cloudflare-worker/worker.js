@@ -232,6 +232,33 @@ const PUBLIC_ASSET_HEADERS = Object.freeze({
   'Strict-Transport-Security':'max-age=31536000'
 });
 function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{...PRIVATE_HEADERS,'Content-Type':'application/json;charset=utf-8'}});}
+
+// Enforce actual UTF-8 request-body bytes even when Content-Length is absent or spoofed.
+// Streams are capped before JSON parsing, preventing oversized unauthenticated buffers.
+async function readLimitedJson(request,maxBytes){
+ const declared=request.headers.get('Content-Length');
+ if(declared!==null&&Number(declared)>maxBytes)throw new RangeError('Request too large');
+ if(!request.body)throw new SyntaxError('Invalid JSON');
+ const reader=request.body.getReader(),chunks=[];
+ let total=0;
+ try{
+  for(;;){
+   const {done,value}=await reader.read();
+   if(done)break;
+   total+=value.byteLength;
+   if(total>maxBytes){
+    await reader.cancel().catch(()=>{});
+    throw new RangeError('Request too large');
+   }
+   chunks.push(value);
+  }
+ }finally{reader.releaseLock();}
+ const bytes=new Uint8Array(total);
+ let offset=0;
+ for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+ return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
+}
+
 function logModelFailure(provider,status){
   // Deliberately omit prompt, chat history, identity, tokens, IP and upstream errors.
   console.error(JSON.stringify({event:'wormstar_model_failure',provider,status}));
@@ -332,8 +359,7 @@ async function studioRoutes(request,env,path){
   if(!env.DB)return json({error:'Persistent memory is not configured'},503);
   let body;
   if(['POST','PUT'].includes(request.method)){
-    if(Number(request.headers.get('Content-Length')||0)>125000)return json({error:'Request exceeds storage size limit'},413);
-    try{body=await request.json();}catch{return json({error:'Invalid JSON'},400);}
+    try{body=await readLimitedJson(request,125000);}catch(e){return e instanceof RangeError?json({error:'Request exceeds storage size limit'},413):json({error:'Invalid JSON'},400);}
   }
 
 
@@ -519,10 +545,10 @@ async function studioRoutes(request,env,path){
       try{
         const title=textInput(body,'title',130),content=textInput(body,'content',60000);
         if(!title||!content)return json({error:'Title and content are required'},400);
-        const count=await env.DB.prepare('SELECT count(*) AS n FROM knowledge').first();
-        if(Number(count?.n||0)>=500)return json({error:'Memory limit reached (500 entries)'},409);
         const existing=await env.DB.prepare('SELECT id FROM knowledge WHERE title=? AND content=? LIMIT 1').bind(title,content).first();
         if(existing)return json({id:existing.id,title,saved:true,duplicate:true});
+        const count=await env.DB.prepare('SELECT count(*) AS n FROM knowledge').first();
+        if(Number(count?.n||0)>=LAB_POLICY.limits.maxKnowledgeEntries)return json({error:'Memory limit reached ('+LAB_POLICY.limits.maxKnowledgeEntries+' entries)'},409);
         const id=crypto.randomUUID();
         await env.DB.prepare('INSERT INTO knowledge(id,title,kind,content) VALUES(?,?,?,?)').bind(id,title,modeKind(body.kind),content).run();
         return json({id,title,saved:true},201);
@@ -540,7 +566,7 @@ async function studioRoutes(request,env,path){
       const existing=await env.DB.prepare('SELECT id FROM knowledge WHERE id=?').bind(id).first();
       if(existing)return json({imported:false,id,reason:'already present'});
       const count=await env.DB.prepare('SELECT COUNT(*) AS n FROM knowledge').first();
-      if(Number(count?.n||0)>=500)return json({error:'Memory library is full'},409);
+      if(Number(count?.n||0)>=LAB_POLICY.limits.maxKnowledgeEntries)return json({error:'Memory library is full'},409);
       await env.DB.prepare('INSERT OR IGNORE INTO knowledge(id,title,kind,content) VALUES(?,?,?,?)')
         .bind(id,title,modeKind(input.kind),content).run();
       return json({imported:true,id});
@@ -558,7 +584,7 @@ async function studioRoutes(request,env,path){
          /^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))
         return json({error:'A public HTTPS webpage is required'},400);
       const count=await env.DB.prepare('SELECT COUNT(*) AS n FROM knowledge').first();
-      if(Number(count?.n||0)>=500)return json({error:'The knowledge library is full'},409);
+      if(Number(count?.n||0)>=LAB_POLICY.limits.maxKnowledgeEntries)return json({error:'The knowledge library is full'},409);
       const result=await fetch('https://api.firecrawl.dev/v2/scrape',{
         method:'POST',
         headers:{'Authorization':'Bearer '+env.FIRECRAWL_API_KEY,'Content-Type':'application/json'},
@@ -670,9 +696,8 @@ export default {
     if(request.method==='POST'&&url.pathname==='/api/chat'){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
       if(!capabilityEnabled('ai.chat'))return permissionDenied('ai.chat');
-      const len=Number(request.headers.get('Content-Length')||0);
-      if(len>LAB_POLICY.limits.maxRequestBytes)return json({error:'Request too large'},413);
-      let body;try{body=await request.json();}catch{return json({error:'Invalid JSON'},400);}
+      let body;try{body=await readLimitedJson(request,LAB_POLICY.limits.maxRequestBytes);}
+      catch(e){return e instanceof RangeError?json({error:'Request too large'},413):json({error:'Invalid JSON'},400);}
       if(!body||typeof body.message!=='string'||!body.message.trim()||body.message.length>LAB_POLICY.limits.maxPromptCharacters||!LAB_POLICY.allowedModes.includes(body.mode)||!Object.hasOwn(PROFILES,body.mode))return json({error:'Invalid input'},400);
       const engine=body.engine===undefined?'gpt-oss-120b':body.engine;
       if(typeof engine!=='string'||!Object.hasOwn(WORMSTAR_ENGINES,engine))return json({error:'Unknown model engine'},400);

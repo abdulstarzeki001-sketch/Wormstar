@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../worker.js';
@@ -160,4 +161,55 @@ test('Monitoring and privacy: errors and health are not cached or augmented with
  assert.equal(unexpected.headers.get('X-Frame-Options'),'DENY');
  const report=await unexpected.text();
  assert.doesNotMatch(report,/Authorization|WORMSTAR_ACCESS_TOKEN/);
+});
+
+
+test('owner diagnostic probes the real chat path but never attaches existing memory',async()=>{
+ const {env,calls}=fixture(undefined,{withMemory:true});
+ const response=await chat(env,{
+   ...QUERY,
+   diagnostic:true,
+   message:'DIAG_WORMSTAR_20261027 أجب بكلمة READY فقط.',
+   engine:'gpt-oss-20b',
+   memoryIds:[],
+   history:[]
+ });
+ assert.equal(response.status,200);
+ const json=await response.json();
+ assert.equal(json.answer,'VALIDATION_OK');
+ assert.equal(json.modelUsed,'@cf/openai/gpt-oss-20b');
+ assert.deepEqual(json.memoryUsed,[]);
+ assert.equal(calls.length,1);
+ assert.doesNotMatch(JSON.stringify(calls[0].input),/SAFE_REFERENCE/);
+ assert.doesNotMatch(JSON.stringify(calls[0].input),/Validation note/);
+});
+
+test('diagnostic cannot secretly attach conversation history, saved files or other engines',async()=>{
+ const {env,calls}=fixture();
+ const invalid=[
+  {...QUERY,diagnostic:true,memoryIds:[ITEM]},
+  {...QUERY,diagnostic:true,history:[{role:'user',content:'private note'}]},
+  {...QUERY,diagnostic:true,engine:'gpt-oss-120b'}
+ ];
+ for(const request of invalid)assert.equal((await chat(env,request)).status,400);
+ assert.equal(calls.length,0);
+});
+
+test('diagnostic is subject to the same enforced owner policy and bearer authentication',async()=>{
+ const {env,calls}=fixture(undefined,{policy:{allowed_modes:['code']}});
+ assert.equal((await chat(env,{...QUERY,diagnostic:true})).status,403);
+ assert.equal((await chat(env,{...QUERY,diagnostic:true},'')).status,401);
+ assert.equal(calls.length,0);
+});
+
+test('Studio offers a live owner-only diagnostics action without persisting test messages',()=>{
+ const raw=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+ const html=JSON.parse(raw.match(/^const HTML = (.+);$/m)[1]);
+ assert.match(html,/id="runCoreCheck"/);
+ assert.match(html,/id="coreCheckResult"/);
+ assert.match(html,/diagnostic:true,history:\[\],memoryIds:\[\]/);
+ assert.match(html,/fetch\('\/api\/chat'/);
+ assert.match(html,/studioApi\('\/api\/studio\/knowledge'\)/);
+ assert.match(html,/el\('runCoreCheck'\)\.onclick/);
+ assert.doesNotMatch(html,/runCoreCheck[\s\S]{0,2400}saveChatArchive\(/);
 });

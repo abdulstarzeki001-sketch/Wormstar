@@ -56,7 +56,7 @@ class WormGPTProviderTests(unittest.TestCase):
 
     def test_newline_in_api_key_is_rejected(self):
         with self.assertRaisesRegex(ValueError, 'WORMGPT_API_KEY'):
-            chat(self.messages, environ={**self.settings, 'WORMGPT_API_KEY': 'x' * 20 + '\\nBearer stolen'})
+            chat(self.messages, environ={**self.settings, 'WORMGPT_API_KEY': 'x' * 20 + '\nBearer stolen'})
 
     def test_invalid_model_id_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "WORMGPT_MODEL_ID"):

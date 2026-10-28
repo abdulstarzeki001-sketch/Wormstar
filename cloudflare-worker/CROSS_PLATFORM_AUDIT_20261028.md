@@ -24,7 +24,7 @@ This is a **point-in-time audit**; no account credentials, private prompts, or d
 4. **GitHub PR #3**: outdated, unmerged and nonmergeable mobile-viewport PR. Its old `user-scalable=no` proposal conflicts with modern accessible input zoom; do not merge mechanically. Current production already includes touch-safe 16px inputs and 760px drawer fixes.
 5. **Authenticated browser & physical device**: Access-protected UI cannot be visually acceptance-tested without a real owner session. An unauthenticated Cloudflare Access login check is **not** evidence of chat or memory working end to end.
 6. **Models/agents**: AI binding and model routing are confirmed; owner-authenticated live model output has not been tested in this audit. OpenClaw, OpenCode, private GPU and proprietary WormGPT require separately configured upstream endpoints/secrets; their mere UI presence does not prove connections.
-7. **Policy documentation drift**: `cloudflare-worker/permissions.json` is the generated-module source of truth. A different legacy file, `policy/permissions.json`, has fewer capabilities and a 120-entry knowledge value, whereas first-party memory API enforces 500 entries. Review before consolidating policy files; never hand-edit generated `permissions-module.js` or loosen server grants.
+7. **Policy documentation drift — corrected in follow-up**: `cloudflare-worker/permissions.json` is the generated-module source of truth. The legacy `policy/permissions.json` intentionally has fewer capabilities. Both policy files and the generated module now declare the actual **500-entry** limit, and the Worker reads it directly. Do not replace one complete manifest with the other or loosen server grants.
 8. **Version history**: D1 `knowledge_revisions=0` at audit time; no migration or backfill is claimed. Record creation and per-item revision history are distinct.
 9. **Observability**: Supabase advisors also report unused indexes and missing primary keys in historical backup tables. Do not drop indexes or mutate legacy backup schemas without measuring production queries and verifying ownership.
 10. **Upload bundle**: Third-party UI files were not installed as executable code. Wormstar v45 incorporates first-party HTML/CSS adaptations without importing unknown service workers or fingerprinting.
@@ -40,3 +40,13 @@ This is a **point-in-time audit**; no account credentials, private prompts, or d
 7. Obtain owner-session mobile/desktop browser QA separately for chat, archives, UX and Supabase sync.
 
 **Explicit non-actions:** No data deleted, no RLS disabled, no account secret exposed or rotated, no unrelated finance tables altered, no unverified runtime connected.
+
+## Follow-up hardening applied on top of the bounded-JSON fix
+
+- Owner Bearer token comparison now compares complete UTF-8 byte arrays, not UTF-16 string lengths; tests use header-compatible non-ASCII Latin-1 tokens.
+- New memory entries, restores and webpage imports enforce `LAB_POLICY.limits.maxKnowledgeEntries=500`. Duplicate note creation is checked before the full-library guard, making repeated requests idempotent at capacity.
+- README now reflects actual Workers AI fallback routing, Cloudflare Access, chat archiving and Supabase session retention.
+- Additional tests cover multi-byte Arabic request payloads, duplicate-at-cap behavior, policy API advertised capacity and token byte comparison. The original bounded-JSON tests remain in place.
+- Deferred settings and owner acceptance are tracked in [issue #23](https://github.com/abdulstarzeki001-sketch/Wormstar/issues/23).
+
+This follow-up deliberately retained the already-merged `readBoundedJson` implementation rather than replacing it with a second request-body parser.

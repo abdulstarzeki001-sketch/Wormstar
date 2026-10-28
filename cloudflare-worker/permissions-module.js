@@ -55,7 +55,7 @@ export default {
     "maxProfileInstructionCharacters": 11000,
     "maxProfileConstraintsCharacters": 6000,
     "maxKnowledgeItemCharacters": 60000,
-    "maxKnowledgeEntries": 120,
+    "maxKnowledgeEntries": 500,
     "maxWebDocumentCharacters": 56000,
     "maxFileUploadBytes": 80000,
     "maxImportedWebUrlCharacters": 2048

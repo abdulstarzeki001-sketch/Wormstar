@@ -27,7 +27,8 @@ test('RAG handles nonmatches without leaking unrelated content',()=>{
 });
 test('new knowledge API and backup limits are consistent',()=>{
  assert.match(code,/knowledge_revisions/);
- assert.match(code,/Memory limit reached \(500 entries\)/);
+ assert.match(code,/LAB_POLICY\.limits\.maxKnowledgeEntries/);
+ assert.equal(JSON.parse(readFileSync(new URL('../permissions.json',import.meta.url),'utf8')).limits.maxKnowledgeEntries,500);
  assert.match(code,/LIMIT 500/);
  assert.match(html,/limit=500/);
  assert.match(html,/id="showMemoryHistory"/);

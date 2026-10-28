@@ -278,9 +278,9 @@ async function allow(request,env) {
   if(!h.startsWith('Bearer '))return false;
   const given=h.slice(7);
   const intended=env.WORMSTAR_ACCESS_TOKEN;
-  if(given.length!==intended.length)return false;
   const a=new TextEncoder().encode(given),b=new TextEncoder().encode(intended);
-  let delta=0;for(let i=0;i<a.length;i++)delta|=a[i]^b[i];return delta===0;
+  if(a.byteLength!==b.byteLength)return false;
+  let delta=0;for(let i=0;i<a.byteLength;i++)delta|=a[i]^b[i];return delta===0;
 }
 
 function textInput(data,field,max){
@@ -554,10 +554,10 @@ async function studioRoutes(request,env,path){
       try{
         const title=textInput(body,'title',130),content=textInput(body,'content',60000);
         if(!title||!content)return json({error:'Title and content are required'},400);
-        const count=await env.DB.prepare('SELECT count(*) AS n FROM knowledge').first();
-        if(Number(count?.n||0)>=500)return json({error:'Memory limit reached (500 entries)'},409);
         const existing=await env.DB.prepare('SELECT id FROM knowledge WHERE title=? AND content=? LIMIT 1').bind(title,content).first();
         if(existing)return json({id:existing.id,title,saved:true,duplicate:true});
+        const count=await env.DB.prepare('SELECT count(*) AS n FROM knowledge').first();
+        if(Number(count?.n||0)>=LAB_POLICY.limits.maxKnowledgeEntries)return json({error:'Memory limit reached ('+LAB_POLICY.limits.maxKnowledgeEntries+' entries)'},409);
         const id=crypto.randomUUID();
         await env.DB.prepare('INSERT INTO knowledge(id,title,kind,content) VALUES(?,?,?,?)').bind(id,title,modeKind(body.kind),content).run();
         return json({id,title,saved:true},201);
@@ -575,7 +575,7 @@ async function studioRoutes(request,env,path){
       const existing=await env.DB.prepare('SELECT id FROM knowledge WHERE id=?').bind(id).first();
       if(existing)return json({imported:false,id,reason:'already present'});
       const count=await env.DB.prepare('SELECT COUNT(*) AS n FROM knowledge').first();
-      if(Number(count?.n||0)>=500)return json({error:'Memory library is full'},409);
+      if(Number(count?.n||0)>=LAB_POLICY.limits.maxKnowledgeEntries)return json({error:'Memory library is full'},409);
       await env.DB.prepare('INSERT OR IGNORE INTO knowledge(id,title,kind,content) VALUES(?,?,?,?)')
         .bind(id,title,modeKind(input.kind),content).run();
       return json({imported:true,id});
@@ -593,7 +593,7 @@ async function studioRoutes(request,env,path){
          /^\d+\.\d+\.\d+\.\d+$/.test(host)||host.startsWith('['))
         return json({error:'A public HTTPS webpage is required'},400);
       const count=await env.DB.prepare('SELECT COUNT(*) AS n FROM knowledge').first();
-      if(Number(count?.n||0)>=500)return json({error:'The knowledge library is full'},409);
+      if(Number(count?.n||0)>=LAB_POLICY.limits.maxKnowledgeEntries)return json({error:'The knowledge library is full'},409);
       const result=await fetch('https://api.firecrawl.dev/v2/scrape',{
         method:'POST',
         headers:{'Authorization':'Bearer '+env.FIRECRAWL_API_KEY,'Content-Type':'application/json'},

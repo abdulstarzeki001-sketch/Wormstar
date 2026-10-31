@@ -27,17 +27,19 @@ if(!workerSource.includes(policyImport)||!workerSource.includes(policyBinding)){
 }
 const current=fs.readFileSync(modulePath,'utf8');
 const start=workerSource.indexOf('const LAB_BASE_INSTRUCTIONS = ');
-const end=workerSource.indexOf(';\nfunction capabilityEnabled',start);
+const nextDeclaration=workerSource.indexOf('function capabilityEnabled',start);
+const end=nextDeclaration<0?-1:workerSource.lastIndexOf(';',nextDeclaration);
 if(start<0||end<0)throw new Error('Worker prompt markers missing');
 const actualPrompt=JSON.parse(workerSource.slice(start+'const LAB_BASE_INSTRUCTIONS = '.length,end));
 const check=process.argv.includes('--check');
 if(check){
- if(current!==moduleExpected||actualPrompt!==prompt){
+ if(current.replace(/\r\n/g,'\n')!==moduleExpected||actualPrompt!==prompt){
   console.error('Wormstar policy module or system prompt out of sync. Run: node cloudflare-worker/tools/sync-policy.mjs');
   process.exitCode=1;
  }else console.log('Wormstar policy module and system prompt are synchronized.');
 }else{
- if(current!==moduleExpected)fs.writeFileSync(modulePath,moduleExpected);
+ if(current.replace(/\r\n/g,'\n')!==moduleExpected)fs.writeFileSync(modulePath,moduleExpected);
  if(actualPrompt!==prompt)fs.writeFileSync(mainPath,workerSource.slice(0,start)+'const LAB_BASE_INSTRUCTIONS = '+JSON.stringify(prompt)+workerSource.slice(end));
  console.log('Synchronized Wormstar permissions module and system prompt.');
 }
+

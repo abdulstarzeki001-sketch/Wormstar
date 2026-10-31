@@ -2,7 +2,7 @@ const REDESIGN_HTML = String.raw`<!doctype html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#f4f2eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -286,6 +286,60 @@ dialog.memory-dialog::backdrop{background:rgba(9,18,17,.52);backdrop-filter:blur
  .gate-card{padding:25px 20px;border-radius:21px}
  .gate h1{font-size:24px}
 }
+
+/* iPhone / iOS Safari refinement */
+html{height:100%;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{min-width:0;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+button,a,input,textarea,select{touch-action:manipulation}
+.gate{min-height:100vh;min-height:100svh;min-height:100dvh;padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.gate-card{max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);overflow-y:auto;overscroll-behavior:contain}
+.shell{min-height:100vh;min-height:100svh;min-height:100dvh}
+#page,.main,.page,.surface,.chat-surface,.workbench-grid>*{min-width:0}
+#page{overflow-wrap:anywhere}
+@media(max-width:860px){
+ .sidebar{height:100svh;height:100dvh;padding-block-start:calc(20px + env(safe-area-inset-top));padding-block-end:calc(16px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+ .topbar{height:calc(66px + env(safe-area-inset-top));min-height:calc(66px + env(safe-area-inset-top));padding-top:env(safe-area-inset-top)}
+ .page{padding-bottom:calc(116px + env(safe-area-inset-bottom));padding-inline-start:max(13px,env(safe-area-inset-left));padding-inline-end:max(13px,env(safe-area-inset-right))}
+ .mobile-nav{bottom:calc(8px + env(safe-area-inset-bottom));inset-inline-start:max(10px,env(safe-area-inset-left));inset-inline-end:max(10px,env(safe-area-inset-right));min-height:68px;padding:6px}
+ .mobile-nav button{min-height:52px;font-size:10px;gap:4px}
+ .mobile-nav button svg{width:19px;height:19px}
+ .icon-btn{width:44px;height:44px;min-width:44px;min-height:44px}
+ .thread{max-height:calc(100dvh - 330px);min-height:clamp(150px,30dvh,300px);scroll-padding-bottom:20px;-webkit-overflow-scrolling:touch}
+ .composer{padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+ .composer textarea{font-size:16px;min-height:104px;max-height:min(34dvh,220px);resize:none}
+ .toolbar-select,.field,.form-card input,.form-card textarea,.form-card select{font-size:16px;min-height:48px}
+ .form-card textarea{min-height:130px}
+ .btn,.nav-btn,.sheet-grid button{min-height:46px}
+ .sheet-overlay{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+ .more-sheet{max-height:min(78dvh,620px);padding-bottom:calc(18px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+ .memory-dialog{max-height:84dvh}
+ .toast{bottom:calc(88px + env(safe-area-inset-bottom));inset-inline-end:max(14px,env(safe-area-inset-right))}
+}
+@media(max-width:420px){
+ .topbar{padding-inline:9px}
+ .topbar-start,.topbar-actions{gap:4px}
+ .topbar-actions .status-pill{padding:5px 7px}
+ .topbar-actions .status-pill #healthLabel{display:none}
+ .top-title{font-size:12px}
+ .icon-btn{width:42px;height:42px;min-width:42px;min-height:42px}
+ .page{padding-inline:12px}
+ .gate-card{padding:24px 18px}
+ .gate-brand{margin-bottom:23px}
+ .gate h1{font-size:23px}
+}
+@media(max-height:560px) and (max-width:860px){
+ .gate{place-items:start center}
+ .gate-card{margin-block:auto}
+ .mobile-nav{min-height:58px}
+ .mobile-nav button{min-height:46px}
+ .thread{max-height:calc(100dvh - 250px);min-height:130px}
+ .composer textarea{min-height:72px;max-height:24dvh}
+}
+@supports not (height:100dvh){
+ .shell,.gate{min-height:100vh}
+ .sidebar{height:100vh}
+}
+
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>

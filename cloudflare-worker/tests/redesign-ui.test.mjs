@@ -57,3 +57,15 @@ test('Cloudflare Worker serves the redesign but retains protected backend routes
   assert.match(worker, /await allow\(request,env\)/);
   assert.match(worker, /theme_color:'#182a2c'/);
 });
+
+
+test('iPhone Safari layout respects dynamic viewport, safe areas and readable form controls', () => {
+  assert.match(REDESIGN_HTML, /interactive-widget=resizes-content/);
+  assert.match(REDESIGN_HTML, /env\(safe-area-inset-top\)/);
+  assert.match(REDESIGN_HTML, /env\(safe-area-inset-bottom\)/);
+  assert.match(REDESIGN_HTML, /100dvh/);
+  assert.match(REDESIGN_HTML, /\.composer textarea\{font-size:16px/);
+  assert.match(REDESIGN_HTML, /\.toolbar-select,.field,.form-card input,.form-card textarea,.form-card select\{font-size:16px/);
+  assert.match(REDESIGN_HTML, /overflow-x:clip/);
+  assert.match(REDESIGN_HTML, /min-height:52px/);
+});

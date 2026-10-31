@@ -10,7 +10,7 @@ test('new interface is a standalone bilingual responsive workspace', () => {
   assert.match(REDESIGN_HTML, /document\.documentElement\.dir=lang==='ar'\?'rtl':'ltr'/);
   assert.match(REDESIGN_HTML, /@media\(max-width:860px\)/);
   assert.match(REDESIGN_HTML, /@media\(max-width:620px\)/);
-  assert.match(REDESIGN_HTML, /class="mobile-nav"/);
+  assert.match(REDESIGN_HTML, /class="mobile-nav hidden"/);
   assert.match(REDESIGN_HTML, /id="sidebar"/);
   assert.match(REDESIGN_HTML, /prefers-reduced-motion/);
 });

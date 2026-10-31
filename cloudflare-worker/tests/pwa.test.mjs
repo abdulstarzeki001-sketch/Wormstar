@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {inflateSync} from 'node:zlib';
 import {APP_ICON_PNG_B64,APP_ICON_SVG} from '../app-icon.js';
 import FUTURE_UI from '../future-ui.js';
+import REDESIGN_HTML from '../redesign-ui.js';
 
 const worker=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
 const htmlRaw=worker.match(/^const HTML = (.+);$/m);
@@ -72,12 +73,12 @@ test('PWA service worker is served at root scope and uses navigation-only offlin
  assert.ok(worker.includes("worker-src 'self'"));
 });
 test('iPhone home-screen launch has a splash and standalone detection',()=>{
- assert.match(html,/ws-launch-splash/);
- assert.match(html,/pwa-standalone/);
- assert.match(html,/navigator\.standalone/);
- assert.ok(html.includes("serviceWorker.register('/service-worker.js'"));
- assert.match(html,/safe-area-inset-top/);
- assert.match(html,/safe-area-inset-bottom/);
+ assert.match(REDESIGN_HTML,/ws-launch-splash/);
+ assert.match(REDESIGN_HTML,/pwa-standalone/);
+ assert.match(REDESIGN_HTML,/navigator\.standalone/);
+ assert.ok(REDESIGN_HTML.includes("serviceWorker.register('/service-worker.js'"));
+ assert.match(REDESIGN_HTML,/safe-area-inset-top/);
+ assert.match(REDESIGN_HTML,/safe-area-inset-bottom/);
 });
 test('Manifest provides standalone launch and a maskable scalable icon',()=>{
  assert.ok(worker.includes("display_override:['standalone','minimal-ui']"));

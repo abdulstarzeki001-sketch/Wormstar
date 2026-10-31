@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { api, auth } from '@appdeploy/client';
 import {
   Activity,
+  AlertCircle,
   BrainCircuit,
   CheckCircle2,
   ClipboardList,
@@ -10,11 +11,13 @@ import {
   Download,
   Fingerprint,
   Flag,
+  Lock,
   LogOut,
-  MessageSquare,
+  Radar,
   RotateCcw,
   Send,
   Shield,
+  ShieldCheck,
   Sparkles,
   Zap,
 } from 'lucide-react';
@@ -221,7 +224,7 @@ export default function Lab() {
         <div className="topnav-inner">
           <div className="brand">
             <div className="brand-mark">
-              <Shield size={20} strokeWidth={2.2} />
+              <ShieldCheck size={20} strokeWidth={2.2} />
             </div>
             <div className="brand-text">
               <span className="brand-name">Wormstar</span>
@@ -265,7 +268,7 @@ export default function Lab() {
               </>
             ) : (
               <span className="status-chip">
-                <span className="status-dot" />
+                <Radar size={14} />
                 مساحة خاصة
               </span>
             )}
@@ -277,7 +280,7 @@ export default function Lab() {
         <main className="auth-screen">
           <div className="auth-card">
             <div className="auth-orb">
-              <Shield size={32} strokeWidth={1.8} />
+              <ShieldCheck size={32} strokeWidth={1.8} />
             </div>
             <p className="auth-kicker">Private Cybersecurity Workspace</p>
             <h1>مختبر Wormstar</h1>
@@ -317,7 +320,7 @@ export default function Lab() {
             )}
 
             <div className="auth-footer">
-              <Shield size={14} />
+              <Lock size={14} />
               تحليل نصي فقط — بدون تنفيذ أوامر على الخادم
             </div>
           </div>
@@ -363,7 +366,7 @@ export default function Lab() {
               {visibleMessages.length === 0 && (
                 <div className="empty-state">
                   <div className="empty-icon">
-                    <MessageSquare size={28} strokeWidth={1.6} />
+                    <ModeIcon size={28} strokeWidth={1.6} />
                   </div>
                   <h2>كيف أقدر أساعدك اليوم؟</h2>
                   <p>
@@ -423,6 +426,7 @@ export default function Lab() {
             <div className="composer">
               {indicatorPreview.length > 0 && (
                 <div className="ioc-preview">
+                  <Fingerprint size={13} />
                   <span>مؤشرات مكتشفة محلياً:</span>
                   {indicatorPreview.map((value) => (
                     <code key={value}>{value}</code>
@@ -431,6 +435,7 @@ export default function Lab() {
               )}
               {error && (
                 <div className="error-banner" role="alert">
+                  <AlertCircle size={15} />
                   {error}
                 </div>
               )}
@@ -459,6 +464,7 @@ export default function Lab() {
                 </div>
               </form>
               <p className="disclaimer">
+                <AlertCircle size={12} />
                 لا تُدخل مفاتيح API أو كلمات مرور. مخرجات الذكاء الاصطناعي تحتاج تحققاً مستقلاً.
               </p>
             </div>

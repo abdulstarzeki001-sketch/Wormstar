@@ -75,12 +75,12 @@ test('crimson identity is selectable, responsive and cannot expose secret-bound 
  assert.doesNotThrow(()=>new Script(ui.boot));
 });
 
-test('Wormstar standalone manifest reflects new first-party black workspace',async()=>{
+test('Wormstar standalone manifest reflects the new ivory and evergreen workspace',async()=>{
  const r=await worker.fetch(new Request('https://wormstar.test/manifest.webmanifest'),{},{});
  assert.equal(r.status,200);
  const manifest=await r.json();
- assert.equal(manifest.background_color,'#070407');
- assert.equal(manifest.theme_color,'#070407');
+ assert.equal(manifest.background_color,'#f4f2eb');
+ assert.equal(manifest.theme_color,'#182a2c');
  assert.equal(manifest.name.startsWith('Wormstar'),true);
 });
 

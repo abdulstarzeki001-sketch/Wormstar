@@ -64,24 +64,24 @@ test('new look preserves required security and memory API contracts',()=>{
 });
 
 test('PWA service worker is served at root scope and uses navigation-only offline fallback',()=>{
- assert.match(worker,/url\.pathname==='\\/service-worker\.js'/);
- assert.match(worker,/Service-Worker-Allowed':'\\/'/);
- assert.match(worker,/PWA_SERVICE_WORKER/);
- assert.match(worker,/request\.mode==='navigate'/);
- assert.match(worker,/OFFLINE_URL='\\/offline\.html'/);
- assert.match(worker,/worker-src 'self'/);
+ assert.ok(worker.includes("url.pathname==='/service-worker.js'"));
+ assert.ok(worker.includes("'Service-Worker-Allowed':'/'"));
+ assert.ok(worker.includes('PWA_SERVICE_WORKER'));
+ assert.ok(worker.includes("request.mode==='navigate'"));
+ assert.ok(worker.includes("OFFLINE_URL='/offline.html'"));
+ assert.ok(worker.includes("worker-src 'self'"));
 });
 test('iPhone home-screen launch has a splash and standalone detection',()=>{
  assert.match(html,/ws-launch-splash/);
  assert.match(html,/pwa-standalone/);
  assert.match(html,/navigator\.standalone/);
- assert.match(html,/serviceWorker\.register\('\/service-worker\.js'/);
+ assert.ok(html.includes("serviceWorker.register('/service-worker.js'"));
  assert.match(html,/safe-area-inset-top/);
  assert.match(html,/safe-area-inset-bottom/);
 });
 test('Manifest provides standalone launch and a maskable scalable icon',()=>{
- assert.match(worker,/display_override:\['standalone','minimal-ui'\]/);
- assert.match(worker,/purpose:'any maskable'/);
- assert.match(worker,/start_url:'\/?source=homescreen'/);
- assert.match(worker,/url\.pathname==='\\/offline\.html'/);
+ assert.ok(worker.includes("display_override:['standalone','minimal-ui']"));
+ assert.ok(worker.includes("purpose:'any maskable'"));
+ assert.ok(worker.includes("start_url:'/?source=homescreen'"));
+ assert.ok(worker.includes("url.pathname==='/offline.html'"));
 });

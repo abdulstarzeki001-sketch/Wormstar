@@ -210,6 +210,17 @@ a{color:inherit}
 .mobile-menu-btn{display:none}
 .mobile-nav{display:none}
 .mobile-veil{display:none}
+.sheet-overlay{position:fixed;inset:0;z-index:55;background:rgba(9,18,17,.42);backdrop-filter:blur(3px);display:flex;align-items:flex-end;padding:10px 10px calc(10px + env(safe-area-inset-bottom))}
+.more-sheet{width:min(100%,640px);max-height:min(78svh,620px);overflow:auto;margin:0 auto;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:15px 17px 18px;box-shadow:var(--shadow)}
+.sheet-handle{width:38px;height:4px;border-radius:99px;background:var(--line-strong);margin:0 auto 14px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:13px}.sheet-head h2{font-size:16px;margin:0}
+.sheet-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sheet-grid button{min-height:48px;border:1px solid var(--line);border-radius:12px;background:var(--paper-2);color:var(--ink);text-align:start;padding:10px 12px;font-weight:750;font-size:12px}
+.sheet-grid button:active{background:var(--accent-soft);color:var(--accent)}
+dialog.memory-dialog{width:min(760px,calc(100vw - 28px));max-height:82svh;border:1px solid var(--line);border-radius:19px;padding:0;background:var(--paper);color:var(--ink);box-shadow:var(--shadow)}
+dialog.memory-dialog::backdrop{background:rgba(9,18,17,.52);backdrop-filter:blur(3px)}
+.memory-dialog-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line)}.memory-dialog-head h2{font-size:15px;margin:0;overflow-wrap:anywhere}
+#memoryViewerBody{margin:0;padding:18px;max-height:66svh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8;font:12px/1.85 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink-2)}
 @media(max-width:1120px){
  .shell{grid-template-columns:236px minmax(0,1fr)}
  .sidebar{padding-inline:12px}
@@ -364,6 +375,25 @@ a{color:inherit}
  <button data-nav="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/></svg><span data-t="reports">التقارير</span></button>
  <button id="mobileMore"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg><span data-t="more">المزيد</span></button>
 </nav>
+<div class="sheet-overlay hidden" id="moreSheet" role="presentation">
+ <section class="more-sheet" role="dialog" aria-modal="true" aria-labelledby="moreSheetTitle">
+  <div class="sheet-handle" aria-hidden="true"></div>
+  <div class="sheet-head"><h2 id="moreSheetTitle">المزيد</h2><button class="icon-btn" type="button" id="closeMoreSheet" aria-label="إغلاق">×</button></div>
+  <div class="sheet-grid">
+   <button type="button" data-sheet-nav="logs">≋ &nbsp; تحليل السجلات</button>
+   <button type="button" data-sheet-nav="ioc">◎ &nbsp; مؤشرات الاختراق</button>
+   <button type="button" data-sheet-nav="ctf">⚑ &nbsp; مختبر CTF</button>
+   <button type="button" data-sheet-nav="memory">▤ &nbsp; مكتبة المعرفة</button>
+   <button type="button" data-sheet-nav="agents">⌘ &nbsp; الوكلاء والتكاملات</button>
+   <button type="button" data-sheet-nav="policy">◇ &nbsp; السياسات والصلاحيات</button>
+   <button type="button" data-sheet-nav="settings">⚙ &nbsp; الإعدادات</button>
+  </div>
+ </section>
+</div>
+<dialog id="memoryDialog" class="memory-dialog" aria-labelledby="memoryViewerTitle">
+ <div class="memory-dialog-head"><h2 id="memoryViewerTitle">مرجع المعرفة</h2><button class="icon-btn" type="button" id="memoryClose" aria-label="إغلاق">×</button></div>
+ <pre id="memoryViewerBody"></pre>
+</dialog>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -427,7 +457,7 @@ a{color:inherit}
  function setPage(next){
   pageName=next;
   if(MODE_IDS.includes(next))activeMode=next;
-  $('sidebar').classList.remove('open');$('mobileVeil').classList.remove('show');
+  $('sidebar').classList.remove('open');$('mobileVeil').classList.remove('show');$('moreSheet').classList.add('hidden');
   document.querySelectorAll('[data-nav]').forEach(el=>el.classList.toggle('active',el.dataset.nav===next||(next==='reports'&&el.dataset.nav==='reports')));
   document.querySelectorAll('#mobileNav [data-nav]').forEach(el=>el.classList.toggle('active',el.dataset.nav===next));
   $('topTitle').textContent=t(next);
@@ -582,9 +612,9 @@ a{color:inherit}
   try{
    const full=await api('/api/studio/knowledge/'+encodeURIComponent(id));
    const content=full.content||full.item&&full.item.content||item.preview||'';
-   const w=window.open('','_blank','noopener,noreferrer');
-   if(w){w.document.write('<title>'+esc(item.title)+'</title><pre style="white-space:pre-wrap;word-break:break-word;font:14px system-ui;padding:24px">'+esc(content)+'</pre>');w.document.close();}
-   else toast(lang==='ar'?'اسمح بفتح نافذة العرض':'Allow the preview window');
+   $('memoryViewerTitle').textContent=item.title;
+   $('memoryViewerBody').textContent=content;
+   $('memoryDialog').showModal();
   }catch(e){toast(e.message);}
  }
  async function loadAgents(){
@@ -655,7 +685,15 @@ a{color:inherit}
  $('langButton').addEventListener('click',()=>{lang=lang==='ar'?'en':'ar';try{localStorage.setItem('wormstar-lang',lang);}catch(e){}applyPrefs();});
  $('mobileMenu').addEventListener('click',()=>{$('sidebar').classList.toggle('open');$('mobileVeil').classList.toggle('show');});
  $('mobileVeil').addEventListener('click',()=>{$('sidebar').classList.remove('open');$('mobileVeil').classList.remove('show');});
- $('mobileMore').addEventListener('click',()=>{$('sidebar').classList.add('open');$('mobileVeil').classList.add('show');});
+ $('mobileMore').addEventListener('click',()=>{$('moreSheet').classList.remove('hidden');});
+$('closeMoreSheet').addEventListener('click',()=>{$('moreSheet').classList.add('hidden');});
+$('moreSheet').addEventListener('click',event=>{
+ const button=event.target.closest('[data-sheet-nav]');
+ if(button){setPage(button.dataset.sheetNav);return;}
+ if(event.target===$('moreSheet'))$('moreSheet').classList.add('hidden');
+});
+$('memoryClose').addEventListener('click',()=>$('memoryDialog').close());
+$('memoryDialog').addEventListener('click',event=>{if(event.target===$('memoryDialog'))$('memoryDialog').close();});
  try{const saved=sessionStorage.getItem(KEY);if(saved){token=saved;validateToken(saved).then(ok=>{if(ok)openApp();else closeApp();}).catch(closeApp);}}catch(e){}
 })();
 </script>

@@ -109,6 +109,7 @@ export default function Lab() {
   }, []);
 
   const activeMode = MODES.find((item) => item.id === mode)!;
+  const ModeIcon = activeMode.icon;
   const visibleMessages = messages.filter((message) => message.mode === mode);
   const indicatorPreview = useMemo(() => {
     if (mode !== 'ioc') return [];
@@ -326,7 +327,7 @@ export default function Lab() {
           <section className="mode-header">
             <div className="mode-info">
               <div className="mode-icon">
-                <activeMode.icon size={22} strokeWidth={1.8} />
+                <ModeIcon size={22} strokeWidth={1.8} />
               </div>
               <div>
                 <h1>{activeMode.label}</h1>

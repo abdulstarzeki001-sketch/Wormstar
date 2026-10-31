@@ -249,6 +249,10 @@ button:disabled {
   color: var(--text-secondary);
 }
 
+.status-chip svg {
+  color: var(--cyan);
+}
+
 .status-dot {
   width: 7px;
   height: 7px;
@@ -704,6 +708,11 @@ button:disabled {
   color: var(--text-muted);
 }
 
+.ioc-preview > svg {
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
 .ioc-preview code {
   font-family: ui-monospace, monospace;
   font-size: 11px;
@@ -719,9 +728,16 @@ button:disabled {
 }
 
 .error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--danger);
   font-size: 13px;
   padding: 10px 0 4px;
+}
+
+.error-banner svg {
+  flex-shrink: 0;
 }
 
 .compose-box {
@@ -773,11 +789,20 @@ button:disabled {
 }
 
 .disclaimer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   text-align: center;
   font-size: 11px;
   color: var(--text-muted);
   margin: 10px 0 0;
   line-height: 1.5;
+}
+
+.disclaimer svg {
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 
 /* ─── Responsive ─── */

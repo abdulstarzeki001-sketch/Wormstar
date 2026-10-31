@@ -1,4 +1,4 @@
-const REDESIGN_HTML = String.raw\`<!doctype html>
+const REDESIGN_HTML = String.raw`<!doctype html>
 <html lang="ar" dir="rtl" data-theme="light">
 <head>
 <meta charset="utf-8">
@@ -660,5 +660,5 @@ a{color:inherit}
 })();
 </script>
 </body>
-</html>\`;
+</html>`;
 export default REDESIGN_HTML;

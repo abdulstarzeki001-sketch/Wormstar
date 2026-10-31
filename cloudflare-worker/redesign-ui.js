@@ -3,16 +3,16 @@ const REDESIGN_HTML = String.raw`<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<meta name="theme-color" content="#f4f2eb">
+<meta name="theme-color" content="#182a2c">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Wormstar">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
 <meta name="description" content="Wormstar — Cyber Intelligence Workspace">
-<link rel="apple-touch-icon" sizes="96x96" href="/apple-touch-icon.png?v=20261101">
-<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261101">
-<link rel="manifest" href="/manifest.webmanifest?v=20261101">
+<link rel="apple-touch-icon" sizes="96x96" href="/apple-touch-icon.png?v=20261101-pwa">
+<link rel="icon" type="image/svg+xml" href="/icon.svg?v=20261101-pwa">
+<link rel="manifest" href="/manifest.webmanifest?v=20261101-pwa">
 <title>Wormstar — Intelligence Workspace</title>
 <style>
 :root{
@@ -341,9 +341,24 @@ button,a,input,textarea,select{touch-action:manipulation}
 }
 
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Native-feeling iOS home-screen launch */
+.ws-launch-splash{display:none}
+html.pwa-standalone .ws-launch-splash{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px));background:radial-gradient(circle at 50% 36%,#23463f 0%,#142625 36%,#0b1517 78%);color:#f4f2e9;animation:wsSplashFade .55s ease 1.05s forwards;pointer-events:none}
+.ws-launch-splash-inner{text-align:center;display:grid;justify-items:center;gap:13px;animation:wsSplashRise .65s cubic-bezier(.2,.8,.2,1) both}
+.ws-launch-splash img{width:112px;height:112px;filter:drop-shadow(0 14px 30px rgba(76,190,159,.24))}
+.ws-launch-splash strong{font:800 21px system-ui,-apple-system,sans-serif;letter-spacing:.18em;direction:ltr}
+.ws-launch-splash small{font:10px ui-monospace,monospace;letter-spacing:.2em;color:#c4ae82;direction:ltr}
+.ws-launch-splash .ws-splash-line{width:46px;height:2px;margin-top:8px;border-radius:99px;background:linear-gradient(90deg,#c6a875,#5cc8a9);transform-origin:center;animation:wsSplashLine .9s ease .2s both}
+@keyframes wsSplashFade{to{opacity:0;visibility:hidden}}
+@keyframes wsSplashRise{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes wsSplashLine{from{transform:scaleX(.15);opacity:.3}to{transform:scaleX(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){html.pwa-standalone .ws-launch-splash{animation:none;opacity:0;visibility:hidden}.ws-launch-splash-inner,.ws-launch-splash .ws-splash-line{animation:none}}
+
 </style>
 </head>
 <body>
+<div class="ws-launch-splash" aria-hidden="true"><div class="ws-launch-splash-inner"><img src="/icon.svg?v=20261101-pwa" alt=""><strong>WORMSTAR</strong><small>PRIVATE INTELLIGENCE WORKSPACE</small><span class="ws-splash-line"></span></div></div>
 <a class="skip-link" href="#page">تجاوز إلى المحتوى</a>
 
 <section id="gate" class="gate" aria-labelledby="gateTitle">
@@ -749,6 +764,13 @@ $('moreSheet').addEventListener('click',event=>{
 $('memoryClose').addEventListener('click',()=>$('memoryDialog').close());
 $('memoryDialog').addEventListener('click',event=>{if(event.target===$('memoryDialog'))$('memoryDialog').close();});
  try{const saved=sessionStorage.getItem(KEY);if(saved){token=saved;validateToken(saved).then(ok=>{if(ok)openApp();else closeApp();}).catch(closeApp);}}catch(e){}
+})();
+</script>
+<script>
+(function(){
+ const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+ if(standalone)document.documentElement.classList.add('pwa-standalone');
+ if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/service-worker.js',{scope:'/'}).catch(()=>{}),{once:true});
 })();
 </script>
 </body>

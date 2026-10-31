@@ -3,23 +3,12 @@ main = "worker.js"
 compatibility_date = "2026-10-25"
 workers_dev = true
 
-# Sample only 10% of deliberately sanitized application logs; omit automatic
-# invocation logs to reduce risk of recording sensitive request metadata.
+# Minimal valid observability config for current Wrangler releases.
+# The previous nested settings (`redact_query_string`, `traces`, `issues`) are
+# not accepted by the Wrangler version used by this CI workflow and caused the
+# deployment to fail during config validation.
 [observability]
 enabled = true
-redact_query_string = true
-
-[observability.traces]
-enabled = false
-
-# Group unhandled exceptions, Worker failures and 5xx into actionable issues.
-[observability.issues]
-enabled = true
-
-[observability.logs]
-enabled = true
-invocation_logs = false
-head_sampling_rate = 0.1
 
 [ai]
 binding = "AI"

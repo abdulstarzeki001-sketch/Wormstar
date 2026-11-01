@@ -6,11 +6,11 @@ import REDESIGN_HTML from '../redesign-ui.js';
 const worker = readFileSync(new URL('../worker.js', import.meta.url), 'utf8');
 
 test('new interface is a standalone bilingual responsive workspace', () => {
-  assert.match(REDESIGN_HTML, /<html lang="ar" dir="rtl" data-theme="light">/);
+  assert.match(REDESIGN_HTML, /<html lang="ar" dir="rtl" data-theme="dark">/);
   assert.match(REDESIGN_HTML, /document\.documentElement\.dir=lang==='ar'\?'rtl':'ltr'/);
-  assert.match(REDESIGN_HTML, /@media\(max-width:860px\)/);
-  assert.match(REDESIGN_HTML, /@media\(max-width:620px\)/);
-  assert.match(REDESIGN_HTML, /class="mobile-nav hidden"/);
+  assert.match(REDESIGN_HTML, /@media\(max-width:760px\)/);
+  assert.match(REDESIGN_HTML, /@media\(max-width:390px\)/);
+  assert.match(REDESIGN_HTML, /class="mobile-nav"/);
   assert.match(REDESIGN_HTML, /id="sidebar"/);
   assert.match(REDESIGN_HTML, /prefers-reduced-motion/);
 });

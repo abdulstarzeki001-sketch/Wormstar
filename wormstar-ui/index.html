@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a101d">
+<meta name="description" content="Wormstar Sentinel — مساحة عمل أمنية ذكية للباحثين وفرق الدفاع السيبراني.">
+<title>Wormstar Sentinel — Security Workspace</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+ --bg:#0a101d;--surface:#111a2a;--surface-2:#172337;--surface-3:#1d2b41;
+ --line:rgba(177,198,222,.12);--line-strong:rgba(177,198,222,.22);
+ --text:#edf3fa;--muted:#91a2b9;--soft:#c5d0de;--accent:#52e0c2;--accent-2:#a69aff;
+ --accent-wash:rgba(82,224,194,.11);--purple-wash:rgba(166,154,255,.12);
+ --warning:#eebc76;--danger:#ff7888;--success:#63d6a7;
+ --shadow:0 28px 80px rgba(0,0,0,.25);--radius:18px;--radius-lg:26px;
+ --sidebar:250px;--context:286px;
+}
+html[data-theme="light"]{
+ --bg:#edf2f6;--surface:#fff;--surface-2:#f6f9fc;--surface-3:#eaf0f6;
+ --line:rgba(32,53,77,.10);--line-strong:rgba(32,53,77,.18);
+ --text:#162338;--muted:#708098;--soft:#43546b;--accent:#087e70;--accent-2:#6659bd;
+ --accent-wash:rgba(8,126,112,.09);--purple-wash:rgba(102,89,189,.08);
+ --warning:#9d641b;--danger:#c13c54;--success:#18865e;
+ --shadow:0 22px 60px rgba(25,48,76,.09);
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans Arabic",Inter,system-ui,sans-serif;min-height:100vh}
+button,input,textarea{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}
+.app{min-height:100vh;display:grid;grid-template-columns:var(--sidebar) minmax(0,1fr) var(--context);direction:rtl}
+.sidebar{height:100vh;position:sticky;top:0;padding:24px 17px 18px;border-left:1px solid var(--line);display:flex;flex-direction:column;background:var(--surface)}
+.brand{display:flex;align-items:center;gap:12px;padding:5px 9px 28px}
+.brand-mark{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#62e8cd,#8c83ff);display:grid;place-items:center;box-shadow:0 10px 28px rgba(82,224,194,.17);flex:none}
+.brand-mark svg{width:26px;height:26px}
+.brand-name{font-family:Inter,"IBM Plex Sans Arabic",sans-serif;font-weight:700;letter-spacing:.02em;font-size:16px;direction:ltr}
+.brand-sub{font-size:10px;color:var(--muted);letter-spacing:.16em;margin-top:3px;direction:ltr}
+.workspace-switch{display:flex;align-items:center;gap:10px;padding:11px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;margin-bottom:22px}
+.workspace-orb{width:9px;height:9px;background:var(--accent);border-radius:50%;box-shadow:0 0 0 5px var(--accent-wash)}
+.workspace-copy{min-width:0;flex:1}.workspace-copy strong{display:block;font-size:12px}.workspace-copy small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.section-label{font-size:10px;letter-spacing:.12em;color:var(--muted);padding:0 12px 9px;font-weight:600}
+.nav{display:grid;gap:4px}.nav button{position:relative;width:100%;display:flex;align-items:center;gap:12px;padding:11px 12px;border:0;border-radius:12px;background:transparent;color:var(--muted);text-align:right;font-size:13px;transition:.2s}
+.nav button:hover{background:var(--surface-2);color:var(--text)}.nav button.active{color:var(--text);background:var(--accent-wash)}
+.nav button.active:before{content:"";position:absolute;right:0;top:10px;bottom:10px;width:3px;border-radius:6px;background:var(--accent)}
+.nav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;flex:none}
+.nav .count{margin-right:auto;color:var(--muted);font-size:10px;background:var(--surface-3);padding:3px 7px;border-radius:20px}
+.sidebar-spacer{flex:1}.plan-card{padding:14px;background:linear-gradient(145deg,var(--surface-2),var(--surface));border:1px solid var(--line);border-radius:15px;margin:16px 0}
+.plan-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600}.plan-head span:last-child{color:var(--accent);font-family:Inter,sans-serif;font-size:10px}
+.plan-card p{font-size:10px;line-height:1.8;color:var(--muted);margin:8px 0 10px}.progress{height:5px;background:var(--surface-3);border-radius:10px;overflow:hidden}.progress i{display:block;width:68%;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:10px}
+.profile{display:flex;align-items:center;gap:10px;padding:12px 7px 0;border-top:1px solid var(--line)}
+.avatar{width:34px;height:34px;border-radius:12px;background:linear-gradient(140deg,#5f7da7,#9f8de3);display:grid;place-items:center;color:white;font-size:12px;font-weight:700}
+.profile-info{flex:1}.profile-info strong{font-size:11px;display:block}.profile-info small{font-size:10px;color:var(--muted)}
+.icon-btn{width:36px;height:36px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);color:var(--muted);display:grid;place-items:center;transition:.2s}
+.icon-btn:hover{color:var(--text);border-color:var(--line-strong)}.icon-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7}
+.main{min-width:0;padding:24px 30px 42px;max-width:1600px;width:100%;margin:0 auto}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.mobile-brand{display:none;align-items:center;gap:9px;font-weight:700;direction:ltr}
+.breadcrumb{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}.breadcrumb b{color:var(--text);font-weight:500}
+.top-actions{margin-right:auto;display:flex;align-items:center;gap:8px}
+.search-trigger{display:flex;align-items:center;gap:9px;width:210px;padding:9px 11px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--muted);font-size:11px;text-align:right}
+.search-trigger svg{width:15px;height:15px;stroke:currentColor;fill:none}.key{margin-right:auto;border:1px solid var(--line);padding:2px 5px;border-radius:5px;font:10px Inter,sans-serif}
+.status-top{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted);padding:0 8px}.status-top i{width:6px;height:6px;background:var(--success);border-radius:50%}
+.page{display:none;animation:rise .25s ease}.page.active{display:block}@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:2px 0 22px}
+.eyebrow{font:600 10px Inter,sans-serif;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;direction:ltr;margin-bottom:9px}
+h1{margin:0;font-size:26px;letter-spacing:-.03em;font-weight:600}.page-heading p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.8}
+.btn{border:1px solid var(--line-strong);background:var(--surface);color:var(--text);border-radius:11px;padding:10px 14px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.2s}
+.btn:hover{transform:translateY(-1px);border-color:var(--accent)}.btn.primary{background:var(--accent);color:#06241f;border-color:var(--accent);font-weight:700}.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+.hero{position:relative;overflow:hidden;display:grid;grid-template-columns:1.3fr .7fr;gap:20px;padding:25px 26px;border:1px solid var(--line);border-radius:var(--radius-lg);background:radial-gradient(ellipse at 10% 20%,rgba(82,224,194,.14),transparent 37%),radial-gradient(ellipse at 92% 10%,rgba(166,154,255,.14),transparent 32%),var(--surface);box-shadow:var(--shadow);margin-bottom:18px}
+.hero:after{content:"";position:absolute;left:-90px;bottom:-180px;width:310px;height:310px;border:1px solid var(--line);border-radius:50%;box-shadow:0 0 0 32px rgba(255,255,255,.012),0 0 0 64px rgba(255,255,255,.012),0 0 0 96px rgba(255,255,255,.012);pointer-events:none}
+.hero-copy{position:relative;z-index:1}.hero-tag{display:inline-flex;gap:7px;align-items:center;border:1px solid var(--line);border-radius:30px;padding:6px 10px;color:var(--accent);font-size:10px;margin-bottom:14px}
+.hero-tag i{width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 9px var(--accent)}
+.hero h2{font-size:23px;line-height:1.55;margin:0;max-width:500px;font-weight:600}.hero h2 span{color:var(--accent)}
+.hero-copy p{font-size:11px;line-height:1.95;color:var(--muted);max-width:490px;margin:9px 0 18px}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap}
+.hero-visual{position:relative;min-height:170px;display:grid;place-items:center;z-index:1}
+.orbit{width:166px;height:166px;border-radius:50%;border:1px solid rgba(82,224,194,.23);position:relative;display:grid;place-items:center}
+.orbit:before,.orbit:after{content:"";position:absolute;border:1px solid rgba(166,154,255,.21);border-radius:50%;inset:16px}.orbit:after{inset:36px;border-color:rgba(82,224,194,.25)}
+.core{width:67px;height:67px;border-radius:23px;display:grid;place-items:center;background:linear-gradient(140deg,#5be6c8,#9184ff);box-shadow:0 0 42px rgba(82,224,194,.2);transform:rotate(45deg)}
+.core svg{transform:rotate(-45deg);width:34px;height:34px;stroke:#06241f;fill:none;stroke-width:1.6}
+.orbit-dot{position:absolute;width:8px;height:8px;background:var(--accent);border:2px solid var(--surface);border-radius:50%;top:15px;right:35px;box-shadow:0 0 0 4px var(--accent-wash)}
+.stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat-card{padding:16px 16px 14px;border:1px solid var(--line);border-radius:16px;background:var(--surface);min-width:0}
+.stat-top{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:10px}
+.stat-icon{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;background:var(--accent-wash);color:var(--accent)}
+.stat-icon.purple{background:var(--purple-wash);color:var(--accent-2)}.stat-icon.amber{background:rgba(238,188,118,.12);color:var(--warning)}
+.stat-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7}
+.stat-value{font:600 25px Inter,sans-serif;letter-spacing:-.05em;margin:11px 0 5px;direction:ltr;text-align:right}
+.stat-foot{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:9px}.trend{color:var(--success);font-weight:600}
+.content-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.85fr);gap:14px}
+.panel{border:1px solid var(--line);border-radius:17px;background:var(--surface);min-width:0;overflow:hidden}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:16px 17px 12px}
+.panel-head h3{font-size:12px;margin:0;font-weight:600}.panel-head p{font-size:9px;color:var(--muted);margin:5px 0 0}
+.text-link{border:0;background:transparent;color:var(--accent);font-size:10px;padding:5px}
+.activity-list{padding:0 17px 10px}.activity{display:flex;align-items:flex-start;gap:11px;padding:12px 0;border-top:1px solid var(--line)}
+.activity-symbol{width:31px;height:31px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--purple-wash);color:var(--accent-2)}
+.activity-symbol.warn{background:rgba(238,188,118,.12);color:var(--warning)}.activity-symbol.good{background:var(--accent-wash);color:var(--accent)}
+.activity-symbol svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+.activity-main{min-width:0;flex:1}.activity-main strong{font-size:10px;display:block}.activity-main p{font-size:9px;color:var(--muted);margin:4px 0 0;line-height:1.7}
+.activity-time{font:9px Inter,sans-serif;color:var(--muted);white-space:nowrap;direction:ltr}
+.severity{font-size:8px;border-radius:30px;padding:4px 7px;background:var(--accent-wash);color:var(--accent);white-space:nowrap}
+.severity.medium{background:rgba(238,188,118,.12);color:var(--warning)}.severity.low{background:var(--purple-wash);color:var(--accent-2)}
+.agent-list{padding:0 17px 14px}.agent{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.agent-avatar{width:31px;height:31px;border-radius:10px;background:var(--surface-3);display:grid;place-items:center;color:var(--soft);font-size:11px;font-family:Inter}
+.agent-info{flex:1}.agent-info strong{font-size:10px;display:block}.agent-info small{font-size:9px;color:var(--muted)}
+.agent-state{font-size:9px;color:var(--success);display:flex;align-items:center;gap:5px}.agent-state i{width:5px;height:5px;border-radius:50%;background:var(--success)}
+.context{height:100vh;position:sticky;top:0;border-right:1px solid var(--line);padding:24px 17px;background:var(--surface);overflow:auto}
+.context-title{font-size:11px;font-weight:600;margin:7px 0 16px}
+.context-card{padding:14px;border:1px solid var(--line);border-radius:15px;background:var(--surface-2);margin-bottom:12px}
+.context-card-head{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:600;margin-bottom:12px}
+.risk-score{display:flex;align-items:center;gap:13px}
+.risk-ring{width:74px;height:74px;border-radius:50%;background:conic-gradient(var(--accent) 0 74%,var(--surface-3) 74% 100%);display:grid;place-items:center;position:relative}
+.risk-ring:after{content:"";position:absolute;inset:7px;background:var(--surface-2);border-radius:50%}
+.risk-ring strong{position:relative;z-index:1;font:600 19px Inter}
+.risk-label strong{font-size:11px;display:block}.risk-label small{font-size:9px;color:var(--muted);line-height:1.8;display:block;margin-top:4px}
+.mini-row{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);font-size:9px;color:var(--muted)}.mini-row b{color:var(--text);font:500 10px Inter}
+.system-line{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line)}
+.system-dot{width:7px;height:7px;border-radius:50%;background:var(--success)}.system-line span{font-size:9px;color:var(--muted);flex:1}.system-line b{font:10px Inter;color:var(--success);font-weight:500}
+.quick-stack{display:grid;gap:7px}.quick{display:flex;align-items:center;gap:9px;padding:9px;border:1px solid var(--line);border-radius:11px;background:var(--surface);text-align:right;color:var(--soft);font-size:9px}
+.quick:hover{border-color:var(--accent)}.quick svg{width:15px;height:15px;stroke:var(--accent);fill:none;stroke-width:1.7}
+.disclaimer{font-size:9px;line-height:1.8;color:var(--muted);padding:12px;border-radius:12px;border:1px dashed var(--line-strong);margin-top:15px}
+.page-placeholder{padding:26px;border-radius:20px;border:1px solid var(--line);background:var(--surface)}
+.feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:15px}
+.feature{padding:17px;border:1px solid var(--line);border-radius:15px;background:var(--surface-2);min-height:132px}
+.feature-icon{width:34px;height:34px;border-radius:11px;background:var(--accent-wash);display:grid;place-items:center;color:var(--accent);margin-bottom:13px}
+.feature-icon svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7}
+.feature strong{display:block;font-size:11px}.feature p{font-size:9px;line-height:1.8;color:var(--muted);margin:6px 0 0}
+.chat-shell{display:flex;flex-direction:column;height:min(66vh,650px);min-height:430px;border:1px solid var(--line);border-radius:20px;background:var(--surface);overflow:hidden}
+.chat-history{flex:1;padding:22px;overflow:auto}.chat-welcome{text-align:center;max-width:480px;margin:36px auto}
+.chat-welcome .hero-mini{width:54px;height:54px;border-radius:18px;background:linear-gradient(140deg,#5be6c8,#9184ff);display:grid;place-items:center;margin:0 auto 15px}
+.chat-welcome h2{font-size:20px;margin:0}.chat-welcome p{font-size:11px;color:var(--muted);line-height:1.9}
+.prompt-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-top:17px}
+.prompt-chip{font-size:9px;color:var(--soft);background:var(--surface-2);border:1px solid var(--line);border-radius:30px;padding:8px 11px}
+.chat-compose{padding:14px;border-top:1px solid var(--line);background:var(--surface-2)}
+.chat-compose textarea{width:100%;resize:none;min-height:62px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);outline:none;padding:12px;font-size:11px}
+.compose-foot{display:flex;align-items:center;gap:7px;margin-top:9px}.compose-note{font-size:9px;color:var(--muted);margin-left:auto}
+.chat-message{max-width:76%;padding:12px 14px;border-radius:14px;margin:8px 0;font-size:11px;line-height:1.9}
+.chat-message.user{background:var(--accent-wash);border:1px solid rgba(82,224,194,.2);margin-right:auto}
+.chat-message.assistant{background:var(--surface-2);border:1px solid var(--line);margin-left:auto}
+.toast{position:fixed;bottom:24px;left:24px;padding:12px 16px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-size:11px;z-index:20;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:none}
+.mobile-nav{display:none}
+.mobile-menu{display:none}
+.overlay{display:none}
+body.ltr .app{direction:ltr;grid-template-columns:var(--sidebar) minmax(0,1fr) var(--context)}
+body.ltr .sidebar{border-left:0;border-right:1px solid var(--line)}
+body.ltr .context{border-right:0;border-left:1px solid var(--line)}
+body.ltr .nav button{text-align:left}body.ltr .nav button.active:before{right:auto;left:0}
+body.ltr .workspace-switch,body.ltr .profile,body.ltr .activity,body.ltr .agent{direction:ltr}
+body.ltr .activity-time,body.ltr .stat-value{text-align:left}
+body.ltr .stat-value{direction:ltr}body.ltr .top-actions{margin-right:0;margin-left:auto}
+body.ltr .sidebar-spacer{direction:ltr}
+body.ltr .hero-copy{text-align:left}body.ltr .hero-copy p{margin-right:0}
+body.ltr .panel-head,body.ltr .context-card-head,body.ltr .mini-row{direction:ltr}
+body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margin-left:auto}body.ltr .chat-message.assistant{margin-left:0;margin-right:auto}
+@media(max-width:1250px){:root{--context:250px;--sidebar:228px}.main{padding:22px 22px 40px}.hero{grid-template-columns:1fr .55fr}.hero-visual{transform:scale(.88)}}
+@media(max-width:1050px){.app{grid-template-columns:var(--sidebar) minmax(0,1fr)}.context{display:none}.content-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){
+ body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+ .app,body.ltr .app{display:block}
+ .sidebar{display:none}
+ .main{padding:0 15px 26px}
+ .topbar{height:62px;margin:0 -15px 19px;padding:0 15px;border-bottom:1px solid var(--line);background:var(--surface)}
+ .mobile-brand{display:flex}.mobile-brand .brand-mark{width:32px;height:32px;border-radius:11px}.mobile-brand .brand-mark svg{width:20px}
+ .mobile-brand .brand-name{font-size:13px}.breadcrumb,.status-top{display:none}
+ .top-actions{gap:6px}.search-trigger{width:38px;height:36px;padding:0;justify-content:center;border-radius:11px;font-size:0}
+ .search-trigger .key{display:none}.search-trigger svg{width:17px;height:17px}
+ .top-actions .icon-btn{width:36px;height:36px}.mobile-menu{display:grid}
+ .page-heading{align-items:flex-start;margin-bottom:16px}.page-heading h1{font-size:21px}.page-heading p{font-size:10px;margin-top:5px}
+ .page-heading>.btn{padding:9px 10px;font-size:9px;white-space:nowrap}
+ .hero{display:block;padding:20px 18px;border-radius:19px;margin-bottom:12px}
+ .hero h2{font-size:20px;max-width:100%}.hero-copy p{font-size:10px;margin:8px 0 14px}
+ .hero-visual{display:none}.hero:after{left:-170px;bottom:-220px}
+ .hero-actions .btn{padding:9px 11px;font-size:10px}
+ .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:12px}
+ .stat-card{padding:13px;border-radius:14px}.stat-value{font-size:23px;margin:8px 0 4px}
+ .stat-top{font-size:9px}.stat-icon{width:28px;height:28px}
+ .content-grid{grid-template-columns:1fr;gap:11px}.panel-head{padding:14px 14px 9px}
+ .activity-list,.agent-list{padding-left:14px;padding-right:14px}
+ .context{display:none}.mobile-nav{position:fixed;display:grid;grid-template-columns:repeat(5,1fr);gap:1px;bottom:0;left:0;right:0;z-index:10;padding:9px 8px calc(9px + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(20px);border-top:1px solid var(--line)}
+ .mobile-nav button{display:grid;justify-items:center;gap:4px;border:0;background:transparent;color:var(--muted);font-size:8px;padding:4px 0}
+ .mobile-nav button svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
+ .mobile-nav button.active{color:var(--accent)}.mobile-nav button.active svg{filter:drop-shadow(0 0 5px var(--accent))}
+ .feature-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.feature{padding:13px;min-height:120px}
+ .page-placeholder{padding:15px}.chat-shell{height:calc(100dvh - 190px);min-height:390px}
+ .chat-history{padding:14px}.chat-welcome{margin:28px auto}.chat-welcome h2{font-size:18px}
+ .chat-compose{padding:10px}.chat-compose textarea{min-height:70px}
+ .compose-note{font-size:8px}.chat-message{max-width:90%;font-size:10px}
+ .overlay{position:fixed;inset:0;background:rgba(1,7,15,.56);z-index:15;display:none;backdrop-filter:blur(4px)}
+ .overlay.open{display:block}.drawer{position:absolute;right:0;top:0;bottom:0;width:min(84vw,300px);background:var(--surface);padding:20px 16px;box-shadow:var(--shadow);overflow:auto}
+ body.ltr .drawer{right:auto;left:0}
+}
+@media(max-width:360px){.main{padding-left:11px;padding-right:11px}.hero{padding:17px 15px}.stat-value{font-size:21px}.topbar{margin-left:-11px;margin-right:-11px;padding:0 11px}.page-heading>.btn{font-size:8px}.feature-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+ <div class="brand"><div class="brand-mark"><svg viewBox="0 0 32 32" fill="none"><path d="M16 3.5 19.3 12.7 28.5 16 19.3 19.3 16 28.5 12.7 19.3 3.5 16 12.7 12.7 16 3.5Z" stroke="#06241f" stroke-width="1.8" stroke-linejoin="round"/><circle cx="16" cy="16" r="3.2" fill="#06241f"/></svg></div><div><div class="brand-name">WORMSTAR</div><div class="brand-sub">SENTINEL WORKSPACE</div></div></div>
+ <div class="workspace-switch"><span class="workspace-orb"></span><div class="workspace-copy"><strong data-i18n="workspace">مساحة العمل الرئيسية</strong><small>PERSONAL SECURITY LAB</small></div><span style="color:var(--muted);font-size:12px">⌄</span></div>
+ <div class="section-label" data-i18n="nav">مساحة العمل</div>
+ <nav class="nav" id="sideNav">
+  <button class="active" data-page="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="11" width="7" height="10" rx="2"/><rect x="3" y="14" width="8" height="7" rx="2"/></svg><span data-i18n="overview">نظرة عامة</span></button>
+  <button data-page="assistant"><svg viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-4.4 14.7L7 21l4-2a8 8 0 1 0 1-16Z"/><path d="M9 10h.01M15 10h.01M9 14c1.7 1.3 4.3 1.3 6 0"/></svg><span data-i18n="assistant">المساعد الذكي</span><span class="count">AI</span></button>
+  <button data-page="code"><svg viewBox="0 0 24 24"><path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/></svg><span data-i18n="code">تدقيق الأكواد</span></button>
+  <button data-page="incidents"><svg viewBox="0 0 24 24"><path d="M12 3 21 19H3L12 3Z"/><path d="M12 9v4M12 16h.01"/></svg><span data-i18n="incidents">الحوادث والتنبيهات</span><span class="count">4</span></button>
+  <button data-page="intel"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8 10.5h5M10.5 8v5"/></svg><span data-i18n="intel">تحليل المؤشرات IOC</span></button>
+  <button data-page="lab"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M8 15h8"/></svg><span data-i18n="lab">المختبر التدريبي</span></button>
+  <button data-page="reports"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M8 13h8M8 17h8"/></svg><span data-i18n="reports">التقارير</span></button>
+ </nav>
+ <div class="section-label" style="margin-top:23px" data-i18n="manage">الإدارة</div>
+ <nav class="nav">
+  <button data-page="agents"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M12 3v4M8 12h.01M16 12h.01M9 16h6"/></svg><span data-i18n="agents">وكلاء الذكاء الاصطناعي</span></button>
+  <button data-page="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.1 1.9-2 3.4-2.2-.5a8 8 0 0 1-1.8 1L14 23h-4l-.6-2.1a8 8 0 0 1-1.8-1l-2.2.5-2-3.4 1.1-1.9A8 8 0 0 1 4 13l-2-1 2-3.5 2.2.5a8 8 0 0 1 1.8-1L8.6 6h4l.6 2a8 8 0 0 1 1.8 1l2.2-.5 2 3.5-1.1 1.9a8 8 0 0 1 .3 1.1Z" transform="translate(1 -2) scale(.92)"/></svg><span data-i18n="settings">الإعدادات</span></button>
+ </nav>
+ <div class="sidebar-spacer"></div>
+ <div class="plan-card"><div class="plan-head"><span data-i18n="security_posture">مستوى الجاهزية</span><span>68%</span></div><p data-i18n="plan_copy">مساحة المختبر تعمل بوضع المراجعة الدفاعية. راجع الصلاحيات قبل أي اختبار نشط.</p><div class="progress"><i></i></div></div>
+ <div class="profile"><div class="avatar">S</div><div class="profile-info"><strong>Star Workspace</strong><small>Owner · Local profile</small></div><button class="icon-btn" id="profileMore" aria-label="Profile options"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button></div>
+</aside>
+<main class="main">
+ <header class="topbar">
+  <div class="mobile-brand"><div class="brand-mark"><svg viewBox="0 0 32 32" fill="none"><path d="M16 3.5 19.3 12.7 28.5 16 19.3 19.3 16 28.5 12.7 19.3 3.5 16 12.7 12.7 16 3.5Z" stroke="#06241f" stroke-width="1.8" stroke-linejoin="round"/><circle cx="16" cy="16" r="3.2" fill="#06241f"/></svg></div><span class="brand-name">WORMSTAR</span></div>
+  <div class="breadcrumb"><span data-i18n="workspace">مساحة العمل الرئيسية</span><span>／</span><b id="crumbText">نظرة عامة</b></div>
+  <div class="top-actions">
+   <button class="search-trigger" id="searchBtn"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span data-i18n="search">ابحث في مساحة العمل</span><span class="key">⌘ K</span></button>
+   <span class="status-top"><i></i><span data-i18n="all_systems">الأنظمة مستقرة</span></span>
+   <button class="icon-btn" id="langBtn" title="Switch language" aria-label="Switch language"><span style="font-size:10px;font-weight:700">EN</span></button>
+   <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme"><svg viewBox="0 0 24 24"><path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5 8.5 8.5 0 1 0 20.5 15.5Z"/></svg></button>
+   <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Open menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+ </header>
+
+ <section class="page active" id="page-overview">
+  <div class="page-heading"><div><div class="eyebrow">SECURITY OPERATIONS / 01</div><h1 data-i18n="welcome">مساحة الرؤية الأمنية</h1><p data-i18n="welcome_sub">صورة واضحة عن نشاط مختبرك، من أول مؤشر إلى آخر تقرير.</p></div><button class="btn" id="refreshBtn"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M5.6 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.4-3"/></svg><span data-i18n="refresh">تحديث العرض</span></button></div>
+  <div class="hero">
+   <div class="hero-copy"><div class="hero-tag"><i></i><span data-i18n="hero_tag">مساحة عمل دفاعية ذكية</span></div><h2 data-i18n="hero_title">الأمن يبدأ من <span>رؤية أوضح.</span><br>والقرار يبدأ من دليل.</h2><p data-i18n="hero_desc">اجمع التحليل، مراجعة الشيفرات، مؤشرات الاختراق والتقارير في مساحة واحدة مصممة لتساعدك على فهم المخاطر واتخاذ إجراء مسؤول.</p><div class="hero-actions"><button class="btn primary" data-goto="assistant"><span data-i18n="start_assistant">ابدأ جلسة تحليل</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button class="btn" data-goto="lab"><span data-i18n="open_lab">افتح المختبر</span></button></div></div>
+   <div class="hero-visual"><div class="orbit"><div class="core"><svg viewBox="0 0 32 32"><path d="M16 3.5 19.3 12.7 28.5 16 19.3 19.3 16 28.5 12.7 19.3 3.5 16 12.7 12.7 16 3.5Z" stroke-linejoin="round"/><circle cx="16" cy="16" r="3.2"/></svg></div><span class="orbit-dot"></span></div></div>
+  </div>
+  <div class="stat-grid">
+   <article class="stat-card"><div class="stat-top"><span data-i18n="stat_assets">الأصول المراقبة</span><span class="stat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span></div><div class="stat-value">24</div><div class="stat-foot"><span class="trend">+3</span><span data-i18n="from_last_week">من الأسبوع الماضي · بيانات توضيحية</span></div></article>
+   <article class="stat-card"><div class="stat-top"><span data-i18n="stat_findings">نتائج المراجعة</span><span class="stat-icon purple"><svg viewBox="0 0 24 24"><path d="M12 3 21 19H3L12 3Z"/><path d="M12 9v4M12 16h.01"/></svg></span></div><div class="stat-value">08</div><div class="stat-foot"><span class="trend">3</span><span data-i18n="need_review">تحتاج مراجعة</span></div></article>
+   <article class="stat-card"><div class="stat-top"><span data-i18n="stat_reports">التقارير</span><span class="stat-icon amber"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/></svg></span></div><div class="stat-value">12</div><div class="stat-foot"><span data-i18n="this_month">هذا الشهر · بيانات توضيحية</span></div></article>
+   <article class="stat-card"><div class="stat-top"><span data-i18n="stat_agents">الوكلاء النشطون</span><span class="stat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M12 3v4M8 12h.01M16 12h.01M9 16h6"/></svg></span></div><div class="stat-value">03</div><div class="stat-foot"><span class="trend">●</span><span data-i18n="agents_ready">جاهزون للمهام</span></div></article>
+  </div>
+  <div class="content-grid">
+   <section class="panel"><div class="panel-head"><div><h3 data-i18n="recent_activity">النشاط الأخير</h3><p data-i18n="recent_activity_sub">آخر ما حدث في مساحة العمل</p></div><button class="text-link" data-goto="incidents" data-i18n="view_all">عرض الكل ←</button></div><div class="activity-list">
+    <div class="activity"><div class="activity-symbol warn"><svg viewBox="0 0 24 24"><path d="M12 3 21 19H3L12 3Z"/><path d="M12 9v4M12 16h.01"/></svg></div><div class="activity-main"><strong data-i18n="activity_1">مراجعة اعتماد مكتبة خارجية</strong><p data-i18n="activity_1_sub">تم رصد إصدار يحتاج تحققاً من المصدر.</p></div><span class="severity medium" data-i18n="medium">متوسط</span><span class="activity-time">09:42</span></div>
+    <div class="activity"><div class="activity-symbol"><svg viewBox="0 0 24 24"><path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/></svg></div><div class="activity-main"><strong data-i18n="activity_2">اكتملت مراجعة ملف المصدر</strong><p data-i18n="activity_2_sub">تحليل ساكن — دون تشغيل الكود.</p></div><span class="severity low" data-i18n="low">منخفض</span><span class="activity-time">08:16</span></div>
+    <div class="activity"><div class="activity-symbol good"><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg></div><div class="activity-main"><strong data-i18n="activity_3">تم حفظ تقرير أمني</strong><p data-i18n="activity_3_sub">التقرير جاهز للمراجعة والتصدير.</p></div><span class="severity" data-i18n="info">معلومة</span><span class="activity-time">أمس</span></div>
+   </div></section>
+   <section class="panel"><div class="panel-head"><div><h3 data-i18n="agent_team">فريق الوكلاء</h3><p data-i18n="agent_team_sub">مكوّنات المساعدة المتاحة</p></div><button class="text-link" data-goto="agents" data-i18n="manage">إدارة</button></div><div class="agent-list">
+    <div class="agent"><div class="agent-avatar">AI</div><div class="agent-info"><strong>Sentinel Core</strong><small data-i18n="agent_core">التحليل والتنسيق</small></div><span class="agent-state"><i></i><span data-i18n="ready">جاهز</span></span></div>
+    <div class="agent"><div class="agent-avatar">CR</div><div class="agent-info"><strong>Code Review</strong><small data-i18n="agent_code">مراجعة الشيفرة</small></div><span class="agent-state"><i></i><span data-i18n="ready">جاهز</span></span></div>
+    <div class="agent"><div class="agent-avatar">TI</div><div class="agent-info"><strong>Threat Intel</strong><small data-i18n="agent_intel">تحليل المؤشرات</small></div><span class="agent-state"><i></i><span data-i18n="ready">جاهز</span></span></div>
+   </div></section>
+  </div>
+ </section>
+
+ <section class="page" id="page-assistant">
+  <div class="page-heading"><div><div class="eyebrow">WORMSTAR AI / 02</div><h1 data-i18n="assistant">المساعد الذكي</h1><p data-i18n="assistant_sub">حلّل الأدلة، افهم السياق، وحوّل النتائج إلى خطوات دفاعية.</p></div><span class="severity">LOCAL / CLOUD ROUTING</span></div>
+  <div class="chat-shell"><div class="chat-history" id="chatHistory"><div class="chat-welcome" id="chatWelcome"><div class="hero-mini"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="#06241f" stroke-width="1.7"><path d="M16 3.5 19.3 12.7 28.5 16 19.3 19.3 16 28.5 12.7 19.3 3.5 16 12.7 12.7 16 3.5Z"/><circle cx="16" cy="16" r="3.2"/></svg></div><h2 data-i18n="chat_title">ما الذي تريد فهمه اليوم؟</h2><p data-i18n="chat_desc">ابدأ بسؤال أمني أو أرفق مقتطفاً من سجل أو شيفرة. لا ترسل أسراراً أو مفاتيح وصول.</p><div class="prompt-chips"><button class="prompt-chip" data-prompt="راجع هذا المقتطف بحثاً عن أخطاء أمنية">مراجعة مقتطف شيفرة</button><button class="prompt-chip" data-prompt="اشرح لي مؤشرات الاختراق في هذا السجل">تحليل سجل أمني</button><button class="prompt-chip" data-prompt="كيف أتحقق من أمان إعدادات HTTP headers؟">تدقيق إعدادات الويب</button></div></div></div><div class="chat-compose"><textarea id="chatInput" data-placeholder="اكتب سؤالك أو الصق مقتطفاً للتحليل..." placeholder="اكتب سؤالك أو الصق مقتطفاً للتحليل..."></textarea><div class="compose-foot"><button class="btn" id="attachBtn">＋ <span data-i18n="attach">إرفاق مقتطف</span></button><span class="compose-note" data-i18n="chat_notice">واجهة نموذجية — ربط مزود الذكاء الاصطناعي مطلوب قبل إرسال الطلبات.</span><button class="btn primary" id="sendBtn"><span data-i18n="send">إرسال</span> ↑</button></div></div></div>
+ </section>
+
+ <section class="page" id="page-code">
+  <div class="page-heading"><div><div class="eyebrow">SOURCE ANALYSIS / 03</div><h1 data-i18n="code">تدقيق الأكواد</h1><p data-i18n="code_sub">مراجعة ساكنة للشيفرة، الاعتماديات، وإعدادات الأمان.</p></div><button class="btn primary" id="uploadCodeBtn">＋ <span data-i18n="new_review">مراجعة جديدة</span></button></div>
+  <div class="page-placeholder"><div class="feature-grid">
+   <div class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/></svg></div><strong data-i18n="static_analysis">التحليل الساكن</strong><p data-i18n="static_desc">فحص أنماط الشيفرة واكتشاف الأخطاء المحتملة دون تشغيلها.</p></div>
+   <div class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 3 21 19H3L12 3Z"/><path d="M12 9v4M12 16h.01"/></svg></div><strong data-i18n="dependency_audit">تدقيق الاعتماديات</strong><p data-i18n="dependency_desc">مراجعة الحزم والإصدارات ومصادر التبعيات.</p></div>
+   <div class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h9"/><circle cx="18" cy="18" r="3"/></svg></div><strong data-i18n="secret_detection">كشف الأسرار</strong><p data-i18n="secret_desc">التنبيه إلى مفاتيح أو رموز وصول مكشوفة داخل الملفات.</p></div>
+  </div><div class="disclaimer" data-i18n="defense_only">تعمل هذه الوحدة ضمن مراجعة دفاعية للملفات التي تملكها أو لديك تصريح بفحصها. لن يتم تنفيذ الشيفرة المرفوعة.</div></div>
+ </section>
+
+ <section class="page" id="page-incidents">
+  <div class="page-heading"><div><div class="eyebrow">DETECTION CENTER / 04</div><h1 data-i18n="incidents">الحوادث والتنبيهات</h1><p data-i18n="incident_sub">فرز الإشارات حسب الشدة والسياق والأولوية.</p></div><button class="btn" id="filterBtn" data-i18n="filter">تصفية النتائج</button></div>
+  <div class="page-placeholder"><div class="feature-grid">
+   <div class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 3 21 19H3L12 3Z"/></svg></div><strong data-i18n="critical_queue">قائمة التنبيهات الحرجة</strong><p data-i18n="critical_desc">تجميع التنبيهات التي تتطلب استجابة سريعة.</p></div>
+   <div class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div><strong data-i18n="triage">فرز الحوادث</strong><p data-i18n="triage_desc">تحديد الأولوية وربط المؤشرات بالأحداث ذات الصلة.</p></div>
+   <div class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 9h8M8 13h5"/></svg></div><strong data-i18n="case_notes">ملاحظات الحالة</strong><p data-i18n="case_desc">توثيق الملاحظات والأدلة والإجراءات المتخذة.</p></div>
+  </div></div>
+ </section>
+
+ <section class="page" id="page-intel">
+  <div class="page-heading"><div><div class="eyebrow">THREAT INTELLIGENCE / 05</div><h1 data-i18n="intel">تحليل المؤشرات IOC</h1><p data-i18n="intel_sub">افحص تنسيقات المؤشرات وسياقها محلياً قبل أي مشاركة خارجية.</p></div><span class="severity low">LOCAL PREVIEW</span></div>
+  <div class="page-placeholder"><label style="display:block;font-size:11px;margin-bottom:9px" data-i18n="ioc_input">أدخل IP أو نطاقاً أو رابطاً أو SHA-256</label><input id="iocInput" style="width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:13px;color:var(--text);outline:none" placeholder="example.com  ·  192.0.2.10  ·  SHA-256"><button class="btn primary" style="margin-top:12px" id="iocCheck" data-i18n="analyze_ioc">تحليل التنسيق</button><div id="iocResult" class="disclaimer" data-i18n="ioc_note">المعاينة المحلية تتحقق من شكل المؤشر فقط؛ لا يتم إجراء اتصال بالشبكة أو استعلام سمعة خارجي.</div></div>
+ </section>
+
+ <section class="page" id="page-lab">
+  <div class="page-heading"><div><div class="eyebrow">CONTROLLED PRACTICE / 06</div><h1 data-i18n="lab">المختبر التدريبي</h1><p data-i18n="lab_sub">مساحة آمنة لسيناريوهات CTF وتحليل العينات التعليمية.</p></div><span class="severity">ISOLATED LAB</span></div>
+  <div class="page-placeholder"><div class="feature-grid">
+   <div class="feature"><div class="feature-icon">01</div><strong data-i18n="ctf">تحديات CTF</strong><p data-i18n="ctf_desc">تدريبات على بيئات معزولة ومصرح بها.</p></div>
+   <div class="feature"><div class="feature-icon">02</div><strong data-i18n="malware_lab">تحليل عينات</strong><p data-i18n="malware_desc">تحليل ثابت للملفات مع تجنب تشغيل الملفات المشبوهة على الجهاز الأساسي.</p></div>
+   <div class="feature"><div class="feature-icon">03</div><strong data-i18n="scope">نطاق الاختبار</strong><p data-i18n="scope_desc">تسجيل النطاق المصرح به ومدة الاختبار والإجراءات المسموحة.</p></div>
+  </div><div class="disclaimer" data-i18n="lab_notice">أي اختبار نشط يجب أن يكون محصوراً بنظام تملكه أو لديك تفويض مكتوب لاختباره.</div></div>
+ </section>
+
+ <section class="page" id="page-reports">
+  <div class="page-heading"><div><div class="eyebrow">INTELLIGENCE OUTPUT / 07</div><h1 data-i18n="reports">التقارير</h1><p data-i18n="reports_sub">حوّل نتائج التحليل إلى تقارير واضحة وقابلة للمراجعة.</p></div><button class="btn primary" id="exportReport">＋ <span data-i18n="create_report">إنشاء تقرير</span></button></div>
+  <div class="page-placeholder"><div class="feature-grid">
+   <div class="feature"><div class="feature-icon">PDF</div><strong data-i18n="pdf_export">تصدير PDF</strong><p data-i18n="pdf_desc">تقارير منظمة مع ملخص تنفيذي ومستوى المخاطر.</p></div>
+   <div class="feature"><div class="feature-icon">MD</div><strong data-i18n="md_export">تصدير Markdown</strong><p data-i18n="md_desc">ملفات نصية قابلة للتوثيق والإضافة إلى Git.</p></div>
+   <div class="feature"><div class="feature-icon">API</div><strong data-i18n="evidence">سجل الأدلة</strong><p data-i18n="evidence_desc">ربط كل نتيجة بالدليل والمصدر وتوقيت التحليل.</p></div>
+  </div></div>
+ </section>
+
+ <section class="page" id="page-agents">
+  <div class="page-heading"><div><div class="eyebrow">AGENT ORCHESTRATION / 08</div><h1 data-i18n="agents">وكلاء الذكاء الاصطناعي</h1><p data-i18n="agents_sub">وحدات متخصصة ضمن تدفق عمل واضح وقابل للتدقيق.</p></div><button class="btn" id="agentConfig" data-i18n="agent_settings">إعدادات الوكلاء</button></div>
+  <div class="page-placeholder"><div class="feature-grid">
+   <div class="feature"><div class="feature-icon">SC</div><strong>Sentinel Core</strong><p data-i18n="sentinel_desc">توزيع المهام وتلخيص النتائج وربط الوحدات.</p></div>
+   <div class="feature"><div class="feature-icon">CR</div><strong>Code Review</strong><p data-i18n="code_agent_desc">مراجعة الشيفرة وتفسير نتائج أدوات التحليل.</p></div>
+   <div class="feature"><div class="feature-icon">TI</div><strong>Threat Intel</strong><p data-i18n="intel_agent_desc">تطبيع مؤشرات الاختراق وإضافة السياق الدفاعي.</p></div>
+  </div></div>
+ </section>
+
+ <section class="page" id="page-settings">
+  <div class="page-heading"><div><div class="eyebrow">PREFERENCES / 09</div><h1 data-i18n="settings">الإعدادات</h1><p data-i18n="settings_sub">تحكم بطريقة عرض مساحة العمل وتجربة الاستخدام.</p></div></div>
+  <div class="page-placeholder"><div class="feature-grid">
+   <div class="feature"><div class="feature-icon">◐</div><strong data-i18n="appearance">المظهر</strong><p data-i18n="appearance_desc">تبديل النمط الداكن والفاتح من شريط الأدوات.</p><button class="btn" style="margin-top:10px" id="settingsTheme" data-i18n="toggle_theme">تبديل السمة</button></div>
+   <div class="feature"><div class="feature-icon">文</div><strong data-i18n="language">اللغة والاتجاه</strong><p data-i18n="language_desc">العربية RTL والإنجليزية LTR.</p><button class="btn" style="margin-top:10px" id="settingsLang">العربية / English</button></div>
+   <div class="feature"><div class="feature-icon">盾</div><strong data-i18n="privacy">الخصوصية والأمان</strong><p data-i18n="privacy_desc">إعدادات الجلسة، الصلاحيات، والاحتفاظ بسجل التدقيق.</p></div>
+  </div></div>
+ </section>
+</main>
+<aside class="context">
+ <div class="section-label" data-i18n="live_context">السياق المباشر</div>
+ <div class="context-title" data-i18n="risk_overview">ملخص الوضع الأمني</div>
+ <div class="context-card"><div class="context-card-head"><span data-i18n="posture">المؤشر العام</span><span class="severity">DEMO</span></div><div class="risk-score"><div class="risk-ring"><strong>74</strong></div><div class="risk-label"><strong data-i18n="good_posture">وضع جيد</strong><small data-i18n="risk_copy">هذه قيمة تجريبية للعرض. اربط مصادر البيانات لعرض القياس الحقيقي.</small></div></div></div>
+ <div class="context-card"><div class="context-card-head"><span data-i18n="system_health">حالة المكونات</span><span style="color:var(--success);font-size:9px">● LIVE UI</span></div><div class="system-line"><i class="system-dot"></i><span>Cloudflare Edge</span><b>Ready</b></div><div class="system-line"><i class="system-dot"></i><span>Local AI</span><b>Standby</b></div><div class="system-line"><i class="system-dot"></i><span>Policy Engine</span><b>Ready</b></div><div class="system-line"><i class="system-dot"></i><span>Audit Log</span><b>Ready</b></div></div>
+ <div class="context-title" data-i18n="quick_actions">إجراءات سريعة</div><div class="quick-stack">
+  <button class="quick" data-goto="assistant"><svg viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-4.4 14.7L7 21l4-2"/></svg><span data-i18n="quick_chat">فتح جلسة مع المساعد</span></button>
+  <button class="quick" data-goto="code"><svg viewBox="0 0 24 24"><path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/></svg><span data-i18n="quick_code">مراجعة شيفرة</span></button>
+  <button class="quick" data-goto="reports"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5"/></svg><span data-i18n="quick_report">إنشاء تقرير</span></button>
+ </div>
+ <div class="disclaimer" data-i18n="demo_disclaimer">ملاحظة: الأرقام والحالة المعروضة بيانات تصميمية تجريبية وليست قياسات حية من أنظمتك.</div>
+</aside>
+</div>
+
+<nav class="mobile-nav" id="mobileNav">
+ <button class="active" data-page="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="11" width="7" height="10" rx="2"/><rect x="3" y="14" width="8" height="7" rx="2"/></svg><span data-i18n="overview">الرئيسية</span></button>
+ <button data-page="assistant"><svg viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-4.4 14.7L7 21l4-2"/></svg><span data-i18n="assistant_short">المساعد</span></button>
+ <button data-page="code"><svg viewBox="0 0 24 24"><path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/></svg><span data-i18n="code_short">الأكواد</span></button>
+ <button data-page="incidents"><svg viewBox="0 0 24 24"><path d="M12 3 21 19H3L12 3Z"/><path d="M12 9v4"/></svg><span data-i18n="incident_short">التنبيهات</span></button>
+ <button data-page="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 13a7 7 0 0 0 0-2l2-1-2-4-2 1a7 7 0 0 0-2-1l-.5-2h-5L9 6a7 7 0 0 0-2 1L5 6l-2 4 2 1a7 7 0 0 0 0 2l-2 1 2 4 2-1a7 7 0 0 0 2 1l.5 2h5L15 18a7 7 0 0 0 2-1l2 1 2-4-2-1Z"/></svg><span data-i18n="settings_short">الإعدادات</span></button>
+</nav>
+<div class="overlay" id="overlay"><div class="drawer" id="drawer"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const translations={
+ar:{
+workspace:"مساحة العمل الرئيسية",nav:"مساحة العمل",overview:"نظرة عامة",assistant:"المساعد الذكي",code:"تدقيق الأكواد",incidents:"الحوادث والتنبيهات",intel:"تحليل المؤشرات IOC",lab:"المختبر التدريبي",reports:"التقارير",manage:"الإدارة",agents:"وكلاء الذكاء الاصطناعي",settings:"الإعدادات",security_posture:"مستوى الجاهزية",plan_copy:"مساحة المختبر تعمل بوضع المراجعة الدفاعية. راجع الصلاحيات قبل أي اختبار نشط.",search:"ابحث في مساحة العمل",all_systems:"الأنظمة مستقرة",welcome:"مساحة الرؤية الأمنية",welcome_sub:"صورة واضحة عن نشاط مختبرك، من أول مؤشر إلى آخر تقرير.",refresh:"تحديث العرض",hero_tag:"مساحة عمل دفاعية ذكية",hero_title:"الأمن يبدأ من <span>رؤية أوضح.</span><br>والقرار يبدأ من دليل.",hero_desc:"اجمع التحليل، مراجعة الشيفرات، مؤشرات الاختراق والتقارير في مساحة واحدة مصممة لتساعدك على فهم المخاطر واتخاذ إجراء مسؤول.",start_assistant:"ابدأ جلسة تحليل",open_lab:"افتح المختبر",stat_assets:"الأصول المراقبة",from_last_week:"من الأسبوع الماضي · بيانات توضيحية",stat_findings:"نتائج المراجعة",need_review:"تحتاج مراجعة",stat_reports:"التقارير",this_month:"هذا الشهر · بيانات توضيحية",stat_agents:"الوكلاء النشطون",agents_ready:"جاهزون للمهام",recent_activity:"النشاط الأخير",recent_activity_sub:"آخر ما حدث في مساحة العمل",view_all:"عرض الكل ←",activity_1:"مراجعة اعتماد مكتبة خارجية",activity_1_sub:"تم رصد إصدار يحتاج تحققاً من المصدر.",activity_2:"اكتملت مراجعة ملف المصدر",activity_2_sub:"تحليل ساكن — دون تشغيل الكود.",activity_3:"تم حفظ تقرير أمني",activity_3_sub:"التقرير جاهز للمراجعة والتصدير.",medium:"متوسط",low:"منخفض",info:"معلومة",agent_team:"فريق الوكلاء",agent_team_sub:"مكوّنات المساعدة المتاحة",agent_core:"التحليل والتنسيق",agent_code:"مراجعة الشيفرة",agent_intel:"تحليل المؤشرات",ready:"جاهز",live_context:"السياق المباشر",risk_overview:"ملخص الوضع الأمني",posture:"المؤشر العام",good_posture:"وضع جيد",risk_copy:"هذه قيمة تجريبية للعرض. اربط مصادر البيانات لعرض القياس الحقيقي.",system_health:"حالة المكونات",quick_actions:"إجراءات سريعة",quick_chat:"فتح جلسة مع المساعد",quick_code:"مراجعة شيفرة",quick_report:"إنشاء تقرير",demo_disclaimer:"ملاحظة: الأرقام والحالة المعروضة بيانات تصميمية تجريبية وليست قياسات حية من أنظمتك.",assistant_sub:"حلّل الأدلة، افهم السياق، وحوّل النتائج إلى خطوات دفاعية.",chat_title:"ما الذي تريد فهمه اليوم؟",chat_desc:"ابدأ بسؤال أمني أو أرفق مقتطفاً من سجل أو شيفرة. لا ترسل أسراراً أو مفاتيح وصول.",attach:"إرفاق مقتطف",chat_notice:"واجهة نموذجية — ربط مزود الذكاء الاصطناعي مطلوب قبل إرسال الطلبات.",send:"إرسال",code_sub:"مراجعة ساكنة للشيفرة، الاعتماديات، وإعدادات الأمان.",new_review:"مراجعة جديدة",static_analysis:"التحليل الساكن",static_desc:"فحص أنماط الشيفرة واكتشاف الأخطاء المحتملة دون تشغيلها.",dependency_audit:"تدقيق الاعتماديات",dependency_desc:"مراجعة الحزم والإصدارات ومصادر التبعيات.",secret_detection:"كشف الأسرار",secret_desc:"التنبيه إلى مفاتيح أو رموز وصول مكشوفة داخل الملفات.",defense_only:"تعمل هذه الوحدة ضمن مراجعة دفاعية للملفات التي تملكها أو لديك تصريح بفحصها. لن يتم تنفيذ الشيفرة المرفوعة.",incident_sub:"فرز الإشارات حسب الشدة والسياق والأولوية.",filter:"تصفية النتائج",critical_queue:"قائمة التنبيهات الحرجة",critical_desc:"تجميع التنبيهات التي تتطلب استجابة سريعة.",triage:"فرز الحوادث",triage_desc:"تحديد الأولوية وربط المؤشرات بالأحداث ذات الصلة.",case_notes:"ملاحظات الحالة",case_desc:"توثيق الملاحظات والأدلة والإجراءات المتخذة.",intel_sub:"افحص تنسيقات المؤشرات وسياقها محلياً قبل أي مشاركة خارجية.",ioc_input:"أدخل IP أو نطاقاً أو رابطاً أو SHA-256",analyze_ioc:"تحليل التنسيق",ioc_note:"المعاينة المحلية تتحقق من شكل المؤشر فقط؛ لا يتم إجراء اتصال بالشبكة أو استعلام سمعة خارجي.",lab_sub:"مساحة آمنة لسيناريوهات CTF وتحليل العينات التعليمية.",ctf:"تحديات CTF",ctf_desc:"تدريبات على بيئات معزولة ومصرح بها.",malware_lab:"تحليل عينات",malware_desc:"تحليل ثابت للملفات مع تجنب تشغيل الملفات المشبوهة على الجهاز الأساسي.",scope:"نطاق الاختبار",scope_desc:"تسجيل النطاق المصرح به ومدة الاختبار والإجراءات المسموحة.",lab_notice:"أي اختبار نشط يجب أن يكون محصوراً بنظام تملكه أو لديك تفويض مكتوب لاختباره.",reports_sub:"حوّل نتائج التحليل إلى تقارير واضحة وقابلة للمراجعة.",create_report:"إنشاء تقرير",pdf_export:"تصدير PDF",pdf_desc:"تقارير منظمة مع ملخص تنفيذي ومستوى المخاطر.",md_export:"تصدير Markdown",md_desc:"ملفات نصية قابلة للتوثيق والإضافة إلى Git.",evidence:"سجل الأدلة",evidence_desc:"ربط كل نتيجة بالدليل والمصدر وتوقيت التحليل.",agents_sub:"وحدات متخصصة ضمن تدفق عمل واضح وقابل للتدقيق.",agent_settings:"إعدادات الوكلاء",sentinel_desc:"توزيع المهام وتلخيص النتائج وربط الوحدات.",code_agent_desc:"مراجعة الشيفرة وتفسير نتائج أدوات التحليل.",intel_agent_desc:"تطبيع مؤشرات الاختراق وإضافة السياق الدفاعي.",settings_sub:"تحكم بطريقة عرض مساحة العمل وتجربة الاستخدام.",appearance:"المظهر",appearance_desc:"تبديل النمط الداكن والفاتح من شريط الأدوات.",toggle_theme:"تبديل السمة",language:"اللغة والاتجاه",language_desc:"العربية RTL والإنجليزية LTR.",privacy:"الخصوصية والأمان",privacy_desc:"إعدادات الجلسة، الصلاحيات، والاحتفاظ بسجل التدقيق.",assistant_short:"المساعد",code_short:"الأكواد",incident_short:"التنبيهات",settings_short:"الإعدادات"}
+};
+const english={
+workspace:"Primary Workspace",nav:"WORKSPACE",overview:"Overview",assistant:"AI Assistant",code:"Code Review",incidents:"Incidents & Alerts",intel:"IOC Analysis",lab:"Training Lab",reports:"Reports",manage:"MANAGEMENT",agents:"AI Agents",settings:"Settings",security_posture:"Security posture",plan_copy:"The lab is in defensive review mode. Verify authorization before active testing.",search:"Search workspace",all_systems:"All systems stable",welcome:"Security at a glance",welcome_sub:"A clear view of your lab activity, from the first indicator to the latest report.",refresh:"Refresh view",hero_tag:"Intelligent defensive workspace",hero_title:"Security starts with <span>clarity.</span><br>Decisions start with evidence.",hero_desc:"Bring analysis, code review, indicators and reporting together in one workspace built to help you understand risk and act responsibly.",start_assistant:"Start analysis",open_lab:"Open lab",stat_assets:"Monitored assets",from_last_week:"vs last week · sample data",stat_findings:"Review findings",need_review:"need review",stat_reports:"Reports",this_month:"this month · sample data",stat_agents:"Active agents",agents_ready:"ready for tasks",recent_activity:"Recent activity",recent_activity_sub:"Latest events across your workspace",view_all:"View all →",activity_1:"Third-party dependency review",activity_1_sub:"A package release needs source verification.",activity_2:"Source file review completed",activity_2_sub:"Static analysis — code was not executed.",activity_3:"Security report saved",activity_3_sub:"The report is ready for review and export.",medium:"Medium",low:"Low",info:"Info",agent_team:"Agent team",agent_team_sub:"Available assistant modules",agent_core:"Analysis and orchestration",agent_code:"Source code review",agent_intel:"Indicator analysis",ready:"Ready",live_context:"LIVE CONTEXT",risk_overview:"Security posture",posture:"Overall score",good_posture:"Healthy posture",risk_copy:"Illustrative score only. Connect data sources for real measurements.",system_health:"Component status",quick_actions:"Quick actions",quick_chat:"Open assistant session",quick_code:"Review code",quick_report:"Create report",demo_disclaimer:"Numbers and status shown are sample design data, not live measurements from your systems.",assistant_sub:"Analyze evidence, understand context and turn findings into defensive next steps.",chat_title:"What would you like to understand?",chat_desc:"Ask a security question or paste a log or code excerpt. Do not share secrets or access tokens.",attach:"Attach excerpt",chat_notice:"UI prototype — connect an AI provider before sending requests.",send:"Send",code_sub:"Static review of source code, dependencies and security configuration.",new_review:"New review",static_analysis:"Static analysis",static_desc:"Inspect code patterns and potential issues without executing code.",dependency_audit:"Dependency audit",dependency_desc:"Review packages, versions and dependency sources.",secret_detection:"Secret detection",secret_desc:"Flag exposed keys or access tokens in files.",defense_only:"This module is for defensive review of files you own or are authorized to assess. Uploaded code is not executed.",incident_sub:"Triage signals by severity, context and priority.",filter:"Filter results",critical_queue:"Critical alert queue",critical_desc:"Collect alerts that require a rapid response.",triage:"Incident triage",triage_desc:"Prioritize and correlate indicators with related events.",case_notes:"Case notes",case_desc:"Document observations, evidence and response actions.",intel_sub:"Validate indicator formats locally before external sharing.",ioc_input:"Enter IP, domain, URL or SHA-256",analyze_ioc:"Validate format",ioc_note:"Local preview checks syntax only; no network connection or external reputation lookup is performed.",lab_sub:"A safe space for CTF scenarios and educational sample analysis.",ctf:"CTF challenges",ctf_desc:"Practice in isolated, authorized environments.",malware_lab:"Sample analysis",malware_desc:"Static file analysis without running suspicious files on your primary device.",scope:"Test scope",scope_desc:"Record the authorized scope, testing window and permitted actions.",lab_notice:"Active testing must be limited to systems you own or are explicitly authorized to assess in writing.",reports_sub:"Turn analysis results into clear, reviewable reports.",create_report:"Create report",pdf_export:"Export PDF",pdf_desc:"Structured reports with executive summary and risk level.",md_export:"Export Markdown",md_desc:"Portable text files for documentation and Git.",evidence:"Evidence log",evidence_desc:"Tie each finding to evidence, source and analysis timestamp.",agents_sub:"Specialized modules in an auditable workflow.",agent_settings:"Agent settings",sentinel_desc:"Route tasks, summarize findings and connect modules.",code_agent_desc:"Review source and explain static-analysis results.",intel_agent_desc:"Normalize indicators and add defensive context.",settings_sub:"Control the workspace appearance and experience.",appearance:"Appearance",appearance_desc:"Switch between dark and light themes from the toolbar.",toggle_theme:"Toggle theme",language:"Language & direction",language_desc:"Arabic RTL and English LTR.",privacy:"Privacy & security",privacy_desc:"Session, authorization and audit-retention preferences.",assistant_short:"Assistant",code_short:"Code",incident_short:"Alerts",settings_short:"Settings"};
+let lang="ar";
+function toast(message){const t=$("#toast");t.textContent=message;t.classList.add("show");clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove("show"),2600)}
+function go(page){$$(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));$$("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));const n=$('[data-page="'+page+'"] [data-i18n]');const c=$("#crumbText");if(c&&n)c.textContent=n.textContent;window.scrollTo({top:0,behavior:"smooth"});$("#overlay").classList.remove("open")}
+$$("[data-page]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
+$$("[data-goto]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.goto)));
+function setLang(next){lang=next;document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";document.body.classList.toggle("ltr",lang==="en");$$("[data-i18n]").forEach(el=>{const key=el.dataset.i18n;const val=(lang==="ar"?translations.ar:english)[key];if(val!==undefined)el.innerHTML=val});$("#langBtn").innerHTML=lang==="ar"?"<span style='font-size:10px;font-weight:700'>EN</span>":"<span style='font-size:10px;font-weight:700'>AR</span>";$("#crumbText").textContent=lang==="ar"?"نظرة عامة":"Overview";$("#chatInput").placeholder=lang==="ar"?"اكتب سؤالك أو الصق مقتطفاً للتحليل...":"Ask a question or paste an excerpt for analysis...";}
+$("#langBtn").addEventListener("click",()=>setLang(lang==="ar"?"en":"ar"));$("#settingsLang").addEventListener("click",()=>setLang(lang==="ar"?"en":"ar"));
+function toggleTheme(){const root=document.documentElement;root.dataset.theme=root.dataset.theme==="dark"?"light":"dark"}$("#themeBtn").addEventListener("click",toggleTheme);$("#settingsTheme").addEventListener("click",toggleTheme);
+$("#refreshBtn").addEventListener("click",()=>toast(lang==="ar"?"تم تحديث عرض النموذج":"Prototype view refreshed"));
+$("#searchBtn").addEventListener("click",()=>{const q=prompt(lang==="ar"?"ابحث عن وحدة: مساعد، أكواد، حوادث، مؤشرات، مختبر، تقارير":"Search: assistant, code, incidents, IOC, lab, reports");if(!q)return;const map=[["مساعد","assistant"],["assistant","assistant"],["كود","code"],["code","code"],["حوادث","incidents"],["incident","incidents"],["مؤشر","intel"],["ioc","intel"],["مختبر","lab"],["lab","lab"],["تقرير","reports"],["report","reports"]];const hit=map.find(x=>q.toLowerCase().includes(x[0]));if(hit)go(hit[1]);else toast(lang==="ar"?"لا توجد وحدة مطابقة":"No matching module")});
+$("#menuBtn").addEventListener("click",()=>{$("#drawer").innerHTML=$(".sidebar").innerHTML;$("#overlay").classList.add("open");$("#drawer").querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)))});
+$("#overlay").addEventListener("click",e=>{if(e.target===$("#overlay"))$("#overlay").classList.remove("open")});
+$$("[data-prompt]").forEach(b=>b.addEventListener("click",()=>{$("#chatInput").value=b.dataset.prompt;$("#chatInput").focus()}));
+function sendMessage(){const input=$("#chatInput"),val=input.value.trim();if(!val)return;$("#chatWelcome")?.remove();const history=$("#chatHistory");const user=document.createElement("div");user.className="chat-message user";user.textContent=val;history.appendChild(user);const reply=document.createElement("div");reply.className="chat-message assistant";reply.textContent=lang==="ar"?"تم استلام النص داخل نموذج الواجهة فقط. اربط مزود AI في الخادم لتفعيل التحليل الفعلي؛ لا يتم إرسال محتوى إلى أي خدمة حالياً.":"Input received by the UI prototype only. Connect a server-side AI provider to enable analysis; nothing is sent to a service right now.";history.appendChild(reply);input.value="";history.scrollTop=history.scrollHeight}
+$("#sendBtn").addEventListener("click",sendMessage);$("#chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}});
+$("#attachBtn").addEventListener("click",()=>toast(lang==="ar"?"ميزة رفع الملفات تحتاج ربطاً آمناً بالخادم":"File upload requires a secure backend integration"));
+$("#uploadCodeBtn").addEventListener("click",()=>toast(lang==="ar"?"واجهة رفع الملفات غير مربوطة بعد":"File upload is not connected yet"));
+$("#filterBtn").addEventListener("click",()=>toast(lang==="ar"?"لا توجد بيانات حوادث حية مرتبطة بعد":"No live incident feed connected yet"));
+$("#agentConfig").addEventListener("click",()=>toast(lang==="ar"?"إعدادات الوكلاء ستُربط بخدمة التنسيق":"Agent settings need orchestration service integration"));
+$("#exportReport").addEventListener("click",()=>{const text=(lang==="ar"?"تقرير Wormstar التجريبي\n\nهذا نموذج تقرير. اربط محرك التقارير لإنتاج النتائج الفعلية.":"Wormstar sample report\n\nThis is a report template. Connect the reporting engine for real findings.");const blob=new Blob([text],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="wormstar-report-template.md";a.click();URL.revokeObjectURL(a.href);toast(lang==="ar"?"تم تنزيل قالب التقرير":"Report template downloaded")});
+$("#iocCheck").addEventListener("click",()=>{const v=$("#iocInput").value.trim();let type="unknown";if(/^https?:\/\//i.test(v))type="URL";else if(/^[a-f0-9]{64}$/i.test(v))type="SHA-256";else if(/^(?:\d{1,3}\.){3}\d{1,3}$/.test(v))type="IPv4";else if(/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(v))type="Domain";$("#iocResult").textContent=v?(lang==="ar"?"نوع التنسيق المحتمل: "+type+" — فحص شكلي محلي فقط، دون اتصال خارجي.":"Likely format: "+type+" — local syntax check only, no external connection."):(lang==="ar"?"أدخل مؤشراً أولاً.":"Enter an indicator first.")});
+$("#profileMore").addEventListener("click",()=>toast(lang==="ar"?"ملف محلي تجريبي":"Local demo profile"));
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+</script>
+</body></html>

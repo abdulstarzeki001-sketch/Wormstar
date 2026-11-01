@@ -1,0 +1,13 @@
+name = "wormstar-integration-hub"
+main = "worker.js"
+compatibility_date = "2026-10-25"
+workers_dev = true
+preview_urls = false
+
+[[services]]
+binding = "CORE"
+service = "wormstar-ai-lab"
+
+[[services]]
+binding = "SENTINEL"
+service = "wormstar-sentinel-preview"

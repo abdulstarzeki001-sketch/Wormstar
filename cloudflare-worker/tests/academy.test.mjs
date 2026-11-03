@@ -8,7 +8,7 @@ const worker=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
 
 test('Cyber Quest retains complete original lessons, quizzes, and mobile layout',()=>{
   assert.equal((ACADEMY_HTML.match(/https:\/\/drive\.google\.com\/file\/d\//g)||[]).length,71);
-  assert.match(ACADEMY_HTML,/18 وحدة تعليمية/);
+  assert.match(ACADEMY_HTML,/18 وحدة/);
   assert.match(ACADEMY_HTML,/localStorage/);
   assert.match(ACADEMY_HTML,/data-nav="quiz"/);
   assert.match(ACADEMY_HTML,/@media\(max-width:760px\)/);

@@ -91,6 +91,20 @@ test('GPT-OSS 120B has bounded low reasoning effort for chat and medium for code
  assert.equal(calls[1].input.reasoning_effort,'medium');
 });
 
+test('AI Core supports deep GPT-OSS owner effort and text-array responses',async()=>{
+ const {env,calls}=fixture(()=>({choices:[{message:{content:[{type:'text',text:'Validated'},{type:'text',text:'answer'}]}}]}),{policy:{max_output_tokens:2048}});
+ const response=await chat(env,{mode:'code',engine:'gpt-oss-120b',message:'Explain the result',reasoningEffort:'high'});
+ assert.equal(response.status,200);
+ const result=await response.json();
+ assert.equal(result.answer,'Validated\nanswer');
+ assert.equal(result.reasoningEffort,'high');
+ assert.equal(calls[0].input.reasoning_effort,'high');
+ assert.equal(calls[0].input.max_tokens,2048);
+ const invalid=await chat(env,{mode:'assistant',message:'test',engine:'auto',reasoningEffort:'unlimited'});
+ assert.equal(invalid.status,400);
+ assert.equal(calls.length,1,'Invalid parameters never trigger billable AI');
+});
+
 test('Security: missing or invalid authorization blocks AI, memory and policy access',async()=>{
  const {env,calls}=fixture();
  for(const bad of ['', 'wrong-token']){

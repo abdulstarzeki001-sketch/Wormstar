@@ -1,0 +1,97 @@
+name: Scheduled Star Cyber Audit Repository Sync
+
+on:
+  schedule:
+    # Every day at 05:17 Asia/Baghdad (02:17 UTC)
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/sync_star_audit.py"
+      - "scripts/tests/test_sync_star_audit.py"
+      - ".github/workflows/sync-star-audit.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: star-audit-upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  stage-upstream-review:
+    name: Mirror safe upstream files and open a review PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out Wormstar
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check out original audit lab (untrusted content; never execute)
+        uses: actions/checkout@v4
+        with:
+          repository: abdulstarzeki001-sketch/Star-Cyber-Audit-iSH
+          ref: main
+          path: .star-audit-upstream
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Test the safe sync engine (local synthetic fixtures)
+        run: python -m unittest discover -s scripts/tests -p "test_sync_star_audit.py" -v
+
+      - name: Create deterministic source mirror and 100% file inventory
+        run: |
+          python scripts/sync_star_audit.py --source .star-audit-upstream
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          info=json.loads(Path("integrations/star-cyber-audit-ish/SOURCE_INVENTORY.json").read_text())
+          assert info["total_source_files"]==len(info["files"])
+          assert info["copied_files"]+info["metadata_only_files"]==len(info["files"])
+          print("Inventory:",info["total_source_files"],"source files;",
+                info["copied_files"],"safe source copies;",
+                info["metadata_only_files"],"archival metadata entries")
+          PY
+
+      - name: Propose upstream updates without changing deployed modules
+        id: sync_pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ github.token }}
+          branch: automation/star-audit-safe-upstream-sync
+          base: main
+          delete-branch: true
+          add-paths: |
+            integrations/star-cyber-audit-ish/upstream/**
+            integrations/star-cyber-audit-ish/SOURCE_INVENTORY.json
+          commit-message: "chore(upstream): stage reviewed iSH source mirror and 100% file inventory"
+          title: "Sync upstream Star Cyber Audit iSH (safe source + complete inventory)"
+          body: |
+            Automatically proposed by the daily 05:17 Asia/Baghdad sync.
+
+            - Copies verified **active source and tooling** into the isolated `upstream/` snapshot.
+            - Generates a deterministic inventory of **every tracked upstream file** with Git blob hashes and byte sizes.
+            - **Does not copy** OneDrive captures, raw external JavaScript, research snapshots, sensitive archives, or unreviewed reports.
+            - Does **not** overwrite active Core/Sentinel/iSH code or automatically deploy untrusted source.
+            - Review this diff, run Quality Gate and merge only when appropriate.
+          labels: |
+            dependencies
+          draft: false
+
+      - name: Record PR status
+        run: |
+          if [ -n "${{ steps.sync_pr.outputs.pull-request-url }}" ]; then
+            echo "Review proposed updates: ${{ steps.sync_pr.outputs.pull-request-url }}"
+          else
+            echo "No upstream changes require a new PR."
+          fi

@@ -2,6 +2,7 @@
 import {termsFor,rankKnowledge} from './rag-engine.js';
 import {chooseReasoningEffort,extractModelAnswer} from './model-runtime.js';
 import {hybridKnowledge,indexKnowledgeBatch} from './advanced-rag.js';
+import {syncRepository,repoIndexStatus,findRepoEvidence,buildRepoMessages,NO_EVIDENCE} from './repository-memory.js';
 import {runAuthorizedScan,runBoundedAgent,listAgents} from './security-ops.js';
 import LAB_POLICY_MANIFEST from './permissions-module.js';
 import FUTURE_UI from './future-ui.js';
@@ -683,6 +684,11 @@ async function studioRoutes(request,env,path){
 }
 
 export default {
+  async scheduled(event,env,ctx){
+    ctx.waitUntil(syncRepository(env,{maxFiles:8})
+      .then(result=>console.info(JSON.stringify({event:'repo_sync',visited:result.visited,total:result.total,changed:result.changed,complete:result.complete})))
+      .catch(()=>console.warn('Repository sync failed; retry on next scheduled run')));
+  },
   async fetch(request,env,ctx){
     const url=new URL(request.url);
     if(request.method==='GET'&&url.pathname==='/service-worker.js'){
@@ -764,6 +770,57 @@ export default {
       if(!permitted.allowed)return json({error:permitted.reason},permitted.status||403);
       const result=await runBoundedAgent(env,body,{memoryEnabled:policy.memory_enabled,maxTokens:policy.max_output_tokens});
       return json(result,result.status===400||result.status===429||result.status===502||result.status===503?result.status:200);
+    }
+    if(url.pathname==='/api/repo/status'&&request.method==='GET'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      try{return json(await repoIndexStatus(env));}catch{return json({error:'Repository index unavailable'},503);}
+    }
+    if(url.pathname==='/api/repo/sync'&&request.method==='POST'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      let body;try{body=await readBoundedJson(request,2048);}catch{return json({error:'Invalid JSON'},400);}
+      try{return json(await syncRepository(env,{maxFiles:body?.maxFiles??6}));}
+      catch(error){return json({error:'Repository sync failed; cursor unchanged',hint:String(error.message).slice(0,110)},503);}
+    }
+    if(url.pathname==='/api/repo/ask'&&request.method==='POST'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      if(!capabilityEnabled('ai.chat'))return permissionDenied('ai.chat');
+      let body;try{body=await readBoundedJson(request,LAB_POLICY.limits.maxRequestBytes);}
+      catch{return json({error:'Invalid request'},400);}
+      if(typeof body?.message!=='string'||!body.message.trim()||body.message.length>LAB_POLICY.limits.maxPromptCharacters)return json({error:'Invalid question'},400);
+      const engine=body.engine??'auto';
+      if(!['auto','gpt-oss-120b','gpt-oss-20b','qwen-coder'].includes(engine))return json({error:'Repository AI only supports hosted Cloudflare models'},400);
+      if(body.reasoningEffort!==undefined&&!['auto','low','medium','high'].includes(body.reasoningEffort))return json({error:'Invalid reasoning effort'},400);
+      if(!env.DB||!env.AI)return json({error:'Knowledge or inference binding missing'},503);
+      let policy;try{policy=await getPolicy(env);}catch{return json({error:'Owner policy unavailable'},503);}
+      const mode=body.mode==='code'?'code':'assistant',check=checkPolicy(policy,mode,body.message);
+      if(!check.allowed)return json({error:check.reason},check.status||403);
+      let evidence;
+      try{evidence=await findRepoEvidence(env,body.message.trim(),{limit:5});}
+      catch{return json({error:'Repository retrieval unavailable'},503);}
+      if(!evidence.sources.length)return json({answer:NO_EVIDENCE,scope:'repository-only',sources:[],modelUsed:null,retrieval:evidence.retrieval,grounded:false});
+      const messages=buildRepoMessages(body.message.trim(),body.history,evidence.sources);
+      const models=[...WORMSTAR_ENGINES[engine]];
+      if(engine==='auto'&&mode==='code'){
+        const coder='@cf/qwen/qwen2.5-coder-32b-instruct';
+        if(models.includes(coder)){models.splice(models.indexOf(coder),1);models.unshift(coder);}
+      }
+      const used=[];
+      for(const model of models){
+        used.push(model);
+        try{
+          const isGpt=model==='@cf/openai/gpt-oss-120b'||model==='@cf/openai/gpt-oss-20b';
+          const effort=chooseReasoningEffort(mode,body.reasoningEffort??'auto',policy.max_output_tokens);
+          const input={messages,max_tokens:policy.max_output_tokens,temperature:0.15,...(isGpt?{reasoning_effort:effort}:{})};
+          const answer=extractModelAnswer(await env.AI.run(model,input));
+          if(!answer)throw Error('Empty inference response');
+          const state=await env.DB.prepare('SELECT head_sha FROM repo_sync_state WHERE id=1').first();
+          return json({answer,scope:'repository-only',
+            sources:evidence.sources.map(({path,url,lineStart,lineEnd})=>({path,url,lineStart,lineEnd})),
+            revision:state?.head_sha||null,grounded:true,modelUsed:model,engineRequested:engine,
+            fallbackUsed:model!==models[0],retrieval:evidence.retrieval,reasoningEffort:isGpt?effort:null});
+        }catch{}
+      }
+      return json({error:'Repository inference unavailable',modelsTried:used},503);
     }
     if(request.method==='POST'&&url.pathname==='/api/chat'){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);

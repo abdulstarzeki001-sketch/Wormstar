@@ -314,6 +314,10 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
       <option value="medium">Balanced / متوازن</option>
       <option value="high">Deep / عميق</option>
     </select>
+    <label class="ai-repo-toggle" for="repoOnly"><input id="repoOnly" type="checkbox" checked> 📚 Repository Expert — حصريًا ملفات Wormstar</label>
+    <button type="button" id="repoStatusBtn" class="btn" aria-label="Knowledge index status">حالة ذاكرة المستودع</button>
+    <button type="button" id="repoSyncBtn" class="btn" aria-label="Index next GitHub file batch">تحديث دفعة ملفات GitHub</button>
+    <small id="repoMemoryStatus" role="status" aria-live="polite">تحديث الذاكرة تلقائي كل ساعة؛ لا تُستخدم ذاكرة شخصية في هذا الوضع.</small>
     <small data-i18n="ai_model_note">التوجيه الذكي يختار النموذج حسب المهمة. مستوى التفكير العميق قد يتطلب وقتًا ورموزًا أكثر، ضمن إعدادات المالك والخدمة.</small>
   </div>
   <div class="chat-history" id="chatHistory"><div class="chat-welcome" id="chatWelcome"><div class="hero-mini"><svg viewBox="0 0 32 32" width="28" height="28" fill="none" stroke="#06241f" stroke-width="1.7"><path d="M16 3.5 19.3 12.7 28.5 16 19.3 19.3 16 28.5 12.7 19.3 3.5 16 12.7 12.7 16 3.5Z"/><circle cx="16" cy="16" r="3.2"/></svg></div><h2 data-i18n="chat_title">ما الذي تريد فهمه اليوم؟</h2><p data-i18n="chat_desc">ابدأ بسؤال أمني أو أرفق مقتطفاً من سجل أو شيفرة. لا ترسل أسراراً أو مفاتيح وصول.</p><div class="prompt-chips"><button class="prompt-chip" data-prompt="راجع هذا المقتطف بحثاً عن أخطاء أمنية">مراجعة مقتطف شيفرة</button><button class="prompt-chip" data-prompt="اشرح لي مؤشرات الاختراق في هذا السجل">تحليل سجل أمني</button><button class="prompt-chip" data-prompt="كيف أتحقق من أمان إعدادات HTTP headers؟">تدقيق إعدادات الويب</button></div></div></div><div class="chat-compose"><textarea id="chatInput" data-placeholder="اكتب سؤالك أو الصق مقتطفاً للتحليل..." placeholder="اكتب سؤالك أو الصق مقتطفاً للتحليل..."></textarea><div class="compose-foot"><input id="aiTextFile" type="file" accept=".txt,.md,.js,.jsx,.ts,.tsx,.py,.json,.log,.csv,.html,.css,.sh,.yml,.yaml" hidden><button class="btn" id="attachBtn">＋ <span data-i18n="attach">إرفاق مقتطف</span></button><span class="compose-note" data-i18n="chat_notice">الرسائل تُرسل إلى Wormstar Core بعد الاتصال، وقد تستعين بذاكرة المختبر المحفوظة.</span><button class="btn primary" id="sendBtn"><span data-i18n="send">إرسال</span> ↑</button></div></div></div>
@@ -539,7 +543,7 @@ async function sendMessage(){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),90000);
   try {
-    const response=await fetch("/api/chat",{
+    const response=await fetch($("#repoOnly").checked?"/api/repo/ask":"/api/chat",{
       method:"POST",cache:"no-store",signal:controller.signal,
       headers:{"Authorization":"Bearer "+wormstarAccess,"Content-Type":"application/json"},
       body:JSON.stringify({mode:$("#aiMode").value,message:value,history:historyForCore,engine:$("#aiModel").value,reasoningEffort:$("#aiReasoning").value,memoryIds:[]})
@@ -554,6 +558,19 @@ async function sendMessage(){
       model.style.cssText="font-size:10px;color:var(--muted);margin-top:6px";
       model.textContent=(lang==="ar"?"المحرك الفعلي: ":"Actual model: ")+String(data.modelUsed).slice(0,90)+(data.fallbackUsed?(lang==="ar"?" · احتياطي":" · Fallback"):"")+(data.reasoningEffort?" · "+data.reasoningEffort:"");
       pending.appendChild(model);
+    }
+    if(Array.isArray(data.sources)&&data.sources.length){
+      const cite=document.createElement("div");
+      cite.className="ai-source-list";
+      cite.textContent=(lang==="ar"?"مصادر GitHub الموثقة: ":"GitHub file evidence: ");
+      for(const source of data.sources.slice(0,5)){
+        if(typeof source.url!=="string"||!source.url.startsWith("https://github.com/abdulstarzeki001-sketch/Wormstar/blob/"))continue;
+        const link=document.createElement("a");link.href=source.url;link.target="_blank";link.rel="noopener noreferrer";
+        link.textContent=String(source.path||"Source").slice(0,110)+" L"+source.lineStart+"–"+source.lineEnd+" ";
+        link.style.cssText="display:block;text-decoration:underline;color:var(--accent);margin:5px 0";
+        cite.appendChild(link);
+      }
+      pending.appendChild(cite);
     }
     if(Array.isArray(data.memoryUsed) && data.memoryUsed.length){
       const sources=document.createElement("div");
@@ -574,6 +591,30 @@ async function sendMessage(){
     $("#chatHistory").scrollTop=$("#chatHistory").scrollHeight;
   }
 }
+$("#repoOnly").addEventListener("change",()=>{
+  // Never cross-contaminate repository-only history with general AI history.
+  aiConversation.length=0;
+  $("#chatHistory").textContent="";
+  $("#repoMemoryStatus").textContent=$("#repoOnly").checked?
+    "Repository Expert: الإجابات من ملفات GitHub المفهرسة فقط.":
+    "General AI: المحادثة العامة مفصولة عن ذاكرة المستودع.";
+});
+async function repositoryControl(path,body){
+  if(!wormstarAccess){aiStatus("سجّل الدخول بمفتاح المالك أولًا.","error");return;}
+  const notice=$("#repoMemoryStatus");notice.textContent="جاري فحص قاعدة معرفة GitHub...";
+  try{
+    const response=await fetch(path,{method:body?"POST":"GET",cache:"no-store",
+      headers:{"Authorization":"Bearer "+wormstarAccess,...(body?{"Content-Type":"application/json"}:{})},
+      ...(body?{body:JSON.stringify(body)}:{})});
+    const payload=await response.json();
+    if(!response.ok)throw Error(payload.error||"HTTP "+response.status);
+    notice.textContent=body?
+      ("GitHub: "+payload.visited+"/"+payload.total+" ملف؛ المتجهات الجديدة "+payload.indexedFragments+"، مكتمل: "+(payload.complete?"نعم":"لا")):
+      ("Repository Memory: "+payload.searchableFiles+"/"+payload.files+" ملف نصي؛ "+payload.fragments+" مقطع؛ التقدم "+payload.visited+"/"+payload.total);
+  }catch(error){notice.textContent="فشل قراءة أو تحديث معرفة GitHub: "+String(error.message).slice(0,130);}
+}
+$("#repoStatusBtn").addEventListener("click",()=>repositoryControl("/api/repo/status"));
+$("#repoSyncBtn").addEventListener("click",()=>repositoryControl("/api/repo/sync",{maxFiles:4}));
 $("#sendBtn").addEventListener("click",sendMessage);
 $("#chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();void sendMessage();}});
 $("#attachBtn").addEventListener("click",()=>$("#aiTextFile").click());

@@ -1,0 +1,29 @@
+name: Test unified iSH static analyzer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "integrations/star-cyber-audit-ish/**"
+      - ".github/workflows/test-unified-ish.yml"
+  pull_request:
+    paths:
+      - "integrations/star-cyber-audit-ish/**"
+      - ".github/workflows/test-unified-ish.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Static syntax and test fixtures
+        run: |
+          python -m py_compile integrations/star-cyber-audit-ish/analyze.py
+          python -m unittest discover -s integrations/star-cyber-audit-ish/tests -p 'test_*.py' -v

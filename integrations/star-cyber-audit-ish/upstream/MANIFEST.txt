@@ -1,0 +1,12 @@
+Star Cyber Audit public source manifest
+run.sh                 POSIX shell launcher for iSH / a-Shell / Linux
+analyze.py              Read-only JavaScript auditor
+README.md               Main documentation
+README_AR.md            Arabic operating guide
+UBOOR_FLOW_NOTES_AR.md  Evidence-based QR flow notes
+README_GITHUB_UPLOAD.md Source publishing guidance
+site/worker.js          Cloudflare Worker serving public dashboard
+
+EXCLUDED intentionally: offline_samples, downloads, HTTP captures, cookies, tokens,
+personally identifying shipment documents and locally generated reports.
+The published website is not affiliated with or endorsed by UBOOR or Iraqi government authorities.

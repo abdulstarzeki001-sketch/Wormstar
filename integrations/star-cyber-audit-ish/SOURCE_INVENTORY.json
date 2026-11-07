@@ -1,0 +1,669 @@
+{
+  "schema_version": 1,
+  "source_repository": "abdulstarzeki001-sketch/Star-Cyber-Audit-iSH",
+  "source_commit": "e42cc7b14ea4d08402e516340db49256de1f6b05",
+  "total_source_files": 94,
+  "copied_files": 18,
+  "metadata_only_files": 76,
+  "warning": "Research, OneDrive exports, archived third-party JS, captured QR tokens and raw reports are not copied into the public app. Original user files must stay private.",
+  "files": [
+    {
+      "path": ".github/workflows/test.yml",
+      "bytes": 5186,
+      "source_git_blob": "766c9bc04757aafe6f94473b47451aa71e9209c1",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 261,
+      "source_git_blob": "1936a2f34fd29800c05db50c027a82c6c706aaef",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "MANIFEST.txt",
+      "bytes": 681,
+      "source_git_blob": "5bd379dc3d1f98d86ef945d6e006b59298550bf7",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3842,
+      "source_git_blob": "05a25f72cef4c9581e39ac2332c7980d5f4da5dc",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "README_AR.md",
+      "bytes": 18201,
+      "source_git_blob": "ef6e54ce9b8a6121f594e34c32596ebda83a27bc",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "README_GITHUB_UPLOAD.md",
+      "bytes": 812,
+      "source_git_blob": "328cc5b08870a690bf9500926684c0399587cf59",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "UBOOR_FLOW_NOTES_AR.md",
+      "bytes": 2437,
+      "source_git_blob": "1522361abd4ed8925d4828d24c773989e5380d2d",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "analyze.py",
+      "bytes": 15893,
+      "source_git_blob": "f5291526bd61483e5bc2b1da6d767fe72f50d328",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "docs/PHASE2_STATIC_ANALYZER_REMEDIATION_AR.md",
+      "bytes": 3312,
+      "source_git_blob": "d7dbe5030205e8358111dc6bef0d2eb4754b258c",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "research/ALL_FILES_INVENTORY_2026-11-07_AR.md",
+      "bytes": 20235,
+      "source_git_blob": "b27b9799522a0f25e5117d8377aa8c35040d6601",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/html-snapshots/2026-11-07/README_AR.md",
+      "bytes": 2667,
+      "source_git_blob": "d997660f31bc25542e31ec32c92e8f9dfdf62977",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/html-snapshots/2026-11-07/dms-index-qr-error-snapshot.html",
+      "bytes": 24837,
+      "source_git_blob": "6075a03abccbfa514d3d38431b1c59a05f6318f3",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/html-snapshots/2026-11-07/dms-qrpubliclink-shell.html",
+      "bytes": 832,
+      "source_git_blob": "225b1c8f19dbf8b33dbddc28f6f8b895c5de17f1",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/html-snapshots/2026-11-07/dms-readqrwithur-error-snapshot.html",
+      "bytes": 24814,
+      "source_git_blob": "e19bda5f6ca82a28dd9a8f5f22d2a396d72bd77f",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/README_AR.md",
+      "bytes": 4700,
+      "source_git_blob": "e7f4e08c6e7cbd5ab09ed3874232061b133b00ae",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/customs-uboor.ur.gov.iq/_downloads.html.txt",
+      "bytes": 603,
+      "source_git_blob": "8299a5dcf84f19b7426146ce00463b44bdd7ed90",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/customs-uboor.ur.gov.iq/company-owner/empty-phone-file.html.txt",
+      "bytes": 1,
+      "source_git_blob": "0519ecba6ea913e21689ec692e81e9e4973fbf73",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/customs-uboor.ur.gov.iq/company-owner/index.html.txt",
+      "bytes": 21212,
+      "source_git_blob": "912ec937a7bc5350eb3f4605fba59dd6ce1e8dff",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/customs-uboor.ur.gov.iq/company-owner/qr-validation-error.html.txt",
+      "bytes": 19185,
+      "source_git_blob": "ec3572a085342960520910b91cb1c320cfd30166",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/customs-uboor.ur.gov.iq/images/customes-logo.png.source.md",
+      "bytes": 486,
+      "source_git_blob": "7a359b60de2a0bb4be7632405d40aab099e242c7",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/customs-uboor.ur.gov.iq/images/ur-logo.png.source.md",
+      "bytes": 475,
+      "source_git_blob": "4dc9511887d49d0ee1cb0cf569cba9441710c0d7",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/customs-uboor.ur.gov.iq/index.html.txt",
+      "bytes": 19436,
+      "source_git_blob": "113287203c76ac54b9b88ce3c5ca93c0c891e0cf",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/customs-uboor.ur.gov.iq/user-auth/index.html.txt",
+      "bytes": 19581,
+      "source_git_blob": "4000f72e28b6bd38581eee144fec8e48cf1bbf5c",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/onedrive-uboor-capture/2026-11-07/ur.gov.iq/js/README.md",
+      "bytes": 217,
+      "source_git_blob": "46e419712d8abe5e6e11e202f39a6491c3cc3d61",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/1997.25b0bf86(1).js",
+      "bytes": 490,
+      "source_git_blob": "d013e05fedaa0773d8b38b6fce5cbd0acff38d60",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/6439.3d46893d(1).js",
+      "bytes": 1336,
+      "source_git_blob": "aa5fe381754826001e590b676e1ccaab4a32ce0d",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/978.a8d79244(1).js",
+      "bytes": 560,
+      "source_git_blob": "b753278d4c096e7ba300a25b53bb4c11e47dcdb2",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/MANIFEST.md",
+      "bytes": 2330,
+      "source_git_blob": "92139248940ebb40dfc6e97cb4c8543e24b1997d",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/UBOOR_verified_review_2026-11-06(1).md",
+      "bytes": 29663,
+      "source_git_blob": "9989d11ea92f2ad9c44456574bff5fd578810fac",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-021750/2752.719f919a(1).js",
+      "bytes": 542,
+      "source_git_blob": "fd978f9ca85a1726d1ddf72422cd1776b21eac93",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-021750/Input-Cq8l9PVo(20261107-021849).js",
+      "bytes": 7831,
+      "source_git_blob": "7c02ee8485ec919fd40e09c1bdd7cadb0b6e1f10",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-021750/MANIFEST_AR.md",
+      "bytes": 3539,
+      "source_git_blob": "be22dfdec2978c2a79752f10eb6ad5a280a4e9e1",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-021750/Textarea-BBpyTmzv(20261107-021849).js",
+      "bytes": 8388,
+      "source_git_blob": "c1e58f77b403b49597e60356221ddf8418b0c364",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042044/BaseModal-Cj4W6vkq(20261107-042043).js",
+      "bytes": 3325,
+      "source_git_blob": "e0065e101ea4f26809631df437da0ed32b9b8dda",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042044/Card-CzWmUXpa(20261107-042044).js",
+      "bytes": 1247,
+      "source_git_blob": "7f69a8ad0d02ec3bfb3767b2b450ca25700cdcdb",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042044/Form-CrcVxbv-(20261107-042044).js",
+      "bytes": 5304,
+      "source_git_blob": "03af13e8fa67f650742bdb6bf5b741f15317618d",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042044/MANIFEST_AR.md",
+      "bytes": 3311,
+      "source_git_blob": "6955148c5f3025d93f2da595035377aceb9c0fb6",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042044/loginview-czys-bdx(20261107-042043).js",
+      "bytes": 4871,
+      "source_git_blob": "116dfbb1ad77c21d8b444b76f0b677fa95f548aa",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042044/loginview-d7e_onzx(20261107-042043).css",
+      "bytes": 27,
+      "source_git_blob": "48b829e8563858c3c0bc4aea9c99cc586b99d4a2",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042439/MANIFEST_AR.md",
+      "bytes": 3143,
+      "source_git_blob": "2e071ce1fe0174bf90276fd4fa55099e642344c1",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042439/badge-dqlbknzz(20261107-042439).js",
+      "bytes": 5460,
+      "source_git_blob": "9fa03b554d7179f40d4e28a04902c73bc03171d7",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042439/form-o25ckf6s(20261107-042439).js",
+      "bytes": 5304,
+      "source_git_blob": "f9fcde6ba229c39d1081d3ed8e80770ba289e083",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042439/formfield-dm6xmaiy(20261107-042439).js",
+      "bytes": 3489,
+      "source_git_blob": "870c96e48ad2740d0b095dbf42d71f02ad1d3f80",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/batch-042439/input-ce30asl_(20261107-042439).js",
+      "bytes": 7831,
+      "source_git_blob": "1fef8294304b2689ada82938a1f4c386135b858a",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/company-owner-vite/README_AR.md",
+      "bytes": 3464,
+      "source_git_blob": "807a585a3452e6ac7ce80088cd96ad93349348bc",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/company-owner-vite/badge-ddrqdsta.js",
+      "bytes": 5460,
+      "source_git_blob": "ce30d886206c4eb3e5f81966cdf57a406a073050",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/company-owner-vite/basemodal-drrlsycw(20261107-015549).css",
+      "bytes": 5451,
+      "source_git_blob": "a0d70815fb269bd470ff8982ac397f8413139bb3",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/company-owner-vite/companyownerview-citq539c(20261107-015549).css",
+      "bytes": 3693,
+      "source_git_blob": "242e66518534a3ce973655936263aafb2f63713e",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/company-owner-vite/companyownerview-cjdszkn6.js",
+      "bytes": 38636,
+      "source_git_blob": "009f2d13f2fa0e0ad8e9be22a234e4d9d678488d",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/company-owner-vite/index-dxnlxmd6.css",
+      "bytes": 217017,
+      "source_git_blob": "b1cc5cd4bd12737fb353eaa9b0f362a80b59cf5c",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/company-owner-vite/input-banvtf9h.js",
+      "bytes": 7831,
+      "source_git_blob": "ea1103e167193ed18dc464de0fecf6d10fafa927",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/company-owner-vite/iraqeagle-bf406bbv(20261107-015549).js",
+      "bytes": 74,
+      "source_git_blob": "f13c5d331738e10040e4c61077677a8b10769f66",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/company-owner-vite/vue3-treeselect-bzqe87yr(20261107-015549).css",
+      "bytes": 24215,
+      "source_git_blob": "ec8db0d349eebbcd9f4f320b230e384f218ae6d8",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/index-gleMzSil(1).js",
+      "bytes": 1416085,
+      "source_git_blob": "01838b7f9a67928e9924f6719a8d9856ac539b87",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/index.801a60b0(20261107-003201).js",
+      "bytes": 7105,
+      "source_git_blob": "a3b30b307d5e9a6fbe21c10bd65c59b3ba5579ac",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-07/robots.ssl.txt",
+      "bytes": 103,
+      "source_git_blob": "1601391c784f3ea436781374f47d546ef372a9d4",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/source-archive/2026-11-07/uboor/AchievementDocument-DEzIzJ3I.js",
+      "bytes": 11641,
+      "source_git_blob": "3d2ab3d4217437e7b50e97d5c37db17f662d23d0",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/source-archive/2026-11-07/uboor/QRDocument-BJwpoEJY.js",
+      "bytes": 607716,
+      "source_git_blob": "47fe6096a16379cfa8e079e15f46b07d6007e0af",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/source-archive/2026-11-07/uboor/QRLocal-5TAaXbzM.js",
+      "bytes": 10014,
+      "source_git_blob": "b36aa6e06c9fdc421f47bb4c59434b5989b59894",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/source-archive/2026-11-07/uboor/QrCodeReaderCustoms-a-UBVR7y.js",
+      "bytes": 16490,
+      "source_git_blob": "95a2c2807045163a3cc8a59508a5f32557de6ba3",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/source-archive/2026-11-07/uboor/qrStore-B8bgApfd.js",
+      "bytes": 248,
+      "source_git_blob": "8ccefa1736a3d7da3a800075c9a7a51e6acc6c30",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/source-archive/2026-11-07/uboor/useExitGate-BvHNutwH.js",
+      "bytes": 6027,
+      "source_git_blob": "b24b64ad0a5a66ad0492cdc4c8974c6ddc93f2d8",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/DEEP_STATIC_AUDIT_AR.md",
+      "bytes": 20708,
+      "source_git_blob": "9ae3b2a6cf47d916454829b02eeaa53b8fce5dc3",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/DEEP_STATIC_AUDIT_FINDINGS.json",
+      "bytes": 13194,
+      "source_git_blob": "acd2ef3252d010bc63307ddd9410b8e307ce5b15",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/FULL_STATIC_SECURITY_AUDIT_V2_AR.md",
+      "bytes": 18656,
+      "source_git_blob": "afa47380d6fdd16af841f523cc16a762a872da0f",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/REVIEW_AR.md",
+      "bytes": 5540,
+      "source_git_blob": "f6f677cb00ea97148e876f11127516bfae9721e4",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/SCANNER_REMEDIATION_V1_AR.md",
+      "bytes": 5176,
+      "source_git_blob": "fc5bfacf67fe026ef6423099ce030e4b394cf8b4",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/analysis.json",
+      "bytes": 4715,
+      "source_git_blob": "a627751e5f3779ede1a55bb317ba26c5b7422a96",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/offline/Star-Cyber-Audit-analysis.json",
+      "bytes": 12542,
+      "source_git_blob": "2e00a0e6449fa5006b5e4fb03bf021ab5f9a8b44",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/offline/Star-Cyber-Audit-report.html",
+      "bytes": 15742,
+      "source_git_blob": "023bed3c8854c628f16355de94c658279666d9fd",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/offline/inventory.csv",
+      "bytes": 638,
+      "source_git_blob": "25f93c744b7b6f493570bd919a3f24e64d7b3fe5",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/onedrive-uboor-folder/DETAILED_FILE_BY_FILE_AR.md",
+      "bytes": 10708,
+      "source_git_blob": "4a80c41e2ec0361de27ba163da1cc9e82fc6876b",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/onedrive-uboor-folder/FILE_INVENTORY_REDACTED.json",
+      "bytes": 3921,
+      "source_git_blob": "4e77ce6dd4f3e913b8696746a3362db3b7af0c8b",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/onedrive-uboor-folder/REVIEW_AR.md",
+      "bytes": 6010,
+      "source_git_blob": "083e4de979f8cc816cdbce6c5cc20861152a1aac",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/reference/CompanyOwnerView_user_report_REDACTED.md",
+      "bytes": 38368,
+      "source_git_blob": "b9ca3d727b813f7d64d40f90f132da17babf0d32",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/reference/UBOOR_AchievementDocument_verified_addendum_2026-11-06.md",
+      "bytes": 8814,
+      "source_git_blob": "f7610f7dd6bbee337d3d5dfa330c67ef16436da7",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/reference/UBOOR_QRCheckpoints_verified_audit_2026-11-06.md",
+      "bytes": 12758,
+      "source_git_blob": "ebb38251f9f327bfec990909e02be63d4db04213",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/reference/UBOOR_Star_Cyber_Audit_Comprehensive_2026-11-07.html",
+      "bytes": 26358,
+      "source_git_blob": "1fcaeed5307bc33a2e3390ee4926a24a34b1faa0",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/reference/UBOOR_Star_Cyber_Audit_Comprehensive_2026-11-07.md",
+      "bytes": 19736,
+      "source_git_blob": "cd7eec9d2dcdd999dd76f8425a5b1818e48ef3ad",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/reference/UBOOR_mobile_integration_report_2026-11-06.md",
+      "bytes": 8531,
+      "source_git_blob": "3dde600036a211fe18878286923dd1f2a1df7e3d",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/reference/UBOOR_qrStore_verified_addendum_2026-11-06.md",
+      "bytes": 7085,
+      "source_git_blob": "17d1b2a90ca2b17aa75c3a157735a90fb34818de",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/reference/UBOOR_verified_update_2026-11-06.md",
+      "bytes": 14066,
+      "source_git_blob": "18a00374cdc79e53040d4fcf5db4d9454cb76963",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-07/source_manifest.json",
+      "bytes": 1862,
+      "source_git_blob": "8e88dc999d2e08e92dcf635f7482f00db2aded78",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/dms-employee-assets/DETAILED_STATIC_AUDIT_AR.md",
+      "bytes": 12528,
+      "source_git_blob": "6c65f9291455d9dcdb331c86d4ef3c5ae31205f5",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "run.sh",
+      "bytes": 228,
+      "source_git_blob": "702935c4887366f94072e443a7733240d01c2794",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "site/sample-data.json",
+      "bytes": 4715,
+      "source_git_blob": "a627751e5f3779ede1a55bb317ba26c5b7422a96",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "site/worker.js",
+      "bytes": 22395,
+      "source_git_blob": "8af477a14b008c88d208627debbf668c12b34c69",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_audit.py",
+      "bytes": 5545,
+      "source_git_blob": "2cd3d6d0c9979c4cf7186ed7bd7a84b6521f72a6",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_regressions.py",
+      "bytes": 6108,
+      "source_git_blob": "b12380ecadeb34fcf3a737adbd4ef534174ab8d9",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/PRIVATE_ONEDRIVE_IMPORT_AR.md",
+      "bytes": 2701,
+      "source_git_blob": "0da8247055ce228c1599eca387718134615700a6",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/connect_remote.sh",
+      "bytes": 2966,
+      "source_git_blob": "6294d7e91e555ab52808ff4d366642b9b625f847",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/star_ish_moshi_setup.sh",
+      "bytes": 1526,
+      "source_git_blob": "b57bbb1fd843fb2bcef13f4132982795692c3304",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/sync_and_audit.sh",
+      "bytes": 2986,
+      "source_git_blob": "d4a726d989c6ec64d7a95dee66b2da478e5a536b",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/upload_onedrive_archive_private.sh",
+      "bytes": 3015,
+      "source_git_blob": "e09e49033937bf5d9a8461ee4d65677d3a6d73e7",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    }
+  ]
+}

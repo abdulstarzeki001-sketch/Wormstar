@@ -59,11 +59,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          URL="https://wormstar-ai-lab.abdulstarzeki001.workers.dev/api/health"
+          URL="https://wormstar-integration-hub.abdulstarzeki001.workers.dev/api/integrations"
           for attempt in 1 2 3 4; do
             if curl --fail --silent --show-error --max-time 20 --output /tmp/core-health.json "$URL" &&
-               node -e "const v=require('/tmp/core-health.json');if(v.ok!==true||v.service!=='wormstar-cloudflare-lab'||v.aiConfigured!==true)process.exit(1)"; then
-              echo "Core health verified"
+               node -e "const v=require('/tmp/core-health.json');if(v.service!=='wormstar-integration-hub'||v.core?.connected!==true||v.core?.status!==200)process.exit(1)"; then
+              echo "Core service-binding health verified (public Core login remains enforced)"
               exit 0
             fi
             sleep 4

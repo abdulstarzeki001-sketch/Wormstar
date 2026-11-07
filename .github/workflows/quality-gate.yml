@@ -1,0 +1,94 @@
+name: Wormstar Quality Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: Core + Policy + RAG Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test Core, permissions and retrieval
+        working-directory: cloudflare-worker
+        run: npm test
+
+  sentinel:
+    name: Sentinel + Same-Origin Audit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Bundle, syntax check and exercise HTTP routes
+        working-directory: wormstar-ui
+        run: npm test
+
+  ish:
+    name: iSH Analyzer and Report Schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Test offline analyzer (no third-party network access)
+        run: |
+          python3 -m py_compile integrations/star-cyber-audit-ish/analyze.py
+          python3 -m unittest discover -s integrations/star-cyber-audit-ish/tests -p 'test_*.py' -v
+      - name: Static inventory of checked-in Sentinel source
+        run: |
+          python3 integrations/star-cyber-audit-ish/analyze.py --local wormstar-ui
+          node scripts/ci/validate-ish-report.mjs integrations/star-cyber-audit-ish/reports/analysis.json
+      - name: Save sanitized inventory summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ish-inventory-${{ github.sha }}
+          path: artifacts/ish-inventory-summary.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  security:
+    name: Commit-Scoped Security Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify scanner regression tests
+        run: node --test scripts/ci/test-security-gate.mjs
+      - name: Inspect added lines and bind report to commit SHA
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          REPORT_PATH: artifacts/security-gate.json
+        run: node scripts/ci/security-gate.mjs
+      - name: Archive report even when checks fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-gate-${{ github.sha }}
+          path: artifacts/security-gate.json
+          if-no-files-found: ignore
+          retention-days: 14

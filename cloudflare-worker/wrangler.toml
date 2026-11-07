@@ -33,4 +33,4 @@ index_name = "wormstar-repository-m3"
 
 # Incremental GitHub sync; catches source changes without any browser credentials.
 [triggers]
-crons = ["17 * * * *"]
+crons = ["7,22,37,52 * * * *"]

@@ -82,6 +82,8 @@ const beforeAuditCalls=forwarded.length;
 assert.match(html,/data-open-audit/);
 assert.match(html,/closest\("\[data-open-audit\]"\)/);
 assert.match(html,/href="\/audit\/"/);
+assert.match(html,/SOURCE_INVENTORY\.json/);
+assert.match(html,/star-cyber-audit-ish\/upstream/);
 response=await go("/audit/");
 assert.equal(response.status,200);
 assert.match(response.headers.get("Content-Security-Policy"),/frame-ancestors 'none'/);

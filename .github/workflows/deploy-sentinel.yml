@@ -1,0 +1,46 @@
+name: Deploy Wormstar Sentinel Preview
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "wormstar-ui/**"
+      - ".github/workflows/deploy-sentinel.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-sentinel-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Validate and deploy isolated Sentinel UI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: wormstar-ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Bundle and validate standalone interface
+        run: |
+          node scripts/build-worker.mjs
+          node --check worker.js
+          node -e "JSON.parse(require('node:fs').readFileSync('manifest.webmanifest','utf8'))"
+
+      - name: Deploy Sentinel without private Core bindings
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: wormstar-ui
+          command: deploy

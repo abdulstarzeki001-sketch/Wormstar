@@ -65,6 +65,9 @@ jobs:
 
       - name: Propose upstream updates without changing deployed modules
         id: sync_pr
+        # Some GitHub repositories disable PR creation by GITHUB_TOKEN.
+        # The action still pushes the review branch; do not make daily backup fail.
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ github.token }}
@@ -88,10 +91,16 @@ jobs:
             dependencies
           draft: false
 
-      - name: Record PR status
+      - name: Record PR status and publish a review link
+        if: always()
         run: |
-          if [ -n "${{ steps.sync_pr.outputs.pull-request-url }}" ]; then
+          if [ "${{ steps.sync_pr.outcome }}" = "failure" ]; then
+            echo "::warning::GitHub Actions token cannot create pull requests in this repository."
+            echo "The safe source snapshot was pushed to automation/star-audit-safe-upstream-sync."
+            echo "Review branch: https://github.com/abdulstarzeki001-sketch/Wormstar/compare/main...automation/star-audit-safe-upstream-sync"
+            echo "To enable fully automated review PR creation: Settings > Actions > General > Workflow permissions > Allow GitHub Actions to create and approve pull requests."
+          elif [ -n "${{ steps.sync_pr.outputs.pull-request-url }}" ]; then
             echo "Review proposed updates: ${{ steps.sync_pr.outputs.pull-request-url }}"
           else
-            echo "No upstream changes require a new PR."
+            echo "No upstream changes require a review PR."
           fi

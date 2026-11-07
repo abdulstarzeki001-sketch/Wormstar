@@ -68,7 +68,7 @@ export async function getRepoTree(){
  const tree=await githubJSON('/git/trees/'+latest.sha+'?recursive=1');
  if(tree.truncated||!Array.isArray(tree.tree))throw Error('GitHub source tree truncated');
  const files=tree.tree.filter(x=>x.type==='blob'&&validPath(x.path)&&SHA.test(x.sha)&&Number.isInteger(x.size))
-  .map(x=>({path:x.path,sha:x.sha,size:x.size})).sort((a,b)=>a.path.localeCompare(b.path));
+  .map(x=>({path:x.path,sha:x.sha,size:x.size})).sort((a,b)=>a.path<b.path?-1:a.path>b.path?1:0);
  if(files.length>3000)throw Error('Repository size requires a paginated tree reader');
  return {head:latest.sha,files};
 }
@@ -176,8 +176,11 @@ export async function findRepoEvidence(env,question,{limit=5}={}){
    const index=lines.findIndex(line=>terms.some(t=>normalize(line).includes(t)));
    if(index<0)continue;
    const from=Math.max(0,index-2),to=Math.min(lines.length,index+5);
+   const excerpt=lines.slice(from,to).join('\n');
+   const offset=terms.map(t=>normalize(excerpt).indexOf(t)).filter(i=>i>=0).sort((a,b)=>a-b)[0]??0;
+   const visible=excerpt.length<=1400?excerpt:excerpt.slice(Math.max(0,offset-250),Math.max(0,offset-250)+1400);
    fullSnippets.push({vector_id:'full:'+doc.path+':'+index,path:doc.path,revision:doc.revision,
-     line_start:from+1,line_end:to,content:lines.slice(from,to).join('\n').slice(0,1400)});
+     line_start:from+1,line_end:to,content:visible});
   }
   lexical=(result.results||[]).concat(fullSnippets).map(x=>{
    const title=normalize(x.path),body=normalize(x.content);

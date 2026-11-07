@@ -17,12 +17,78 @@ function response(body, type, status = 200) {
   });
 }
 
+
+function apiReply(value, status = 200) {
+  return Response.json(value, {
+    status,
+    headers: {
+      "Cache-Control": "no-store",
+      "Referrer-Policy": "no-referrer",
+      "X-Content-Type-Options": "nosniff"
+    }
+  });
+}
+
+// Only the existing Core's token verification decides who may chat.
+// The preview Worker never stores, logs, or embeds a shared secret.
+async function forwardCore(request, env, path) {
+  if (request.method !== "POST") return apiReply({error:"Method not allowed"}, 405);
+  const origin = request.headers.get("Origin");
+  if (origin && origin !== new URL(request.url).origin) return apiReply({error:"Forbidden origin"}, 403);
+  const auth = request.headers.get("Authorization") || "";
+  if (!/^Bearer [^\\r\\n]{8,512}$/.test(auth)) return apiReply({error:"Wormstar owner token required"}, 401);
+  if (!env.CORE || typeof env.CORE.fetch !== "function") return apiReply({error:"Wormstar Core is not connected"}, 503);
+
+  const chat = path === "/api/chat";
+  if (chat) {
+    if (!(request.headers.get("Content-Type") || "").toLowerCase().startsWith("application/json")) {
+      return apiReply({error:"JSON required"}, 415);
+    }
+    const rawLength = request.headers.get("Content-Length");
+    if (rawLength && (!/^\\d+$/.test(rawLength) || Number(rawLength) > 65536)) {
+      return apiReply({error:"Request too large"}, 413);
+    }
+    if (!request.body) return apiReply({error:"Request body required"}, 400);
+  }
+
+  const headers = new Headers({"Authorization":auth, "Accept":"application/json"});
+  if (chat) headers.set("Content-Type","application/json");
+  try {
+    const forwarded = new Request("https://wormstar-core.internal" + path, {
+      method:"POST",
+      headers,
+      ...(chat ? {body:request.body} : {})
+    });
+    const upstream = await env.CORE.fetch(forwarded);
+    if (!(upstream.headers.get("Content-Type") || "").toLowerCase().includes("application/json")) {
+      return apiReply({error:"Unexpected Core response"}, 502);
+    }
+    return new Response(upstream.body, {
+      status:upstream.status,
+      headers: {
+        "Content-Type":"application/json; charset=utf-8",
+        "Cache-Control":"no-store",
+        "Referrer-Policy":"no-referrer",
+        "X-Content-Type-Options":"nosniff"
+      }
+    });
+  } catch {
+    return apiReply({error:"Core connection failed"}, 502);
+  }
+}
+
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
+    const path = new URL(request.url).pathname;
+    if (path === "/api/auth" || path === "/api/chat") {
+      return forwardCore(request, env, path);
+    }
+    if (path === "/api/health" && request.method === "GET") {
+      return apiReply({ok:true,service:"wormstar-sentinel-preview",coreBound:!!env.CORE});
+    }
     if (request.method !== "GET" && request.method !== "HEAD") {
       return response("Method not allowed", "text/plain; charset=utf-8", 405);
     }
-    const path = new URL(request.url).pathname;
     if (path === "/" || path === "/index.html") {
       return response(request.method === "HEAD" ? null : INDEX, "text/html; charset=utf-8");
     }

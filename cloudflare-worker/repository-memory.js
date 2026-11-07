@@ -215,6 +215,17 @@ export async function findRepoEvidence(env,question,{limit=5}={}){
  }
  return {sources,retrieval};
 }
+// No inference for unrelated topics merely because "Wormstar" matched a filename.
+const GENERIC_TOPIC=new Set(['wormstar','github','repo','repository','project','مشروع','المشروع','file','files','ملف','الملف','الملفات','what','does','how','explain','about','core','sentinel']);
+export function repoQuestionSupported(question,sources){
+ if(!Array.isArray(sources)||!sources.length)return false;
+ const terms=termsFor(question).filter(t=>!GENERIC_TOPIC.has(t));
+ if(!terms.length)return true; // general questions about this repository
+ return sources.some(s=>{
+  const evidence=normalize(String(s.path||'')+' '+String(s.content||''));
+  return terms.some(t=>evidence.includes(t));
+ });
+}
 export const REPO_PERSONA=[
  'أنت Wormstar Repository Intelligence، باحث ومهندس متخصص حصريًا في مستودع abdulstarzeki001-sketch/Wormstar وملفات المختبرات المدمجة فيه.',
  'المصادر الوحيدة للأجوبة الوقائعية هي مقاطع المستودع المُسترجعة والمرفقة بهذا الطلب؛ ليست لديك صلاحية لفحص ملفات أخرى أو مصادر إنترنت إضافية.',

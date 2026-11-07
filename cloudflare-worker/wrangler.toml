@@ -25,3 +25,12 @@ index_name = "wormstar-knowledge-m3"
 # Conservative scope: only Workers owned by this Cloudflare account.
 [vars]
 SCAN_ALLOWED_HOSTS = "wormstar-sentinel-preview.abdulstarzeki001.workers.dev,wormstar-ai-lab.abdulstarzeki001.workers.dev"
+
+# Dedicated, isolated project-repository vector memory.
+[[vectorize]]
+binding = "REPO_VECTORS"
+index_name = "wormstar-repository-m3"
+
+# Incremental GitHub sync; catches source changes without any browser credentials.
+[triggers]
+crons = ["17 * * * *"]

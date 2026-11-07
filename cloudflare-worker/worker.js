@@ -2,7 +2,7 @@
 import {termsFor,rankKnowledge} from './rag-engine.js';
 import {chooseReasoningEffort,extractModelAnswer} from './model-runtime.js';
 import {hybridKnowledge,indexKnowledgeBatch} from './advanced-rag.js';
-import {syncRepository,repoIndexStatus,findRepoEvidence,buildRepoMessages,NO_EVIDENCE} from './repository-memory.js';
+import {syncRepository,repoIndexStatus,findRepoEvidence,repoQuestionSupported,buildRepoMessages,NO_EVIDENCE} from './repository-memory.js';
 import {runAuthorizedScan,runBoundedAgent,listAgents} from './security-ops.js';
 import LAB_POLICY_MANIFEST from './permissions-module.js';
 import FUTURE_UI from './future-ui.js';
@@ -797,7 +797,7 @@ export default {
       let evidence;
       try{evidence=await findRepoEvidence(env,body.message.trim(),{limit:5});}
       catch{return json({error:'Repository retrieval unavailable'},503);}
-      if(!evidence.sources.length)return json({answer:NO_EVIDENCE,scope:'repository-only',sources:[],modelUsed:null,retrieval:evidence.retrieval,grounded:false});
+      if(!repoQuestionSupported(body.message,evidence.sources))return json({answer:NO_EVIDENCE,scope:'repository-only',sources:[],modelUsed:null,retrieval:evidence.retrieval,grounded:false});
       const messages=buildRepoMessages(body.message.trim(),body.history,evidence.sources);
       const models=[...WORMSTAR_ENGINES[engine]];
       if(engine==='auto'&&mode==='code'){

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const source = readFileSync(new URL("../worker.js", import.meta.url), "utf8");
-const { default: worker } = await import("data:text/javascript;base64," + Buffer.from(source).toString("base64"));
+const { default: worker } = await import(new URL("../worker.js", import.meta.url));
 const origin = "https://wormstar-sentinel-preview.example";
 let forwarded = [];
 
@@ -72,4 +72,26 @@ assert.equal(response.status,200);
 assert.equal(forwarded.at(-1).pathname,"/api/agents/run");
 assert.equal((await go("/api/admin/secrets",{method:"POST",headers:jsonHeaders,body:"{}"})).status,405);
 
-console.log("Sentinel worker: layout, auth, origin, size, and chat proxy tests passed");
+
+const beforeAuditCalls=forwarded.length;
+assert.match(html,/id="openStaticAuditNav"/);
+assert.match(html,/href="\/audit\/"/);
+response=await go("/audit/");
+assert.equal(response.status,200);
+assert.match(response.headers.get("Content-Security-Policy"),/frame-ancestors 'none'/);
+let auditHtml=await response.text();
+assert.match(auditHtml,/STAR CYBER AUDIT/);
+assert.match(auditHtml,/fetch\("\/audit\/api\/sample"/);
+assert.match(auditHtml,/href="\/"/);
+assert.doesNotMatch(auditHtml,/fetch\("\/api\/sample"/);
+response=await go("/audit/api/sample");
+assert.equal(response.status,200);
+const auditSample=await response.json();
+assert.equal(auditSample.static_read_only,true);
+assert.ok(Array.isArray(auditSample.files)&&auditSample.files.length>0);
+assert.equal((await go("/audit/health")).status,200);
+assert.equal((await go("/audit/missing")).status,404);
+assert.equal((await go("/audit/",{method:"POST",body:"ignored"})).status,405);
+assert.equal(forwarded.length,beforeAuditCalls,"Local audit must not invoke private Core");
+
+console.log("Unified Sentinel + iSH audit: layout, auth, origin, size, and chat proxy tests passed");

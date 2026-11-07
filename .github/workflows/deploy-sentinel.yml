@@ -16,7 +16,15 @@ permissions:
   contents: read
 
 jobs:
+  quality:
+    name: Require cross-lab quality gate
+    uses: ./.github/workflows/quality-gate.yml
+    permissions:
+      contents: read
+
   deploy:
+    needs: quality
+    if: github.ref == 'refs/heads/main'
     name: Validate and deploy isolated Sentinel UI
     runs-on: ubuntu-latest
     defaults:
@@ -29,7 +37,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Bundle and validate standalone interface
         run: |
@@ -45,3 +53,20 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: wormstar-ui
           command: deploy
+
+      - name: Post-deployment unified lab smoke tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          ORIGIN="https://wormstar-sentinel-preview.abdulstarzeki001.workers.dev"
+          for attempt in 1 2 3 4; do
+            if curl --fail --silent --show-error --max-time 20 -o /tmp/sentinel-health.json "$ORIGIN/api/health" &&
+               curl --fail --silent --show-error --max-time 20 -o /tmp/audit-health.json "$ORIGIN/audit/health" &&
+               node -e "const s=require('/tmp/sentinel-health.json'),a=require('/tmp/audit-health.json');if(!s.ok||!s.coreBound||a.status!=='ok'||a.read_only!==true)process.exit(1)"; then
+              echo "Sentinel + iSH static audit health verified"
+              exit 0
+            fi
+            sleep 4
+          done
+          echo "Post-deploy smoke verification failed" >&2
+          exit 1

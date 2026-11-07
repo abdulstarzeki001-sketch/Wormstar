@@ -74,7 +74,8 @@ assert.equal((await go("/api/admin/secrets",{method:"POST",headers:jsonHeaders,b
 
 
 const beforeAuditCalls=forwarded.length;
-assert.match(html,/id="openStaticAuditNav"/);
+assert.match(html,/data-open-audit/);
+assert.match(html,/closest\("\[data-open-audit\]"\)/);
 assert.match(html,/href="\/audit\/"/);
 response=await go("/audit/");
 assert.equal(response.status,200);

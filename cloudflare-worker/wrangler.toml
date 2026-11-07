@@ -17,3 +17,11 @@ binding = "AI"
 binding = "DB"
 database_name = "wormstar_ai_memory"
 database_id = "d9d08aa3-184f-47aa-bc2b-a9f53c0bd2aa"
+
+[[vectorize]]
+binding = "VECTORS"
+index_name = "wormstar-knowledge-m3"
+
+# Conservative scope: only Workers owned by this Cloudflare account.
+[vars]
+SCAN_ALLOWED_HOSTS = "wormstar-sentinel-preview.abdulstarzeki001.workers.dev,wormstar-ai-lab.abdulstarzeki001.workers.dev"

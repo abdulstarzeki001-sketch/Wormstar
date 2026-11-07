@@ -16,7 +16,15 @@ permissions:
   contents: read
 
 jobs:
+  quality:
+    name: Require cross-lab quality gate
+    uses: ./.github/workflows/quality-gate.yml
+    permissions:
+      contents: read
+
   deploy:
+    needs: quality
+    if: github.ref == 'refs/heads/main'
     name: Deploy wormstar-ai-lab
     runs-on: ubuntu-latest
     defaults:
@@ -29,7 +37,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Policy check
         run: |
@@ -46,3 +54,19 @@ jobs:
           command: deploy
           # Optional: pin a wrangler version for reproducible deploys
           # wranglerVersion: "4.14.1"
+
+      - name: Post-deployment Core smoke check
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://wormstar-ai-lab.abdulstarzeki001.workers.dev/api/health"
+          for attempt in 1 2 3 4; do
+            if curl --fail --silent --show-error --max-time 20 --output /tmp/core-health.json "$URL" &&
+               node -e "const v=require('/tmp/core-health.json');if(v.ok!==true||v.service!=='wormstar-cloudflare-lab'||v.aiConfigured!==true)process.exit(1)"; then
+              echo "Core health verified"
+              exit 0
+            fi
+            sleep 4
+          done
+          echo "Core post-deployment health verification failed" >&2
+          exit 1

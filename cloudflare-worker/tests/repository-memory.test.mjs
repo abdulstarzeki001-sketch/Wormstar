@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../worker.js';
-import {REPO,NO_EVIDENCE,validPath,isKnowledgeText,classifyText,createChunks,findRepoEvidence,buildRepoMessages,syncRepository} from '../repository-memory.js';
+import {REPO,NO_EVIDENCE,validPath,isKnowledgeText,classifyText,createChunks,findRepoEvidence,repoQuestionSupported,buildRepoMessages,syncRepository} from '../repository-memory.js';
 
 test('GitHub path policy does not import secrets, archives, binaries or traversal',()=>{
  assert.equal(validPath('cloudflare-worker/worker.js'),true);
@@ -29,6 +29,12 @@ test('Prompt-injected repository text remains a reference, not a system instruct
  assert.deepEqual(p.slice(1).map(x=>x.role),['user','user']);
  assert.ok(p.at(-1).content.includes('untrusted reference data'));
  assert.doesNotMatch(p[0].content,/Ignore all prior/);
+});
+test('Off-topic query with a generic Wormstar mention is not source-grounded',()=>{
+ const references=[{path:'README.md',content:'Wormstar Sentinel Core software architecture',lineStart:1,lineEnd:1}];
+ assert.equal(repoQuestionSupported('How to cook pizza in Wormstar?',references),false);
+ assert.equal(repoQuestionSupported('Explain Wormstar Sentinel Core',references),true);
+ assert.equal(repoQuestionSupported('Wormstar Core architecture',references),true);
 });
 test('Private repo APIs reject unauthenticated HTTP traffic before D1/AI calls',async()=>{
  const env={WORMSTAR_ACCESS_TOKEN:'owner-test-secret'};

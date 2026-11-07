@@ -835,10 +835,20 @@ export default {
       for(const model of models){
         attemptedModels.push(model);
         try{
-          const response=await env.AI.run(model,{messages,max_tokens:policy.max_output_tokens,temperature:0.2});
+          // GPT-OSS reasoning consumes output tokens. Use a low-effort profile for
+          // interactive chat, keeping medium effort for code and CTF reviews.
+          const gptOss=model==='@cf/openai/gpt-oss-120b'||model==='@cf/openai/gpt-oss-20b';
+          const reasoningEffort=body.mode==='code'||body.mode==='ctf'?'medium':'low';
+          const runInput={messages,max_tokens:policy.max_output_tokens,temperature:0.2,
+            ...(gptOss?{reasoning_effort:reasoningEffort}:{})};
+          const response=await env.AI.run(model,runInput);
           const answer=typeof response==='string'?response:response?.response||response?.choices?.[0]?.message?.content||response?.output_text||'';
           if(typeof answer!=='string'||!answer.trim())throw Error('Empty response');
-          return json({answer:answer.trim(),modelUsed:model,engineRequested:engine,fallbackUsed:model!==models[0],modelHost:'cloudflare-workers-ai',modelsTried:attemptedModels,memoryUsed:used.map(r=>({id:r.id,title:r.title,selected:selected.some(a=>a.id===r.id)}))});
+          // Record model-routing diagnostics only; no prompts, answers, identities or tokens.
+          console.info(JSON.stringify({event:'wormstar_ai_completion',model,engine,mode:body.mode,fallbackUsed:model!==models[0]}));
+          return json({answer:answer.trim(),modelUsed:model,engineRequested:engine,fallbackUsed:model!==models[0],modelHost:'cloudflare-workers-ai',
+            reasoningEffort:gptOss?reasoningEffort:null,modelsTried:attemptedModels,
+            memoryUsed:used.map(r=>({id:r.id,title:r.title,selected:selected.some(a=>a.id===r.id)}))});
         }catch(e){lastError=e;}
       }
       logModelFailure('workers-ai',503);

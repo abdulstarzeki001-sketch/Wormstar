@@ -1,7 +1,7 @@
 // Dedicated repository intelligence: GitHub is the only upstream source.
 // D1 stores reviewed text; REPO_VECTORS stores embeddings/IDs only.
 // Neither personal memory nor owner conversation archives enter repository RAG.
-import {termsFor,rankKnowledge} from './rag-engine.js';
+import {termsFor,normalize} from './rag-engine.js';
 
 export const REPO='abdulstarzeki001-sketch/Wormstar';
 export const INDEX='wormstar-repository-m3';
@@ -123,9 +123,11 @@ export async function syncRepository(env,{maxFiles=8}={}){
  for(const file of batch){
   const old=await env.DB.prepare('SELECT blob_sha,kind FROM repo_file_index WHERE path=?').bind(file.path).first();
   if(old?.blob_sha===file.sha) {
-   if(old.kind==='metadata')continue;
-   const n=await env.DB.prepare('SELECT COUNT(*) AS n FROM repo_fragments WHERE path=?').bind(file.path).first();
-   if(Number(n?.n)>0)continue;
+   const n=old.kind==='metadata'?{n:1}:await env.DB.prepare('SELECT COUNT(*) AS n FROM repo_fragments WHERE path=?').bind(file.path).first();
+   if(Number(n?.n)>0){
+    await env.DB.prepare('UPDATE repo_file_index SET revision=? WHERE path=?').bind(head,file.path).run();
+    continue;
+   }
   }
   let body=null;
   if(isKnowledgeText(file.path,file.size)){
@@ -166,7 +168,11 @@ export async function findRepoEvidence(env,question,{limit=5}={}){
   const filters=terms.map(()=>'(instr(lower(f.path),?)>0 OR instr(lower(f.content),?)>0)').join(' OR ');
   const result=await env.DB.prepare('SELECT f.vector_id,f.path,f.content,f.line_start,f.line_end,d.revision FROM repo_fragments f JOIN repo_file_index d ON f.path=d.path WHERE '+filters+' LIMIT 160')
    .bind(...terms.flatMap(t=>[t,t])).all();
-  lexical=rankKnowledge((result.results||[]).map(x=>({...x,title:x.path})),question,{limit:10,budget:7000});
+  lexical=(result.results||[]).map(x=>{
+   const title=normalize(x.path),body=normalize(x.content);
+   const matches=terms.filter(t=>title.includes(t)||body.includes(t));
+   return {...x,lexicalScore:matches.length*5+matches.filter(t=>title.includes(t)).length*12};
+  }).filter(x=>x.lexicalScore>0).sort((a,b)=>b.lexicalScore-a.lexicalScore).slice(0,10);
  }
  let semantic=[],retrieval='lexical';
  if(env.AI&&env.REPO_VECTORS){

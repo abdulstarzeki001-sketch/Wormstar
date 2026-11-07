@@ -32,7 +32,8 @@ function apiReply(value, status = 200) {
 // Only the existing Core's token verification decides who may chat.
 // The preview Worker never stores, logs, or embeds a shared secret.
 async function forwardCore(request, env, path) {
-  if (request.method !== "POST") return apiReply({error:"Method not allowed"}, 405);
+  const readonly = path === "/api/rag/status" || path === "/api/agents";
+  if (request.method !== (readonly ? "GET" : "POST")) return apiReply({error:"Method not allowed"}, 405);
   const origin = request.headers.get("Origin");
   if (origin && origin !== new URL(request.url).origin) return apiReply({error:"Forbidden origin"}, 403);
   const auth = request.headers.get("Authorization") || "";
@@ -40,7 +41,7 @@ async function forwardCore(request, env, path) {
   if (given.length < 8 || given.length > 512 || given.includes(String.fromCharCode(10)) || given.includes(String.fromCharCode(13))) return apiReply({error:"Wormstar owner token required"}, 401);
   if (!env.CORE || typeof env.CORE.fetch !== "function") return apiReply({error:"Wormstar Core is not connected"}, 503);
 
-  const chat = path === "/api/chat";
+  const chat = !readonly && path !== "/api/auth";
   let boundedBody;
   if (chat) {
     if (!(request.headers.get("Content-Type") || "").toLowerCase().startsWith("application/json")) {
@@ -60,7 +61,7 @@ async function forwardCore(request, env, path) {
   if (chat) headers.set("Content-Type","application/json");
   try {
     const forwarded = new Request("https://wormstar-core.internal" + path, {
-      method:"POST",
+      method:readonly?"GET":"POST",
       headers,
       ...(chat ? {body:boundedBody} : {})
     });
@@ -85,7 +86,7 @@ async function forwardCore(request, env, path) {
 export default {
   async fetch(request, env) {
     const path = new URL(request.url).pathname;
-    if (path === "/api/auth" || path === "/api/chat") {
+    if (["/api/auth","/api/chat","/api/rag/status","/api/rag/reindex","/api/security/header-audit","/api/agents","/api/agents/run"].includes(path)) {
       return forwardCore(request, env, path);
     }
     if (path === "/api/health" && request.method === "GET") {

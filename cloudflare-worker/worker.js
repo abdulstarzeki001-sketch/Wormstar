@@ -1,5 +1,6 @@
 
 import {termsFor,rankKnowledge} from './rag-engine.js';
+import {chooseReasoningEffort,extractModelAnswer} from './model-runtime.js';
 import {hybridKnowledge,indexKnowledgeBatch} from './advanced-rag.js';
 import {runAuthorizedScan,runBoundedAgent,listAgents} from './security-ops.js';
 import LAB_POLICY_MANIFEST from './permissions-module.js';
@@ -358,7 +359,7 @@ function validatePolicy(value){
     version:1,mission:string('mission',2000),
     allowed_modes:modes,required_terms:[...new Set(terms.map(s=>s.trim()))],
     max_input_chars:int('max_input_chars',200,12000),
-    max_output_tokens:int('max_output_tokens',128,1800),
+    max_output_tokens:int('max_output_tokens',128,4096),
     memory_enabled:bool('memory_enabled'),allow_web_import:bool('allow_web_import'),
     allow_memory_delete:bool('allow_memory_delete'),
     answer_style:string('answer_style',140),workflow_steps:steps.map(s=>s.trim())
@@ -769,6 +770,7 @@ export default {
       if(!capabilityEnabled('ai.chat'))return permissionDenied('ai.chat');
       let body;try{body=await readBoundedJson(request,LAB_POLICY.limits.maxRequestBytes);}catch(error){return json({error:error.status===413?'Request too large':'Invalid JSON'},error.status===413?413:400);}
       if(!body||typeof body.message!=='string'||!body.message.trim()||body.message.length>LAB_POLICY.limits.maxPromptCharacters||!LAB_POLICY.allowedModes.includes(body.mode)||!Object.hasOwn(PROFILES,body.mode))return json({error:'Invalid input'},400);
+      if(body.reasoningEffort!==undefined && !['auto','low','medium','high'].includes(body.reasoningEffort))return json({error:'Invalid reasoning effort'},400);
       const engine=body.engine===undefined?'gpt-oss-120b':body.engine;
       if(typeof engine!=='string'||!Object.hasOwn(WORMSTAR_ENGINES,engine))return json({error:'Unknown model engine'},400);
       const customGpu=Object.hasOwn(GPU_MODELS,engine);
@@ -871,11 +873,11 @@ export default {
           // GPT-OSS reasoning consumes output tokens. Use a low-effort profile for
           // interactive chat, keeping medium effort for code and CTF reviews.
           const gptOss=model==='@cf/openai/gpt-oss-120b'||model==='@cf/openai/gpt-oss-20b';
-          const reasoningEffort=body.mode==='code'||body.mode==='ctf'?'medium':'low';
+          const reasoningEffort=chooseReasoningEffort(body.mode,body.reasoningEffort??'auto',policy.max_output_tokens);
           const runInput={messages,max_tokens:policy.max_output_tokens,temperature:0.2,
             ...(gptOss?{reasoning_effort:reasoningEffort}:{})};
           const response=await env.AI.run(model,runInput);
-          const answer=typeof response==='string'?response:response?.response||response?.choices?.[0]?.message?.content||response?.output_text||'';
+          const answer=extractModelAnswer(response);
           if(typeof answer!=='string'||!answer.trim())throw Error('Empty response');
           // Record model-routing diagnostics only; no prompts, answers, identities or tokens.
           console.info(JSON.stringify({event:'wormstar_ai_completion',model,engine,mode:body.mode,fallbackUsed:model!==models[0]}));

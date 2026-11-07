@@ -1,0 +1,128 @@
+{
+  "generated_utc": "2026-11-06T22:55:00Z",
+  "static_read_only": true,
+  "scope": "Six attached JavaScript files analyzed locally; four attached prior reports for context. No authenticated API calls.",
+  "files": [
+    {
+      "name": "QRDocument-BJwpoEJY.js",
+      "origin": "attached_file_2026-11-07",
+      "classification": "JS_SOURCE",
+      "bytes": 607716,
+      "sha256": "23f8c5d87b6a91511af2a96f57075e8502861bd2f6d92d914a14222db4199400",
+      "api_paths": [
+        "local_form/refuse_doc_company",
+        "BorderPort_HS/path-document-file"
+      ],
+      "api_calls": [],
+      "imports": [],
+      "storage": [
+        "qr_readings"
+      ],
+      "privilege_literals": [],
+      "flags": [
+        "PERSISTENT_BROWSER_STORAGE: preview reads qr_readings and falls back to x[0] for unmatched ID",
+        "DOCUMENT_REFUSAL_UI: client privilege is not proof of backend authorization",
+        "AUTO_SEND_PNG: DOM screenshot can be sent to BorderPort_HS/path-document-file"
+      ]
+    },
+    {
+      "name": "qrStore-B8bgApfd.js",
+      "origin": "attached_file_2026-11-07",
+      "classification": "JS_SOURCE",
+      "bytes": 248,
+      "sha256": "122527b8507637168eeb4365f879f160f02620d1dc997c74e3da1880a1573e77",
+      "api_paths": [],
+      "api_calls": [],
+      "imports": [],
+      "storage": [
+        "qr_readings"
+      ],
+      "privilege_literals": [],
+      "flags": [
+        "PERSISTENT_BROWSER_STORAGE: shared qr_readings key lacks per-account scope",
+        "SCHEMA_GAP: JSON.parse value is not checked with Array.isArray before unshift",
+        "SILENT_WRITE_FAILURE: setItem exceptions are swallowed; history unbounded"
+      ]
+    },
+    {
+      "name": "AchievementDocument-DEzIzJ3I.js",
+      "origin": "attached_file_2026-11-07",
+      "classification": "JS_SOURCE",
+      "bytes": 11641,
+      "sha256": "bec1dbe0a25694f05f30d5dcf6edb253fb2f9276d9e00b583ba416aabc941d7c",
+      "api_paths": [],
+      "api_calls": [],
+      "imports": [],
+      "storage": [],
+      "privilege_literals": [],
+      "flags": [
+        "LOCAL_QR_FALLBACK: qr_code || doc_id || doc_number used to render QR image",
+        "THIRD_PARTY_QR_SERVICE: generator catch sets a QuickChart URL with the QR value",
+        "DOCUMENT_ID_MISMATCH: fallback view can use shared data without ID matching",
+        "PRINT_CLIPPING: fixed A4 296mm page and overflow hidden"
+      ]
+    },
+    {
+      "name": "useExitGate-BvHNutwH.js",
+      "origin": "attached_file_2026-11-07",
+      "classification": "JS_SOURCE",
+      "bytes": 6027,
+      "sha256": "9d9a109e58d619a8afdf91bfcbd9f7e45377ddb8236e82e13597b896e56c3306",
+      "api_paths": [
+        "support_org/read_qr_exitgate",
+        "support_org/paginate_qrcode_reader_import",
+        "BorderPort_HS/return_doc_hc_by_docnumber",
+        "support_org/return_doc_qrcode_export",
+        "support_org/download_qrcode_readers_import"
+      ],
+      "api_calls": [],
+      "imports": [],
+      "storage": [],
+      "privilege_literals": [],
+      "flags": [
+        "HTTP_STATUS_ONLY: gate scan checks HTTP 200 but not success:false JSON field",
+        "DOC_NUMBER_MAPPING: list filters map doc_number to doc_id",
+        "PERSISTENT_BROWSER_STORAGE: detail fetches can append previews to qrStore"
+      ]
+    },
+    {
+      "name": "QrCodeReaderCustoms-a-UBVR7y.js",
+      "origin": "attached_file_2026-11-07",
+      "classification": "JS_SOURCE",
+      "bytes": 16490,
+      "sha256": "09b62507255c25910a196ca0ca1e5fb6d961be5d10287face07cc777aaf45c0b",
+      "api_paths": [],
+      "api_calls": [],
+      "imports": [],
+      "storage": [],
+      "privilege_literals": [
+        "download_health_qrcode_readers"
+      ],
+      "flags": [
+        "ROLE_UI_ONLY: Excel button checks download_health_qrcode_readers, server not evaluated",
+        "DOC_NUMBER_MAPPING: selected row navigates with doc_number"
+      ]
+    },
+    {
+      "name": "QRLocal-5TAaXbzM.js",
+      "origin": "attached_file_2026-11-07",
+      "classification": "JS_SOURCE",
+      "bytes": 10014,
+      "sha256": "1e3ea9982971b4e4e08bb2ebee1520fe6a5056bc8590de4288fec80456fa9626",
+      "api_paths": [
+        "local_form/read_doc_company"
+      ],
+      "api_calls": [],
+      "imports": [],
+      "storage": [],
+      "privilege_literals": [],
+      "flags": [
+        "POSSIBLE_TOKEN_DEBUG_LOG: console.debug includes y.token",
+        "REVIEW_POST_RETRY: catch block issues a second diagnostic POST via fetch",
+        "MESSAGE_REGEX: Arabic text regex can match negative messages containing تم",
+        "CLIENT_EXPIRY_HEURISTIC: 48-hour window is UI-only and not official validity proof",
+        "GEOLOCATION_OPTIONAL: blank coordinates may be submitted"
+      ]
+    }
+  ]
+}

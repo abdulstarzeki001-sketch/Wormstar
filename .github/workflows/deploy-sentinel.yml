@@ -35,6 +35,7 @@ jobs:
         run: |
           node scripts/build-worker.mjs
           node --check worker.js
+          node scripts/test-worker.mjs
           node -e "JSON.parse(require('node:fs').readFileSync('manifest.webmanifest','utf8'))"
 
       - name: Deploy Sentinel without private Core bindings

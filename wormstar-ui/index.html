@@ -231,7 +231,7 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
   <button data-page="incidents"><svg viewBox="0 0 24 24"><path d="M12 3 21 19H3L12 3Z"/><path d="M12 9v4M12 16h.01"/></svg><span data-i18n="incidents">الحوادث والتنبيهات</span><span class="count">4</span></button>
   <button data-page="intel"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8 10.5h5M10.5 8v5"/></svg><span data-i18n="intel">تحليل المؤشرات IOC</span></button>
   <button data-page="lab"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M8 15h8"/></svg><span data-i18n="lab">المختبر التدريبي</span></button>
-  <button id="openStaticAuditNav" type="button" aria-label="Open iSH Static Audit"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 10l3 3-3 3M13 16h5"/></svg><span data-i18n="static_audit">التحليل الساكن iSH</span><span class="count">iSH</span></button>
+  <button data-open-audit type="button" aria-label="Open iSH Static Audit"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 10l3 3-3 3M13 16h5"/></svg><span data-i18n="static_audit">التحليل الساكن iSH</span><span class="count">iSH</span></button>
   <button data-page="reports"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M8 13h8M8 17h8"/></svg><span data-i18n="reports">التقارير</span></button>
  </nav>
  <div class="section-label" style="margin-top:23px" data-i18n="manage">الإدارة</div>
@@ -629,7 +629,9 @@ $("#ragIndexBtn").addEventListener("click",async()=>{
  finally{button.disabled=false;}
 });
 
-$("#openStaticAuditNav").addEventListener("click",()=>{
+// Event delegation also handles the mobile drawer, which clones sidebar HTML.
+document.addEventListener("click",(event)=>{
+  if(!event.target.closest("[data-open-audit]"))return;
   // A separate tab preserves the in-memory owner login in the Sentinel tab.
   window.open("/audit/","_blank","noopener,noreferrer");
 });

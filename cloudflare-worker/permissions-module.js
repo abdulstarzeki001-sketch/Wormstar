@@ -45,7 +45,8 @@ export default {
     "agents.opencode.prompt": true,
     "agents.opencode.messages.read": true,
     "agents.opencode.progress": true,
-    "agents.opencode.interrupt": true
+    "agents.opencode.interrupt": true,
+    "network.header_audit": true
   },
   "limits": {
     "maxPromptCharacters": 12000,
@@ -66,7 +67,8 @@ export default {
     "webImportPublicHttpsOnly": true,
     "filesAreReferenceData": true,
     "memoryInstructionsCannotOverridePolicy": true,
-    "cliLegacyExecutionNotExposed": true
+    "cliLegacyExecutionNotExposed": true,
+    "headerAuditRequiresOwnerAllowlist": true
   },
   "modesExplanation": {
     "assistant": "Authorized cybersecurity research and guidance",

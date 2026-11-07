@@ -1,0 +1,2 @@
+{"messages":[{"role":"user","content":"What is a safe first check for web security?"},{"role":"assistant","content":"Confirm ownership and scope, inspect HTTPS response headers, then document the findings without running intrusive tests."}]}
+{"messages":[{"role":"user","content":"اشرح الفرق بين تنبيه أمني و ثغرة مؤكدة."},{"role":"assistant","content":"التنبيه مؤشر يحتاج تحققًا، أما الثغرة المؤكدة فتستند إلى دليل تقني قابل لإعادة التحقق داخل نطاق مصرح به."}]}

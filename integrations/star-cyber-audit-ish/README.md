@@ -62,6 +62,16 @@ allowlisted set of public JavaScript assets. Do not run it against systems you d
 not own or have permission to assess, and do not confuse WAF HTML responses
 with JavaScript source.
 
+## مزامنة معلومات المستودع ومصدر المختبر
+
+- النسخة المستوردة تضم **18 ملفًا تشغيليًا وتوثيقيًا آمنًا** تحت [upstream/](./upstream/) ولا تستبدل نسخة التشغيل المدمجة.
+- الفهرس [SOURCE_INVENTORY.json](./SOURCE_INVENTORY.json) يغطي **94 ملفًا** من المصدر، ويعرض المسار والحجم وبصمة Git وتصنيف النقل لكل ملف.
+- المزامنة اليومية في [.github/workflows/sync-star-audit.yml](../../.github/workflows/sync-star-audit.yml) عند الساعة **05:17 بتوقيت بغداد** (02:17 UTC)، أو تشغيل يدوي عبر workflow_dispatch.
+- الملفات الخام، لقطات OneDrive، الأكواد الأجنبية المؤرشفة، والتقارير التي قد تحتوي بيانات حساسة: **معلوماتها فقط** في الفهرس، وليست داخل الموقع العام.
+- لا تُنفذ شيفرات المستودع الأصلي أثناء المزامنة؛ يجري فحص سكربت النقل باختبارات مستقلة، ثم تُرفع الفروقات إلى فرع مراجعة مخصص.
+- تم دمج النسخة الأولية عبر [Pull Request #39](https://github.com/abdulstarzeki001-sketch/Wormstar/pull/39).
+- إعدادات GitHub الحالية لا تسمح لـGitHub Actions بإنشاء طلبات Pull Request. المزامنة ستحدّث فرع المراجعة، لكن لإنشاء PR تلقائيًا يلزم تفعيل Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests.
+
 ## Tests and maintenance
 
 ```sh

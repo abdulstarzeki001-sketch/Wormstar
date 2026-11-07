@@ -36,7 +36,8 @@ async function forwardCore(request, env, path) {
   const origin = request.headers.get("Origin");
   if (origin && origin !== new URL(request.url).origin) return apiReply({error:"Forbidden origin"}, 403);
   const auth = request.headers.get("Authorization") || "";
-  if (!/^Bearer [^\\r\\n]{8,512}$/.test(auth)) return apiReply({error:"Wormstar owner token required"}, 401);
+  const given = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (given.length < 8 || given.length > 512 || given.includes(String.fromCharCode(10)) || given.includes(String.fromCharCode(13))) return apiReply({error:"Wormstar owner token required"}, 401);
   if (!env.CORE || typeof env.CORE.fetch !== "function") return apiReply({error:"Wormstar Core is not connected"}, 503);
 
   const chat = path === "/api/chat";
@@ -45,7 +46,7 @@ async function forwardCore(request, env, path) {
       return apiReply({error:"JSON required"}, 415);
     }
     const rawLength = request.headers.get("Content-Length");
-    if (rawLength && (!/^\\d+$/.test(rawLength) || Number(rawLength) > 65536)) {
+    if (rawLength && (!Number.isSafeInteger(Number(rawLength)) || Number(rawLength) < 0 || Number(rawLength) > 65536)) {
       return apiReply({error:"Request too large"}, 413);
     }
     if (!request.body) return apiReply({error:"Request body required"}, 400);

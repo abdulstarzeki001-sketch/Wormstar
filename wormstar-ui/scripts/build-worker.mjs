@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Script } from 'node:vm';
 
-// The standalone Sentinel preview serves static UI only, without private bindings.
+// Bundle the Sentinel UI with a restricted, owner-authenticated Core service proxy.
 let worker = readFileSync('worker.js', 'utf8');
 const revision = (process.env.GITHUB_SHA || 'local').slice(0, 12);
 const files = [

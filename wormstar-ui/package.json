@@ -1,0 +1,9 @@
+{
+  "name": "wormstar-unified-sentinel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-worker.mjs",
+    "test": "node scripts/build-worker.mjs && node --check worker.js && node --check audit-worker.js && node scripts/test-worker.mjs"
+  }
+}

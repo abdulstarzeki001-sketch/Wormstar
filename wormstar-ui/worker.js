@@ -41,6 +41,7 @@ async function forwardCore(request, env, path) {
   if (!env.CORE || typeof env.CORE.fetch !== "function") return apiReply({error:"Wormstar Core is not connected"}, 503);
 
   const chat = path === "/api/chat";
+  let boundedBody;
   if (chat) {
     if (!(request.headers.get("Content-Type") || "").toLowerCase().startsWith("application/json")) {
       return apiReply({error:"JSON required"}, 415);
@@ -50,6 +51,9 @@ async function forwardCore(request, env, path) {
       return apiReply({error:"Request too large"}, 413);
     }
     if (!request.body) return apiReply({error:"Request body required"}, 400);
+    // Bound the actual bytes, not just an optional Content-Length header.
+    boundedBody = new Uint8Array(await request.arrayBuffer());
+    if (boundedBody.byteLength > 65536) return apiReply({error:"Request too large"}, 413);
   }
 
   const headers = new Headers({"Authorization":auth, "Accept":"application/json"});
@@ -58,7 +62,7 @@ async function forwardCore(request, env, path) {
     const forwarded = new Request("https://wormstar-core.internal" + path, {
       method:"POST",
       headers,
-      ...(chat ? {body:request.body} : {})
+      ...(chat ? {body:boundedBody} : {})
     });
     const upstream = await env.CORE.fetch(forwarded);
     if (!(upstream.headers.get("Content-Type") || "").toLowerCase().includes("application/json")) {

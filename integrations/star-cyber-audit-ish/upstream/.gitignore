@@ -1,0 +1,19 @@
+# Never commit downloaded government assets, credentials, captured HTTP traffic or local reports
+/offline_samples/
+/downloads/
+/reports/
+*.rejected.html
+*.har
+*.pcap
+*.pcapng
+*.zip
+*.log
+.env
+.env.*
+*.pem
+*.key
+*cookie*
+*token*
+__pycache__/
+*.py[cod]
+.DS_Store

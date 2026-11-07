@@ -19,6 +19,8 @@ export async function semanticSearch(env,query,{limit=4,budget=6500}={}){
  const matches=Array.isArray(result?.matches)?result.matches:[];
  const ids=[];
  for(const match of matches){
+   // Low-score approximate matches are not trustworthy evidence.
+   if(typeof match?.score!=='number'||match.score<0.5)continue;
    const id=match?.metadata?.sourceId;
    if(typeof id==='string'&&UUID.test(id)&&!ids.includes(id))ids.push(id);
    if(ids.length>=6)break;
@@ -52,7 +54,8 @@ export async function hybridKnowledge(env,query,{limit=4,budget=8500}={}){
    catch{vectorStatus='degraded';} // fallback to lexical without leaking private input in logs
  }
  const combined=[];let left=budget;
- for(const row of [...semantic,...lexical]){
+ // Keep exact lexical evidence first; semantic matches supply recall for paraphrases.
+ for(const row of [...lexical.slice(0,2),...semantic,...lexical]){
    if(combined.some(r=>r.id===row.id))continue;
    const content=String(row.content||'').slice(0,Math.min(left,2200));
    if(!content)continue;

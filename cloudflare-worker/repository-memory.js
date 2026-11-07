@@ -172,12 +172,12 @@ export async function findRepoEvidence(env,question,{limit=5}={}){
    .bind('text',...terms.flatMap(t=>[t,t])).all()).results||[];
   const fullSnippets=[];
   for(const doc of full){
-   const lines=String(doc.content||'').split(/\\r?\\n/);
+   const lines=String(doc.content||'').split(/\r?\n/);
    const index=lines.findIndex(line=>terms.some(t=>normalize(line).includes(t)));
    if(index<0)continue;
    const from=Math.max(0,index-2),to=Math.min(lines.length,index+5);
    fullSnippets.push({vector_id:'full:'+doc.path+':'+index,path:doc.path,revision:doc.revision,
-     line_start:from+1,line_end:to,content:lines.slice(from,to).join('\\n').slice(0,1400)});
+     line_start:from+1,line_end:to,content:lines.slice(from,to).join('\n').slice(0,1400)});
   }
   lexical=(result.results||[]).concat(fullSnippets).map(x=>{
    const title=normalize(x.path),body=normalize(x.content);

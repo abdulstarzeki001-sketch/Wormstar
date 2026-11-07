@@ -23,8 +23,9 @@ A new product shell, not a restyle of the legacy dashboard. The interface uses a
 9. Settings
 
 ## Interaction contract
-Navigation, language direction, theme, local IOC syntax preview, message composition prototype, demo notices and Markdown report-template export work in this standalone UI.
-The AI prompt, file upload, security scans, agent orchestration, authentication, live telemetry, report generation and audit storage remain intentionally unconnected until their existing backend APIs and authorization controls are mapped and verified. No live operation is claimed by the UI.
+Navigation, language direction, theme, local IOC syntax preview and Markdown report-template export work in this standalone UI.
+The AI Assistant now uses the existing `wormstar-ai-lab` Core through an internal Cloudflare Service Binding. A user must supply the same `WORMSTAR_ACCESS_TOKEN` that Core validates, via an on-screen password field. The token stays in JavaScript memory for that page session only, is not stored in localStorage or sessionStorage, and is sent solely as a Bearer header to same-origin `/api/auth` and `/api/chat` proxy routes. The proxy forwards only those two routes, enforces same-origin checks and request byte limits, and never includes the Core secret in shipped source.
+Source/text attachment is local preview (up to 30 KB); its contents are sent to Core only on explicit Send. Chat uses Workers AI GPT-OSS 20B via the Core with owner-defined policy and optional saved knowledge. Live telemetry, active scanning, orchestration, and backend evidence storage remain unconnected; the dashboard metrics remain illustrative. If the owner loses the token, rotate the `WORMSTAR_ACCESS_TOKEN` secret in Core's Cloudflare configuration rather than committing a credential to GitHub.
 
 ## Design tokens
 - Ink: #0A101D

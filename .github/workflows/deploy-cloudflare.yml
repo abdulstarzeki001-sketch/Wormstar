@@ -35,6 +35,7 @@ jobs:
         run: |
           node --check worker.js
           node tools/sync-policy.mjs --check
+          npm test
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3

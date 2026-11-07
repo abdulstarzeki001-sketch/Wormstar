@@ -1,8 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { Script } from 'node:vm';
 
-// Bundle the reviewed standalone UI files into the single-file Cloudflare Worker.
-// This preview deliberately exposes no privileged APIs, secrets, or data bindings.
+// The standalone Sentinel preview serves static UI only, without private bindings.
 let worker = readFileSync('worker.js', 'utf8');
 const revision = (process.env.GITHUB_SHA || 'local').slice(0, 12);
 const files = [
@@ -17,23 +16,17 @@ for (const [name, filename] of files) {
   if (name === 'SW') {
     value = value.replaceAll('wormstar-sentinel-ui-v1', `wormstar-sentinel-ui-${revision}`);
   }
+  if (name === 'INDEX') {
+    const scripts = [...value.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
+    for (const script of scripts) new Script(script[1], { filename: 'index.html:inline' });
+  }
   const pattern = new RegExp(`^const ${name} = .*;$`, 'm');
   if (!pattern.test(worker)) throw new Error(`Missing generated constant: ${name}`);
-  // Use a replacement CALLBACK: String.replace(template) interprets '$' in the
-  // serialized HTML as '
-}
-
-writeFileSync('worker.js', worker);
-console.log(`Prepared Sentinel preview Worker (${revision})`);
-, breaking the '$' DOM helper and every UI control.
+  // Callback replacement is essential: a string replacement interprets $$ as $.
   worker = worker.replace(pattern, () => `const ${name} = ${JSON.stringify(value)};`);
   const embedded = worker.match(pattern)?.[0].match(/^const \w+ = (.*);$/)?.[1];
   if (!embedded || JSON.parse(embedded) !== value) {
     throw new Error(`Embedded ${name} differs from ${filename}`);
-  }
-  if (name === 'INDEX') {
-    const scripts = [...value.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
-    for (const script of scripts) new Script(script[1], { filename: 'index.html:inline' });
   }
 }
 

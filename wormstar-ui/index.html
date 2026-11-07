@@ -134,6 +134,16 @@ h1{margin:0;font-size:26px;letter-spacing:-.03em;font-weight:600}.page-heading p
 .ai-auth-status{flex:1 1 100%;font-size:10px;line-height:1.5;color:var(--muted)}
 .ai-auth-status[data-state="connected"]{color:var(--success)}
 .ai-auth-status[data-state="error"]{color:var(--danger)}
+
+.ops-panel{margin-top:16px;padding:16px;border:1px solid var(--line);background:var(--surface);border-radius:15px}
+.ops-panel h3{margin:0 0 8px;font-size:16px}
+.ops-panel p{font-size:12px;line-height:1.7;color:var(--muted)}
+.ops-input{display:block;width:100%;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface-2);padding:12px;font-size:16px;color:var(--text);margin:10px 0}
+.ops-check{display:flex;align-items:center;gap:10px;font-size:12px;line-height:1.5;padding:8px 0}
+.ops-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ops-panel pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.65 ui-monospace,monospace;color:var(--text);background:var(--surface-2);border:1px solid var(--line);padding:12px;border-radius:10px;max-height:350px;overflow:auto;margin-top:12px}
+.ops-panel button:disabled{opacity:.55;cursor:wait}
+
 .ai-model-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
 .ai-model-bar label{font-size:11px;color:var(--soft);font-weight:700}
 .ai-model-bar select{flex:1;min-width:150px;max-width:360px;border:1px solid var(--line-strong);border-radius:9px;padding:9px;font-size:13px;background:var(--surface-2);color:var(--text)}
@@ -320,6 +330,19 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
    <div class="feature"><div class="feature-icon">02</div><strong data-i18n="malware_lab">تحليل عينات</strong><p data-i18n="malware_desc">تحليل ثابت للملفات مع تجنب تشغيل الملفات المشبوهة على الجهاز الأساسي.</p></div>
    <div class="feature"><div class="feature-icon">03</div><strong data-i18n="scope">نطاق الاختبار</strong><p data-i18n="scope_desc">تسجيل النطاق المصرح به ومدة الاختبار والإجراءات المسموحة.</p></div>
   </div><div class="disclaimer" data-i18n="lab_notice">أي اختبار نشط يجب أن يكون محصوراً بنظام تملكه أو لديك تفويض مكتوب لاختباره.</div></div>
+  <div class="ops-panel" id="scopePanel">
+    <h3>فحص أمني مصرح به — طلب HTTP واحد</h3>
+    <p>افحص ترويسات HTTP في أحد مشروعيك على Cloudflare. لا يتم إجراء فحص منافذ أو تسجيل دخول أو زحف أو إرسال نماذج. النطاق محصور في القائمة التالية من جانب الخادم.</p>
+    <label for="scanTarget">النطاق المسموح</label>
+    <select class="ops-input" id="scanTarget">
+      <option value="https://wormstar-sentinel-preview.abdulstarzeki001.workers.dev/">Wormstar Sentinel Preview</option>
+      <option value="https://wormstar-ai-lab.abdulstarzeki001.workers.dev/">Wormstar AI Lab</option>
+    </select>
+    <label class="ops-check"><input id="scanConsent" type="checkbox"> أؤكد أنني أملك هذا النطاق ومصرح لي بفحصه الآن.</label>
+    <div class="ops-actions"><button class="btn primary" id="scanRun" type="button">بدء فحص الترويسات</button></div>
+    <pre id="scanResult" role="status">سجّل الدخول من صفحة المساعد، ثم وافق على النطاق.</pre>
+  </div>
+
  </section>
 
  <section class="page" id="page-reports">
@@ -338,6 +361,21 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
    <div class="feature"><div class="feature-icon">CR</div><strong>Code Review</strong><p data-i18n="code_agent_desc">مراجعة الشيفرة وتفسير نتائج أدوات التحليل.</p></div>
    <div class="feature"><div class="feature-icon">TI</div><strong>Threat Intel</strong><p data-i18n="intel_agent_desc">تطبيع مؤشرات الاختراق وإضافة السياق الدفاعي.</p></div>
   </div></div>
+  <div class="ops-panel">
+    <h3>وكلاء مهام مستقلة ومقيّدة</h3>
+    <p>كل وكيل ينفّذ تحليلًا واحدًا بطلب منك. لا توجد أوامر نظام أو أدوات فحص شبكي أو عمل تلقائي مستمر.</p>
+    <label for="opsAgent">الوكيل</label>
+    <select class="ops-input" id="opsAgent">
+      <option value="memory-analyst">Memory Analyst — تحليل المعرفة</option>
+      <option value="code-reviewer">Code Reviewer — مراجعة كود</option>
+      <option value="incident-triage">Incident Triage — فرز حادثة</option>
+    </select>
+    <label for="opsTask">المهمة أو المقتطف</label>
+    <textarea class="ops-input" id="opsTask" maxlength="8500" rows="6" placeholder="اكتب المهمة مع الأدلة والملاحظات..."></textarea>
+    <div class="ops-actions"><button class="btn primary" id="agentRun" type="button">تشغيل الوكيل</button></div>
+    <pre id="agentResult" role="status">يجب تسجيل الدخول بمفتاح Wormstar من صفحة المساعد.</pre>
+  </div>
+
  </section>
 
  <section class="page" id="page-settings">
@@ -347,6 +385,20 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
    <div class="feature"><div class="feature-icon">文</div><strong data-i18n="language">اللغة والاتجاه</strong><p data-i18n="language_desc">العربية RTL والإنجليزية LTR.</p><button class="btn" style="margin-top:10px" id="settingsLang">العربية / English</button></div>
    <div class="feature"><div class="feature-icon">盾</div><strong data-i18n="privacy">الخصوصية والأمان</strong><p data-i18n="privacy_desc">إعدادات الجلسة، الصلاحيات، والاحتفاظ بسجل التدقيق.</p></div>
   </div></div>
+  <div class="ops-panel">
+    <h3>البحث الدلالي Hybrid RAG</h3>
+    <p>Vectorize + BGE-M3 متعدد اللغات، مع حفظ النصوص الأصلية في D1. الفهرسة تتم على دفعات بعد تسجيل الدخول.</p>
+    <div class="ops-actions">
+      <button class="btn" id="ragStatusBtn" type="button">حالة Vectorize</button>
+      <button class="btn primary" id="ragIndexBtn" type="button">فهرسة المعرفة الحالية</button>
+    </div>
+    <pre id="ragOutput" role="status">لا تُحفظ المتجهات في المتصفح. تتطلب الفهرسة اتصال المالك.</pre>
+  </div>
+  <div class="ops-panel">
+    <h3>LoRA / Fine-tuning</h3>
+    <p>تم إعداد مسار التدريب الخارجي في GitHub. لم يتم تدريب نموذج أو نشر أوزان مخصصة على Cloudflare. يحتاج التدريب خادم GPU وبيانات تدريب مراجَعة.</p>
+  </div>
+
  </section>
 </main>
 <aside class="context">
@@ -518,6 +570,56 @@ $("#filterBtn").addEventListener("click",()=>toast(lang==="ar"?"لا توجد ب
 $("#agentConfig").addEventListener("click",()=>toast(lang==="ar"?"إعدادات الوكلاء ستُربط بخدمة التنسيق":"Agent settings need orchestration service integration"));
 $("#exportReport").addEventListener("click",()=>{const text=(lang==="ar"?"تقرير Wormstar التجريبي\n\nهذا نموذج تقرير. اربط محرك التقارير لإنتاج النتائج الفعلية.":"Wormstar sample report\n\nThis is a report template. Connect the reporting engine for real findings.");const blob=new Blob([text],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="wormstar-report-template.md";a.click();URL.revokeObjectURL(a.href);toast(lang==="ar"?"تم تنزيل قالب التقرير":"Report template downloaded")});
 $("#iocCheck").addEventListener("click",()=>{const v=$("#iocInput").value.trim();let type="unknown";if(/^https?:\/\//i.test(v))type="URL";else if(/^[a-f0-9]{64}$/i.test(v))type="SHA-256";else if(/^(?:\d{1,3}\.){3}\d{1,3}$/.test(v))type="IPv4";else if(/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(v))type="Domain";$("#iocResult").textContent=v?(lang==="ar"?"نوع التنسيق المحتمل: "+type+" — فحص شكلي محلي فقط، دون اتصال خارجي.":"Likely format: "+type+" — local syntax check only, no external connection."):(lang==="ar"?"أدخل مؤشراً أولاً.":"Enter an indicator first.")});
+
+async function opsRequest(path, data){
+ if(!wormstarAccess)throw Error(lang==="ar"?"سجّل الدخول أولاً من AI Assistant.":"Connect in AI Assistant first.");
+ const response=await fetch(path,{method:data===undefined?"GET":"POST",cache:"no-store",
+   headers:{"Authorization":"Bearer "+wormstarAccess,...(data===undefined?{}:{"Content-Type":"application/json"})},
+   ...(data===undefined?{}:{body:JSON.stringify(data)})});
+ const result=await response.json().catch(()=>({error:"Invalid API response"}));
+ if(!response.ok)throw Error(result.error||"HTTP "+response.status);
+ return result;
+}
+$("#scanRun").addEventListener("click",async()=>{
+ const button=$("#scanRun"),output=$("#scanResult");output.textContent="";
+ if(!$("#scanConsent").checked){output.textContent="يجب تأكيد ملكية النطاق والتصريح.";return;}
+ button.disabled=true;output.textContent="جارٍ إجراء طلب تدقيق واحد...";
+ try{
+   const result=await opsRequest("/api/security/header-audit",{target:$("#scanTarget").value});
+   output.textContent=JSON.stringify(result,null,2);
+ }catch(error){output.textContent="تعذر الفحص: "+error.message}
+ finally{button.disabled=false;}
+});
+$("#agentRun").addEventListener("click",async()=>{
+ const button=$("#agentRun"),output=$("#agentResult"),task=$("#opsTask").value.trim();
+ if(!task){output.textContent="أدخل مهمة أولاً";return;}
+ button.disabled=true;output.textContent="جارٍ تنفيذ التحليل المصرح به...";
+ try{
+   const data=await opsRequest("/api/agents/run",{agent:$("#opsAgent").value,task});
+   output.textContent=data.answer+"\n\nModel: "+data.modelUsed+"\nReferences: "+(data.sourceIds||[]).map(x=>x.title).join("، ");
+ }catch(error){output.textContent="تعذر تشغيل الوكيل: "+error.message}
+ finally{button.disabled=false;}
+});
+$("#ragStatusBtn").addEventListener("click",async()=>{
+ try{$("#ragOutput").textContent=JSON.stringify(await opsRequest("/api/rag/status"),null,2)}
+ catch(error){$("#ragOutput").textContent=String(error.message)}
+});
+$("#ragIndexBtn").addEventListener("click",async()=>{
+ const button=$("#ragIndexBtn"),output=$("#ragOutput");button.disabled=true;
+ let cursor="",count=0,batches=0;
+ try{
+   for(;batches<100;batches++){
+     const data=await opsRequest("/api/rag/reindex",{cursor,limit:4});
+     count+=data.indexedDocuments||0;
+     output.textContent="تمت فهرسة "+count+" وثيقة في "+(batches+1)+" دفعة. آخر مؤشر: "+(data.nextCursor||"");
+     if(data.done){output.textContent+="\nاكتملت الفهرسة. قد تتأخر ظهور المتجهات الجديدة قليلًا.";break;}
+     if(!data.nextCursor||data.nextCursor===cursor)throw Error("تعذّر متابعة المؤشر");
+     cursor=data.nextCursor;
+   }
+ }catch(error){output.textContent+="\nفشلت الفهرسة: "+error.message+"\nيمكن إعادة التشغيل بأمان."}
+ finally{button.disabled=false;}
+});
+
 $("#profileMore").addEventListener("click",()=>toast(lang==="ar"?"ملف محلي تجريبي":"Local demo profile"));
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
 </script>

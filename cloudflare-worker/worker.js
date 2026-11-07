@@ -1,5 +1,7 @@
 
 import {termsFor,rankKnowledge} from './rag-engine.js';
+import {hybridKnowledge,indexKnowledgeBatch} from './advanced-rag.js';
+import {runAuthorizedScan,runBoundedAgent,listAgents} from './security-ops.js';
 import LAB_POLICY_MANIFEST from './permissions-module.js';
 import FUTURE_UI from './future-ui.js';
 import REDESIGN_HTML from './redesign-ui.js';
@@ -317,15 +319,8 @@ async function getProfile(env){
   return (await env.DB.prepare('SELECT name,instructions,constraints,updated_at FROM ai_profile WHERE id=1').first())||{name:'Wormstar',instructions:'',constraints:''};
 }
 async function relevantKnowledge(env,query){
-  const terms=termsFor(query);
-  if(!terms.length)return [];
-  // Search the full library, not only the newest 120 items.
-  const sqlTerms=[...new Set(terms.slice(0,8).flatMap(t=>t.startsWith('ال')&&t.length>4?[t,t.slice(2)]:[t]))].slice(0,12);
-  const clause=sqlTerms.map(()=>'(instr(lower(title), ?) > 0 OR instr(lower(content), ?) > 0)').join(' OR ');
-  const params=sqlTerms.flatMap(t=>[t,t]);
-  const sql='SELECT id,title,kind,content,updated_at FROM knowledge WHERE '+clause+' ORDER BY updated_at DESC LIMIT 160';
-  const rows=(await env.DB.prepare(sql).bind(...params).all()).results||[];
-  return rankKnowledge(rows,query,{limit:4,budget:8500});
+  const result=await hybridKnowledge(env,query,{limit:4,budget:8500});
+  return result.documents;
 }
 
 const POLICY_MODES=['assistant','code','logs','ioc','ctf','report'];
@@ -731,6 +726,44 @@ export default {
       return permissionDenied('unknown lab operation');
     }
     if(url.pathname.startsWith('/api/studio/')){if(!(await allow(request,env)))return json({error:'Unauthorized'},401);try{return await studioRoutes(request,env,url.pathname);}catch(e){return json({error:'Memory database request failed'},503);}}
+
+    // Owner-authenticated, deny-by-default operations. This is NOT a generic
+    // port scanner or arbitrary URL fetch proxy.
+    if(url.pathname==='/api/rag/status'&&request.method==='GET'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      return json({index:'wormstar-knowledge-m3',model:'@cf/baai/bge-m3',configured:!!(env.VECTORS&&env.DB&&env.AI),storage:'Vectorize IDs/embeddings; full documents remain in D1'});
+    }
+    if(url.pathname==='/api/rag/reindex'&&request.method==='POST'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      if(!capabilityEnabled('memory.items.read'))return permissionDenied('memory.items.read');
+      let body;try{body=await readBoundedJson(request,4096)}catch{return json({error:'Invalid request body'},400)}
+      try{return json(await indexKnowledgeBatch(env,{cursor:body?.cursor||'',limit:body?.limit||4}));}
+      catch{return json({error:'Vector index batch failed'},503);}
+    }
+    if(url.pathname==='/api/security/header-audit'&&request.method==='POST'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      if(!capabilityEnabled('network.header_audit'))return permissionDenied('network.header_audit');
+      let body;try{body=await readBoundedJson(request,2048)}catch{return json({error:'Invalid input'},400)}
+      try{const result=await runAuthorizedScan(env,body?.target);return json(result,result.status===429||result.status===502?result.status:200);}
+      catch{return json({error:'Not an approved scan target'},403);}
+    }
+    if(url.pathname==='/api/agents'&&request.method==='GET'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      if(!capabilityEnabled('ai.chat'))return permissionDenied('ai.chat');
+      return json({agents:listAgents()});
+    }
+    if(url.pathname==='/api/agents/run'&&request.method==='POST'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      if(!capabilityEnabled('ai.chat'))return permissionDenied('ai.chat');
+      let body;try{body=await readBoundedJson(request,LAB_POLICY.limits.maxRequestBytes)}catch{return json({error:'Invalid input'},400)}
+      const agentMode={'memory-analyst':'assistant','code-reviewer':'code','incident-triage':'logs'}[body?.agent];
+      if(!agentMode)return json({error:'Unsupported agent'},400);
+      let policy;try{policy=await getPolicy(env)}catch{return json({error:'Owner policy unavailable'},503)}
+      const permitted=checkPolicy(policy,agentMode,String(body?.task||''));
+      if(!permitted.allowed)return json({error:permitted.reason},permitted.status||403);
+      const result=await runBoundedAgent(env,body,{memoryEnabled:policy.memory_enabled,maxTokens:policy.max_output_tokens});
+      return json(result,result.status===400||result.status===429||result.status===502||result.status===503?result.status:200);
+    }
     if(request.method==='POST'&&url.pathname==='/api/chat'){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
       if(!capabilityEnabled('ai.chat'))return permissionDenied('ai.chat');

@@ -168,7 +168,18 @@ export async function findRepoEvidence(env,question,{limit=5}={}){
   const filters=terms.map(()=>'(instr(lower(f.path),?)>0 OR instr(lower(f.content),?)>0)').join(' OR ');
   const result=await env.DB.prepare('SELECT f.vector_id,f.path,f.content,f.line_start,f.line_end,d.revision FROM repo_fragments f JOIN repo_file_index d ON f.path=d.path WHERE '+filters+' LIMIT 160')
    .bind(...terms.flatMap(t=>[t,t])).all();
-  lexical=(result.results||[]).map(x=>{
+  const full=(await env.DB.prepare('SELECT path,revision,content FROM repo_file_index WHERE kind=? AND '+terms.map(()=>'(instr(lower(path),?)>0 OR instr(lower(content),?)>0)').join(' OR ')+' LIMIT 80')
+   .bind('text',...terms.flatMap(t=>[t,t])).all()).results||[];
+  const fullSnippets=[];
+  for(const doc of full){
+   const lines=String(doc.content||'').split(/\\r?\\n/);
+   const index=lines.findIndex(line=>terms.some(t=>normalize(line).includes(t)));
+   if(index<0)continue;
+   const from=Math.max(0,index-2),to=Math.min(lines.length,index+5);
+   fullSnippets.push({vector_id:'full:'+doc.path+':'+index,path:doc.path,revision:doc.revision,
+     line_start:from+1,line_end:to,content:lines.slice(from,to).join('\\n').slice(0,1400)});
+  }
+  lexical=(result.results||[]).concat(fullSnippets).map(x=>{
    const title=normalize(x.path),body=normalize(x.content);
    const matches=terms.filter(t=>title.includes(t)||body.includes(t));
    return {...x,lexicalScore:matches.length*5+matches.filter(t=>title.includes(t)).length*12};
@@ -182,7 +193,7 @@ export async function findRepoEvidence(env,question,{limit=5}={}){
    if(!Array.isArray(vector)||vector.length!==1024)throw Error('Embedding mismatch');
    const matches=await env.REPO_VECTORS.query(vector,{topK:12,returnMetadata:'none'});
    for(const item of matches?.matches||[]){
-    if(!Number.isFinite(item.score)||item.score<0.68)continue;
+    if(!Number.isFinite(item.score)||item.score<0.61)continue;
     const doc=await env.DB.prepare('SELECT f.vector_id,f.path,f.content,f.line_start,f.line_end,d.revision FROM repo_fragments f JOIN repo_file_index d ON d.path=f.path WHERE f.vector_id=?')
       .bind(item.id).first();
     if(doc)semantic.push({...doc,score:item.score});

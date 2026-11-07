@@ -76,6 +76,21 @@ test('AI Core: successful text generation returns visible answer, actual model a
  assert.match(r.headers.get('Cache-Control'),/no-store/);
 });
 
+test('GPT-OSS 120B has bounded low reasoning effort for chat and medium for code review',async()=>{
+ const {env,calls}=fixture(undefined,{withMemory:true});
+ const basic=await chat(env,{mode:'assistant',message:'Explain the saved note',engine:'gpt-oss-120b'});
+ assert.equal(basic.status,200);
+ const result=await basic.json();
+ assert.equal(result.modelUsed,'@cf/openai/gpt-oss-120b');
+ assert.equal(result.reasoningEffort,'low');
+ assert.equal(calls[0].input.reasoning_effort,'low');
+ assert.ok(result.memoryUsed.length>0,'Owner RAG memory is still available');
+ const code=await chat(env,{mode:'code',message:'Review this source code',engine:'gpt-oss-120b'});
+ assert.equal(code.status,200);
+ assert.equal((await code.json()).reasoningEffort,'medium');
+ assert.equal(calls[1].input.reasoning_effort,'medium');
+});
+
 test('Security: missing or invalid authorization blocks AI, memory and policy access',async()=>{
  const {env,calls}=fixture();
  for(const bad of ['', 'wrong-token']){

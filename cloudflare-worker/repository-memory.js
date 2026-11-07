@@ -219,7 +219,7 @@ export async function findRepoEvidence(env,question,{limit=5}={}){
 const GENERIC_TOPIC=new Set(['wormstar','github','repo','repository','project','مشروع','المشروع','file','files','ملف','الملف','الملفات','what','does','how','explain','about','core','sentinel']);
 export function repoQuestionSupported(question,sources){
  if(!Array.isArray(sources)||!sources.length)return false;
- const terms=termsFor(question).filter(t=>!GENERIC_TOPIC.has(t));
+ const terms=termsFor(question).filter(t=>t.length>=3&&!GENERIC_TOPIC.has(t));
  if(!terms.length)return true; // general questions about this repository
  return sources.some(s=>{
   const evidence=normalize(String(s.path||'')+' '+String(s.content||''));

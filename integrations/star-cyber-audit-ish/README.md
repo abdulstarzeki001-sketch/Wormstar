@@ -8,14 +8,14 @@ plus the original offline-capable Python analyzer for iSH, a-Shell and Linux.
 
 This is a source copy of the user's original GitHub project
 [`Star-Cyber-Audit-iSH`](https://github.com/abdulstarzeki001-sketch/Star-Cyber-Audit-iSH).
-We keep both original projects intact; the second deployment under
-`abo330899.workers.dev` remains independent and has not been modified.
+The original audit project and its independent deployment under
+`abo330899.workers.dev` remain separate from Wormstar.
 
 Copied files:
 
 | Original | Unified repo | Source blob |
 | --- | --- | --- |
-| `site/worker.js` | `wormstar-ui/audit-worker.js` | `8af477a14b008c88d208627debbf668c12b34c69` |
+| `site/worker.js` | `wormstar-ui/audit-worker.js` | `55c08dbc32d496b22491997b8252acc66a0ba7ad` |
 | `analyze.py` | `integrations/star-cyber-audit-ish/analyze.py` | `f5291526bd61483e5bc2b1da6d767fe72f50d328` |
 | `run.sh` | `integrations/star-cyber-audit-ish/run.sh` | `702935c4887366f94072e443a7733240d01c2794` |
 | `site/sample-data.json` | `integrations/star-cyber-audit-ish/sample-data.json` | `a627751e5f3779ede1a55bb317ba26c5b7422a96` |
@@ -34,6 +34,11 @@ The original read-only dashboard performs its **only network fetch** against its
 sample endpoint. The URL is rewritten to the same-origin `/audit/api/sample`.
 The original dashboard's CSP and no-framing policy are retained.
 It cannot access the private `CORE` Service Binding, AI tokens, D1, RAG, or privileged APIs.
+The report view includes a rotatable, illustrative 3D summary of the opened
+report. Its equally sized shapes do not represent live network traffic or
+confirmed vulnerabilities. Duplicate file names are distinguished by their
+relative paths. Oversized reports are rejected instead of silently truncating
+their counts.
 
 This is an actual local module import, not a fragile cross-account iframe or a
 cross-account Workers Service Binding. The two Cloudflare accounts do not have
@@ -70,7 +75,8 @@ with JavaScript source.
 - الملفات الخام، لقطات OneDrive، الأكواد الأجنبية المؤرشفة، والتقارير التي قد تحتوي بيانات حساسة: **معلوماتها فقط** في الفهرس، وليست داخل الموقع العام.
 - لا تُنفذ شيفرات المستودع الأصلي أثناء المزامنة؛ يجري فحص سكربت النقل باختبارات مستقلة، ثم تُرفع الفروقات إلى فرع مراجعة مخصص.
 - تم دمج النسخة الأولية عبر [Pull Request #39](https://github.com/abdulstarzeki001-sketch/Wormstar/pull/39).
-- إعدادات GitHub الحالية لا تسمح لـGitHub Actions بإنشاء طلبات Pull Request. المزامنة ستحدّث فرع المراجعة، لكن لإنشاء PR تلقائيًا يلزم تفعيل Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests.
+- عند توافر مصدر عام قابل للقراءة، قد تحتاج المزامنة إلى صلاحية إنشاء Pull Request في إعدادات GitHub Actions. لا يفترض ملخص التشغيل أن فرع المراجعة أُنشئ إذا فشلت خطوة الطلب.
+- المصدر الأصلي خاص حالياً بينما Wormstar عام، لذلك لا يمكن لرمز هذا المستودع الافتراضي قراءته، وقد فشل آخر تشغيل مجدول. لا تُنشر محتويات المصدر الخاص أو أسماء ملفاته إلى فرع عام تلقائياً؛ يلزم تحديد آلية وصول ومراجعة تسمح بالنشر قبل استعادة المزامنة. يظهر سبب التعذر في ملخص التشغيل ولا يُعرض على أنه «لا توجد تغييرات».
 
 ## Tests and maintenance
 

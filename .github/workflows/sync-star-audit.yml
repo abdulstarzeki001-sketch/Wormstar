@@ -10,6 +10,8 @@ on:
     paths:
       - "scripts/sync_star_audit.py"
       - "scripts/tests/test_sync_star_audit.py"
+      - "scripts/tests/test_sync_status.py"
+      - "scripts/ci/report-sync-status.py"
       - ".github/workflows/sync-star-audit.yml"
 
 permissions:
@@ -34,6 +36,7 @@ jobs:
           persist-credentials: false
 
       - name: Check out original audit lab (untrusted content; never execute)
+        id: checkout_upstream
         uses: actions/checkout@v4
         with:
           repository: abdulstarzeki001-sketch/Star-Cyber-Audit-iSH
@@ -47,9 +50,10 @@ jobs:
           python-version: "3.11"
 
       - name: Test the safe sync engine (local synthetic fixtures)
-        run: python -m unittest discover -s scripts/tests -p "test_sync_star_audit.py" -v
+        run: python -m unittest discover -s scripts/tests -p "test_sync_*.py" -v
 
       - name: Create deterministic source mirror and 100% file inventory
+        id: mirror_source
         run: |
           python scripts/sync_star_audit.py --source .star-audit-upstream
           python - <<'PY'
@@ -66,7 +70,7 @@ jobs:
       - name: Propose upstream updates without changing deployed modules
         id: sync_pr
         # Some GitHub repositories disable PR creation by GITHUB_TOKEN.
-        # The action still pushes the review branch; do not make daily backup fail.
+        # Do not assume a branch was pushed if the PR action fails.
         continue-on-error: true
         uses: peter-evans/create-pull-request@v7
         with:
@@ -93,14 +97,9 @@ jobs:
 
       - name: Record PR status and publish a review link
         if: always()
-        run: |
-          if [ "${{ steps.sync_pr.outcome }}" = "failure" ]; then
-            echo "::warning::GitHub Actions token cannot create pull requests in this repository."
-            echo "The safe source snapshot was pushed to automation/star-audit-safe-upstream-sync."
-            echo "Review branch: https://github.com/abdulstarzeki001-sketch/Wormstar/compare/main...automation/star-audit-safe-upstream-sync"
-            echo "To enable fully automated review PR creation: Settings > Actions > General > Workflow permissions > Allow GitHub Actions to create and approve pull requests."
-          elif [ -n "${{ steps.sync_pr.outputs.pull-request-url }}" ]; then
-            echo "Review proposed updates: ${{ steps.sync_pr.outputs.pull-request-url }}"
-          else
-            echo "No upstream changes require a review PR."
-          fi
+        env:
+          UPSTREAM_CHECKOUT_OUTCOME: ${{ steps.checkout_upstream.outcome }}
+          MIRROR_OUTCOME: ${{ steps.mirror_source.outcome }}
+          PR_OUTCOME: ${{ steps.sync_pr.outcome }}
+          PR_URL: ${{ steps.sync_pr.outputs.pull-request-url }}
+        run: python3 scripts/ci/report-sync-status.py

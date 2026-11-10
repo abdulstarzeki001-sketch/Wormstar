@@ -298,7 +298,11 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
       <option value="gpt-oss-120b">GPT‑OSS 120B · Deep analysis</option>
       <option value="gpt-oss-20b">GPT‑OSS 20B · Fast response</option>
       <option value="qwen-coder">Qwen Coder · Source review</option>
+      <option id="goclawModel" value="goclaw-agent" disabled>GoClaw · بوابة مستقلة</option>
     </select>
+    <button type="button" id="goclawStatusBtn" class="btn">فحص GoClaw</button>
+    <small id="goclawStatus" role="status" aria-live="polite">GoClaw غير متحقق منه؛ يحتاج بوابة مستقلة وإعداد المالك.</small>
+    <small id="goclawModeNote" hidden>تحدد إعدادات GoClaw النموذج وتعليمات الوكيل وعمق التفكير وحد الرموز؛ يتحقق Wormstar من الحد المعلن فقط. نوع المهمة هنا يطبّق سياسة Wormstar.</small>
     <label for="aiMode">المهمة</label>
     <select id="aiMode" aria-label="Analysis mode">
       <option value="assistant">Chat / محادثة</option>
@@ -470,17 +474,39 @@ function toast(message){const t=$("#toast");t.textContent=message;t.classList.ad
 function go(page){$$(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));$$("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));const n=$('[data-page="'+page+'"] [data-i18n]');const c=$("#crumbText");if(c&&n)c.textContent=n.textContent;window.scrollTo({top:0,behavior:"smooth"});$("#overlay").classList.remove("open")}
 $$("[data-page]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
 $$("[data-goto]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.goto)));
-function setLang(next){lang=next;document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";document.body.classList.toggle("ltr",lang==="en");$$("[data-i18n]").forEach(el=>{const key=el.dataset.i18n;const val=(lang==="ar"?translations.ar:english)[key];if(val!==undefined)el.innerHTML=val});$("#langBtn").innerHTML=lang==="ar"?"<span style='font-size:10px;font-weight:700'>EN</span>":"<span style='font-size:10px;font-weight:700'>AR</span>";$("#crumbText").textContent=lang==="ar"?"نظرة عامة":"Overview";$("#chatInput").placeholder=lang==="ar"?"اكتب سؤالك أو الصق مقتطفاً للتحليل...":"Ask a question or paste an excerpt for analysis...";}
+function setLang(next){
+  lang=next;document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+  document.body.classList.toggle("ltr",lang==="en");
+  $$("[data-i18n]").forEach(el=>{
+    const key=el.dataset.i18n,val=(lang==="ar"?translations.ar:english)[key];
+    if(val===undefined)return;
+    if(key==="hero_title"){
+      const parts=lang==="ar"?["الأمن يبدأ من ","رؤية أوضح.","والقرار يبدأ من دليل."]:["Security starts with ","clarity.","Decisions start with evidence."];
+      const emphasis=document.createElement("span");emphasis.textContent=parts[1];
+      el.replaceChildren(document.createTextNode(parts[0]),emphasis,document.createElement("br"),document.createTextNode(parts[2]));
+    }else el.textContent=val;
+  });
+  const languageLabel=document.createElement("span");languageLabel.style.cssText="font-size:10px;font-weight:700";
+  languageLabel.textContent=lang==="ar"?"EN":"AR";$("#langBtn").replaceChildren(languageLabel);
+  $("#crumbText").textContent=lang==="ar"?"نظرة عامة":"Overview";
+  $("#chatInput").placeholder=lang==="ar"?"اكتب سؤالك أو الصق مقتطفاً للتحليل...":"Ask a question or paste an excerpt for analysis...";
+}
 $("#langBtn").addEventListener("click",()=>setLang(lang==="ar"?"en":"ar"));$("#settingsLang").addEventListener("click",()=>setLang(lang==="ar"?"en":"ar"));
 function toggleTheme(){const root=document.documentElement;root.dataset.theme=root.dataset.theme==="dark"?"light":"dark"}$("#themeBtn").addEventListener("click",toggleTheme);$("#settingsTheme").addEventListener("click",toggleTheme);
 $("#refreshBtn").addEventListener("click",()=>toast(lang==="ar"?"تم تحديث عرض النموذج":"Prototype view refreshed"));
 $("#searchBtn").addEventListener("click",()=>{const q=prompt(lang==="ar"?"ابحث عن وحدة: مساعد، أكواد، حوادث، مؤشرات، مختبر، تقارير":"Search: assistant, code, incidents, IOC, lab, reports");if(!q)return;const map=[["مساعد","assistant"],["assistant","assistant"],["كود","code"],["code","code"],["حوادث","incidents"],["incident","incidents"],["مؤشر","intel"],["ioc","intel"],["مختبر","lab"],["lab","lab"],["تقرير","reports"],["report","reports"]];const hit=map.find(x=>q.toLowerCase().includes(x[0]));if(hit)go(hit[1]);else toast(lang==="ar"?"لا توجد وحدة مطابقة":"No matching module")});
-$("#menuBtn").addEventListener("click",()=>{$("#drawer").innerHTML=$(".sidebar").innerHTML;$("#overlay").classList.add("open");$("#drawer").querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)))});
+$("#menuBtn").addEventListener("click",()=>{
+  $("#drawer").replaceChildren(...Array.from($(".sidebar").childNodes,node=>node.cloneNode(true)));
+  $("#overlay").classList.add("open");
+  $("#drawer").querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
+});
 $("#overlay").addEventListener("click",e=>{if(e.target===$("#overlay"))$("#overlay").classList.remove("open")});
 $$("[data-prompt]").forEach(b=>b.addEventListener("click",()=>{$("#chatInput").value=b.dataset.prompt;$("#chatInput").focus()}));
 let wormstarAccess = "";
 let aiBusy = false;
 const aiConversation = [];
+let conversationRevision = 0;
+function clearAiConversation(){conversationRevision++;aiConversation.length=0;$("#chatHistory").textContent="";}
 function aiStatus(message, state="idle"){
   const element=$("#aiConnectionState");element.textContent=message;element.dataset.state=state;
 }
@@ -503,6 +529,7 @@ $("#aiConnectForm").addEventListener("submit",async(event)=>{
     wormstarAccess=candidate;
     $("#aiToken").value="";
     aiRenderAuth();
+    void refreshGoClaw();
   } catch(error) {
     aiStatus((lang==="ar"?"فشل الاتصال: ":"Connection failed: ")+(error.message||"Network error"),"error");
   } finally {
@@ -511,10 +538,57 @@ $("#aiConnectForm").addEventListener("submit",async(event)=>{
 });
 $("#aiDisconnectBtn").addEventListener("click",()=>{
   wormstarAccess="";
-  aiConversation.length=0;
-  $("#chatHistory").textContent="";
+  clearAiConversation();
   $("#chatInput").value="";
+  $("#goclawModel").disabled=true;
+  if($("#aiModel").value==="goclaw-agent")$("#aiModel").value="auto";
+  previousAiModel=$("#aiModel").value;
+  updateGoClawControls();
+  $("#goclawStatus").textContent="GoClaw غير متحقق منه؛ سجّل الدخول لفحص البوابة.";
   aiRenderAuth();
+});
+async function refreshGoClaw(){
+  if(!wormstarAccess){$("#goclawStatus").textContent="سجّل الدخول بمفتاح Wormstar أولاً.";return;}
+  const current=wormstarAccess;
+  $("#goclawStatus").textContent="جارٍ فحص استجابة بوابة GoClaw...";
+  try{
+    const response=await fetch("/api/goclaw/status",{headers:{Authorization:"Bearer "+current},cache:"no-store"});
+    const data=await response.json();
+    if(wormstarAccess!==current)return;
+    if(!response.ok)throw Error("Status unavailable");
+    const ready=data.configured===true&&data.gatewayReachable===true;
+    $("#goclawModel").disabled=!ready;
+    if(!ready&&$("#aiModel").value==="goclaw-agent"){
+      $("#aiModel").value="auto";previousAiModel="auto";clearAiConversation();
+      updateGoClawControls();
+    }
+    $("#goclawStatus").textContent=ready?
+      "البوابة تستجيب؛ فحص الصحة لا يثبت جاهزية الوكيل أو النموذج. الرسائل تذهب للبوابة وقد تستخدم أدواتها حسب إعدادها.":
+      "GoClaw غير متصل أو غير مُعدّ؛ لن يستخدم Wormstar نموذجاً بديلاً تلقائياً.";
+  }catch{
+    if(wormstarAccess!==current)return;
+    $("#goclawModel").disabled=true;
+    if($("#aiModel").value==="goclaw-agent"){
+      $("#aiModel").value="auto";previousAiModel="auto";clearAiConversation();
+      updateGoClawControls();
+    }
+    $("#goclawStatus").textContent="تعذر فحص GoClaw. تحقق من إعداد البوابة والاتصال.";
+  }
+}
+$("#goclawStatusBtn").addEventListener("click",refreshGoClaw);
+let previousAiModel=$("#aiModel").value;
+function updateGoClawControls(){
+  const selected=$("#aiModel").value==="goclaw-agent";
+  $("#aiReasoning").disabled=selected;
+  $("#goclawModeNote").hidden=!selected;
+}
+$("#aiModel").addEventListener("change",()=>{
+  const next=$("#aiModel").value;
+  if(next!==previousAiModel&&(next==="goclaw-agent"||previousAiModel==="goclaw-agent")){
+    clearAiConversation();
+  }
+  previousAiModel=next;
+  updateGoClawControls();
 });
 function appendAiMessage(role,message){
   const history=$("#chatHistory");
@@ -532,8 +606,12 @@ async function sendMessage(){
     aiStatus(lang==="ar"?"سجّل الدخول أولاً باستخدام مفتاح Wormstar.":"Connect using your Wormstar owner key first.","error");
     $("#aiToken").focus();return;
   }
+  if($("#aiModel").value==="goclaw-agent"&&$("#repoOnly").checked){
+    toast("GoClaw لا يعمل في وضع Repository Expert؛ ألغِ اختيار الوضع لاستخدام البوابة.");return;
+  }
   if(value.length>10000){toast(lang==="ar"?"الرسالة طويلة جداً (الحد 10,000 حرف).":"Message too long (10,000 character limit).");return;}
   aiBusy=true;$("#sendBtn").disabled=true;
+  const sendRevision=conversationRevision;
   $("#chatWelcome")?.remove();
   const historyForCore=aiConversation.slice(-6);
   appendAiMessage("user",value);
@@ -549,6 +627,7 @@ async function sendMessage(){
       body:JSON.stringify({mode:$("#aiMode").value,message:value,history:historyForCore,engine:$("#aiModel").value,reasoningEffort:$("#aiReasoning").value,memoryIds:[]})
     });
     const data=await response.json().catch(()=>({error:"Invalid JSON response from Core"}));
+    if(sendRevision!==conversationRevision)return;
     if(!response.ok)throw Error(data.error||"HTTP "+response.status);
     if(typeof data.answer!=="string"||!data.answer.trim())throw Error("Core returned an empty answer");
     pending.textContent=data.answer;
@@ -579,6 +658,7 @@ async function sendMessage(){
       pending.appendChild(sources);
     }
   } catch(error){
+    if(sendRevision!==conversationRevision)return;
     aiConversation.pop();
     input.value=value;
     pending.textContent=(lang==="ar"?"تعذر إرسال الرسالة: ":"Request failed: ")+(error.name==="AbortError"?"Timeout (90s)":String(error.message||"Network error"));
@@ -593,8 +673,7 @@ async function sendMessage(){
 }
 $("#repoOnly").addEventListener("change",()=>{
   // Never cross-contaminate repository-only history with general AI history.
-  aiConversation.length=0;
-  $("#chatHistory").textContent="";
+  clearAiConversation();
   $("#repoMemoryStatus").textContent=$("#repoOnly").checked?
     "Repository Expert: الإجابات من ملفات GitHub المفهرسة فقط.":
     "General AI: المحادثة العامة مفصولة عن ذاكرة المستودع.";

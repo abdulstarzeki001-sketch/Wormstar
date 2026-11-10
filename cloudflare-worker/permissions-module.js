@@ -39,6 +39,8 @@ export default {
     "memory.chats.delete": true,
     "agents.openclaw.status": true,
     "agents.openclaw.chat": true,
+    "agents.goclaw.status": true,
+    "agents.goclaw.chat": true,
     "agents.opencode.status": true,
     "agents.opencode.sessions.read": true,
     "agents.opencode.sessions.create": true,

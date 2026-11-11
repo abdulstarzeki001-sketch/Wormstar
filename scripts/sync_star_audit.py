@@ -8,6 +8,7 @@ party dependency is used and all paths come from git ls-files.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -62,7 +63,7 @@ def local_file(source: Path, path: str) -> Path | None:
     return resolved
 
 
-def indexed_files(source: Path) -> list[tuple[str, str, str]]:
+def indexed_files(source: Path) -> list[tuple[str, str, str, int | None]]:
     """Read paths and blob hashes from the Git index without opening source files."""
     records = []
     for entry in git(source, "ls-files", "--stage", "-z").split(b"\x00"):
@@ -76,7 +77,21 @@ def indexed_files(source: Path) -> list[tuple[str, str, str]]:
         if not re.fullmatch(r"[a-f0-9]{40,64}", sha):
             raise ValueError("Invalid source blob identifier")
         records.append((name.decode("utf-8"), mode, sha))
-    return sorted(records)
+    blobs = sorted({sha for _name, mode, sha in records if mode in {"100644", "100755"}})
+    sizes = {}
+    if blobs:
+        result = subprocess.run(
+            ["git", "-C", str(source), "cat-file", "--batch-check=%(objectname) %(objecttype) %(objectsize)"],
+            input=("\n".join(blobs) + "\n").encode("ascii"), capture_output=True, check=True,
+        )
+        for line in result.stdout.decode("ascii").splitlines():
+            fields = line.split()
+            if len(fields) != 3 or fields[1] != "blob" or not fields[2].isdigit():
+                raise ValueError("Unable to determine a Git blob size")
+            sizes[fields[0]] = int(fields[2])
+        if len(sizes) != len(blobs):
+            raise ValueError("Missing source Git blob metadata")
+    return sorted((name, mode, sha, sizes.get(sha)) for name, mode, sha in records)
 
 
 def output_file(destination: Path, name: str) -> Path:
@@ -128,6 +143,14 @@ def sync(source: Path, destination: Path, manifest: Path) -> dict:
     source = source.resolve(strict=True)
     if not (source / ".git").exists():
         raise ValueError("Source must be a checked-out git repository")
+    if destination.is_symlink() or manifest.is_symlink():
+        raise ValueError("Mirror and inventory paths must not be symbolic links")
+    mirror = destination.resolve()
+    inventory = manifest.resolve()
+    if mirror == source or mirror.is_relative_to(source) or source.is_relative_to(mirror):
+        raise ValueError("Source and mirror paths must not overlap")
+    if inventory.is_relative_to(source):
+        raise ValueError("Inventory must not overwrite a source file")
     commit = git(source, "rev-parse", "HEAD").decode("ascii").strip()
     if not re.fullmatch(r"[a-f0-9]{40}", commit):
         raise ValueError("Invalid source commit")
@@ -138,10 +161,8 @@ def sync(source: Path, destination: Path, manifest: Path) -> dict:
         raise ValueError("Unexpected upstream file count; refuse automated copy")
     rows = []
     synced = set()
-    for name, mode, sha in entries:
+    for name, mode, sha, file_size in entries:
         allowed, status, data = classify(source, name) if mode in {"100644", "100755"} else (False, "non_regular_git_entry", None)
-        path = local_file(source, name) if mode in {"100644", "100755"} else None
-        file_size = path.stat().st_size if path else None
         row = {"path": name, "bytes": file_size, "source_git_blob": None,
                "classification": "copied_source" if allowed else "metadata_only",
                "reason": status}
@@ -150,6 +171,10 @@ def sync(source: Path, destination: Path, manifest: Path) -> dict:
             row["source_git_blob"] = sha
         rows.append(row)
         if allowed:
+            algorithm = "sha256" if len(sha) == 64 else "sha1"
+            digest = hashlib.new(algorithm, b"blob " + str(len(data)).encode() + b"\x00" + data).hexdigest()
+            if digest != sha:
+                raise ValueError("Source file differs from its Git index; refusing an inaccurate snapshot")
             output = output_file(destination, name)
             output.parent.mkdir(parents=True, exist_ok=True)
             if not output.is_file() or output.read_bytes() != data:

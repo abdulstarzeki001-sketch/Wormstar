@@ -111,6 +111,28 @@ class SyncStarAuditTests(unittest.TestCase):
                 sync_module.sync(source, base / "mirror", base / "inventory.json")
             self.assertFalse((base / "inventory.json").exists())
 
+    def test_index_hidden_modification_cannot_be_published(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            source = self.setup_repo(base)
+            subprocess.run(["git", "-C", str(source), "update-index", "--assume-unchanged", "README.md"], check=True)
+            (source / "README.md").write_text("modified after the snapshot")
+            with self.assertRaisesRegex(ValueError, "differs from its Git index"):
+                sync_module.sync(source, base / "mirror", base / "inventory.json")
+            self.assertFalse((base / "inventory.json").exists())
+
+    def test_overlapping_source_or_inventory_paths_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            source = self.setup_repo(base)
+            original = (source / "README.md").read_text()
+            for destination in (source, source / "subdir", base):
+                with self.assertRaisesRegex(ValueError, "must not overlap"):
+                    sync_module.sync(source, destination, base / "inventory.json")
+            with self.assertRaisesRegex(ValueError, "must not overwrite"):
+                sync_module.sync(source, base / "mirror", source / "README.md")
+            self.assertEqual((source / "README.md").read_text(), original)
+
     def test_mirror_directory_symlink_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)

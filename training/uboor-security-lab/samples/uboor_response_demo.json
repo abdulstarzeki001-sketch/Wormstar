@@ -1,0 +1,16 @@
+{
+  "doc_id": "SYNTHETIC-001",
+  "current_date": "22-01-2026",
+  "items": [
+    {
+      "item_name": "منتج تجريبي",
+      "production_capacity": 1.9,
+      "unit": "طن"
+    }
+  ],
+  "weight_quantity": "1.9",
+  "message": "تمت العملية بنجاح (نص اصطناعي للاختبار)",
+  "qr_code": "https://example.invalid/robot?url=FAKE_TRAINING_TOKEN%7Clocal_company",
+  "driver_name": "[SYNTHETIC]",
+  "company_name": "[SYNTHETIC]"
+}

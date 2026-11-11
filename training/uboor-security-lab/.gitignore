@@ -1,0 +1,34 @@
+# Never push captured customer/government data by accident
+private_inputs/
+local_only/
+reports/
+*.har
+!samples/
+!samples/*.har
+.env
+.env.*
+*.log
+*.sqlite
+*.db
+*.pem
+*.key
+*.p12
+*.pfx
+*.der
+*.pcap
+*.pcapng
+*.burp
+*.session
+*.cookies
+*token*
+!docs/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.DS_Store
+
+# Local-only government/third-party source materials
+private_inputs/
+*.zip

@@ -87,12 +87,17 @@ def analyze_har(har):
         endpoint = urlsplit(request.get("url") or "").path.rstrip("/")
         if endpoint != TARGET:
             continue
-        method = str(request.get("method") or "UNKNOWN").upper()
+        method = request.get("method")
+        method = method.upper() if isinstance(method, str) else "UNKNOWN"
+        if method not in {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}:
+            method = "UNKNOWN"
+        status = response.get("status")
+        status = status if type(status) is int and 100 <= status <= 599 else None
         payload, body_state = read_payload(request)
         rec = {
             "entry": position,
             "method": method,
-            "http_status": response.get("status") if isinstance(response.get("status"), int) else None,
+            "http_status": status,
             "body_state": body_state,
             "quantity_status": check_quantities(payload),
             "duplicate_group": None,

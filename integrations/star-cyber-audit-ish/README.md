@@ -52,9 +52,13 @@ cd integrations/star-cyber-audit-ish
 sh run.sh --local /path/to/your-js-and-html
 # If you're already in the repo directory with offline snapshots:
 sh run.sh --local ./my-files
+# Try the included synthetic UBOOR sample without a network request:
+sh run.sh --local ../../training/uboor-security-lab/samples/js
 ```
 
 The analyzer creates its report artifacts under `reports/`.
+Running without `--local` uses existing local snapshots/downloads only. In a
+fresh checkout these directories can be empty; supply `--local` as above.
 Open `reports/analysis.json` on the unified `/audit/` dashboard using
 **Import analysis.json**. The file is read by your browser; it is *not uploaded*.
 For AI interpretation, manually choose a short, reviewed text report/code file

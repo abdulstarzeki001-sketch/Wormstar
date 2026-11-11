@@ -3,10 +3,14 @@
 Never connects to UBOOR/DMS. All samples are synthetic and kept in temp dirs.
 """
 import csv
+import contextlib
 import importlib.util
+import io
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("star_audit", ROOT / "analyze.py")
@@ -24,6 +28,14 @@ DMS_FIXTURE = (
 
 
 class TestRegressionAudit(unittest.TestCase):
+    def test_empty_default_input_is_reported_without_replacing_a_report(self):
+        with tempfile.TemporaryDirectory() as td, patch.object(audit, 'ROOT', Path(td)), patch.object(sys, 'argv', ['analyze.py']):
+            output = io.StringIO()
+            with contextlib.redirect_stderr(output):
+                self.assertEqual(audit.main(), 2)
+            self.assertIn('No source files found', output.getvalue())
+            self.assertFalse((Path(td) / 'reports' / 'analysis.json').exists())
+
     def test_webpack_minified_classification(self):
         for chunk in (1997, 978, 2752, 6439):
             sample = DMS_FIXTURE.replace("6439", str(chunk))

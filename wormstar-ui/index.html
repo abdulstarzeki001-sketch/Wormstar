@@ -375,6 +375,16 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
       <a class="btn" href="https://github.com/abdulstarzeki001-sketch/Wormstar/tree/main/integrations/star-cyber-audit-ish/upstream" target="_blank" rel="noopener noreferrer">نسخة ملفات المختبر الأصلية</a>
     </div>
   </div>
+  <div class="ops-panel" id="uboorLabCard">
+    <h3>مختبر UBOOR المحلي</h3>
+    <p>حلّل عينات HAR وJSON وJavaScript على جهازك دون إرسال طلبات إلى UBOOR. استورد تقرير <code>js_static_report.json</code> في لوحة iSH لعرض أسماء الملفات ومؤشرات المراجعة؛ بقية التقارير تبقى ملفات محلية.</p>
+    <pre>cd ~/Wormstar
+bash scripts/run-uboor-lab.sh</pre>
+    <div class="ops-actions">
+      <a class="btn primary" href="/audit/" target="_blank" rel="noopener noreferrer">فتح عارض التقارير</a>
+      <a class="btn" href="https://github.com/abdulstarzeki001-sketch/Wormstar/blob/main/docs/uboor-security-lab.md" target="_blank" rel="noopener noreferrer">طريقة تشغيل المختبر</a>
+    </div>
+  </div>
   <div class="ops-panel" id="scopePanel">
     <h3>فحص أمني مصرح به — طلب HTTP واحد</h3>
     <p>افحص ترويسات HTTP في أحد مشروعيك على Cloudflare. لا يتم إجراء فحص منافذ أو تسجيل دخول أو زحف أو إرسال نماذج. النطاق محصور في القائمة التالية من جانب الخادم.</p>
@@ -396,19 +406,31 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
   <div>
    <div class="eyebrow">WORMSTAR / LINUX</div>
    <h1 data-i18n="terminal">ترمنال Linux</h1>
-   <p>بيئة تنفيذ Linux داخل Wormstar Sentinel</p>
+   <p>طرفية خاصة تعمل على جهازك داخل حاوية Docker معزولة، بمفتاح منفصل عن Wormstar Core.</p>
   </div>
  </div>
-
  <div class="ops-panel">
-  <h3>Linux Sandbox</h3>
-  <p>بانتظار ربط خادم Docker الآمن.</p>
-  <pre id="terminalOutput"
-   style="background:#08111e;color:#6ee7b7;
-   padding:20px;min-height:250px;
-   border-radius:12px;direction:ltr;
-   text-align:left;white-space:pre-wrap"
-  >star@wormstar:~$ [not connected]</pre>
+  <h3>اتصال الطرفية</h3>
+  <label for="wsTermEndpoint">عنوان خادم الطرفية الخاص</label>
+  <input class="ops-input" id="wsTermEndpoint" type="url" placeholder="https://your-private-terminal.example" autocomplete="off">
+  <label for="wsTermToken">مفتاح الطرفية المنفصل</label>
+  <input class="ops-input" id="wsTermToken" type="password" autocomplete="off" spellcheck="false">
+  <div class="ops-actions"><button class="btn primary" id="wsTermConnect" type="button">اتصال</button><button class="btn" id="wsTermDisconnect" type="button" disabled>قطع الاتصال</button></div>
+  <p id="wsTermStatus" role="status" aria-live="polite">غير متصل. شغّل خدمة الطرفية على جهازك واضبط الوصول الخاص أولاً.</p>
+  <p>الاتصال من الموقع المنشور يحتاج عنوان HTTPS خاصًا مضبوطًا في إعداد Worker والخدمة؛ راجع <a href="https://github.com/abdulstarzeki001-sketch/Wormstar/blob/main/integrations/wormstar-linux-terminal/README_AR.md" target="_blank" rel="noopener noreferrer">دليل الطرفية</a>.</p>
+ </div>
+ <div class="ops-panel">
+  <h3>Linux Shell</h3>
+  <pre id="wsTermOutput" aria-live="polite" style="background:#08111e;color:#6ee7b7;padding:16px;min-height:220px;max-height:400px;overflow:auto;border-radius:12px;direction:ltr;text-align:left;white-space:pre-wrap">غير متصل.\n</pre>
+  <form id="wsTermForm" class="ops-actions"><label for="wsTermInput">الأمر</label><input class="ops-input" id="wsTermInput" autocomplete="off" spellcheck="false" maxlength="4000" disabled><button class="btn primary" id="wsTermSend" type="submit" disabled>تنفيذ</button></form>
+  <p>الأوامر اليدوية تعمل داخل الحاوية فقط. واجهة الأوامر سطرية ولا تدعم البرامج التفاعلية كاملة الشاشة.</p>
+ </div>
+ <div class="ops-panel">
+  <h3>مساعد الخطوات المحلي — اختياري</h3>
+  <label for="wsTermGoal">المهمة</label><textarea class="ops-input" id="wsTermGoal" maxlength="2000" placeholder="اكتب المهمة التي تريد تنفيذها داخل الحاوية"></textarea>
+  <div class="ops-actions"><button class="btn" id="wsTermPlan" type="button" disabled>اقترح الخطوة</button><button class="btn primary" id="wsTermApprove" type="button" disabled>أوافق على تنفيذ الخطوة</button></div>
+  <p id="wsTermExplanation"></p><pre id="wsTermCommand"></pre><pre id="wsTermResult"></pre>
+  <p>يتطلب المساعد Ollama محليًا وتفعيل صلاحياته. لا ينفذ الخطوة المقترحة حتى تضغط الموافقة.</p>
  </div>
 </section>
 <section class="page" id="page-reports">
@@ -807,4 +829,5 @@ document.addEventListener("click",(event)=>{
 $("#profileMore").addEventListener("click",()=>toast(lang==="ar"?"ملف محلي تجريبي":"Local demo profile"));
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
 </script>
+<script src="/terminal.js" defer></script>
 </body></html>

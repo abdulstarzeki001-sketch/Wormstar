@@ -10,6 +10,32 @@ permissions:
   contents: read
 
 jobs:
+  terminal:
+    name: Private Terminal Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install terminal test dependencies
+        run: python -m pip install -r integrations/wormstar-linux-terminal/requirements.txt
+      - name: Test authentication, sandbox validation and terminal protocol
+        run: python -m unittest discover -s integrations/wormstar-linux-terminal/tests -v
+
+  uboor:
+    name: UBOOR Offline Lab Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test offline lab with synthetic data
+        run: bash scripts/run-uboor-lab.sh
+
   core:
     name: Core + Policy + RAG Tests
     runs-on: ubuntu-latest

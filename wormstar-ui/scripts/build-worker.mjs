@@ -8,6 +8,7 @@ const files = [
   ['INDEX', 'index.html'],
   ['MANIFEST', 'manifest.webmanifest'],
   ['SW', 'sw.js'],
+  ['TERMINAL_JS', 'terminal.js'],
 ];
 
 for (const [name, filename] of files) {

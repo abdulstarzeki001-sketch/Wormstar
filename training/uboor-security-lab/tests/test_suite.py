@@ -26,9 +26,37 @@ response = load_module("scripts/uboor_response_audit.py")
 js_audit = load_module("scripts/js_static_audit.py")
 correlate = load_module("scripts/correlate_audit.py")
 auth = load_module("labs/auth_header_lab.py")
+legacy_har = load_module("scripts/uboor_har_analyzer.py")
 
 
 class TestHAR(unittest.TestCase):
+    def test_legacy_har_redacts_identifiers_in_path_method_and_status(self):
+        har = {"log": {"entries": [{
+            "request": {"method": "PRIVATE_METHOD", "url":
+                        "https://example.invalid/api/local_form/company_item_reduce/PRIVATE_ID?x=PRIVATE_QUERY"},
+            "response": {"status": "PRIVATE_STATUS"},
+        }]}}
+        report = legacy_har.analyze(har)
+        self.assertEqual(report["matching_requests"], 1)
+        self.assertNotIn("PRIVATE_", json.dumps(report))
+        self.assertEqual(report["results"][0]["method"], "UNKNOWN")
+
+    def test_forensics_redacts_untrusted_method_and_status(self):
+        har = {"log": {"entries": [{"request": {"method": "PRIVATE_METHOD", "url":
+            "https://example.invalid/api/local_form/company_item_reduce"},
+            "response": {"status": "PRIVATE_STATUS"}}]}}
+        self.assertNotIn("PRIVATE_", json.dumps(forensics.analyze_har(har)))
+
+    def test_legacy_har_rejects_any_invalid_item_and_uses_exact_decimals(self):
+        payload = {"item1": {"production_capacity": "1.9"},
+                   "item2": {"production_capacity": "invalid"},
+                   "vihcle_info": {"weight_quantity": "1.9"}}
+        self.assertEqual(legacy_har.quantity_check(payload)["status"], "invalid_value")
+        payload = {"item1": {"production_capacity": 0.1},
+                   "item2": {"production_capacity": 0.2},
+                   "vihcle_info": {"weight_quantity": 0.3}}
+        self.assertEqual(legacy_har.quantity_check(payload)["status"], "matching")
+
     def test_training_duplicates_and_mismatch(self):
         data = json.loads((ROOT / "samples/har_training.har").read_text())
         report = forensics.analyze_har(data)
@@ -80,6 +108,13 @@ class TestWeights(unittest.TestCase):
 
 
 class TestResponse(unittest.TestCase):
+    def test_report_redacts_qr_path_host_kind_and_unknown_unit(self):
+        payload = {"qr_code": "https://private-id.example/document/PRIVATE_ID?url=FAKE_TOKEN%7CPRIVATE_KIND",
+                   "items": [{"unit": "PRIVATE_UNIT", "production_capacity": 1}], "weight_quantity": 1}
+        text = json.dumps(response.analyze(None, {}, payload))
+        for secret in ("private-id", "PRIVATE_ID", "FAKE_TOKEN", "PRIVATE_KIND", "PRIVATE_UNIT"):
+            self.assertNotIn(secret, text)
+
     def test_demo(self):
         status, headers, body = response.load_response(
             ROOT / "samples/uboor_response_demo.json"

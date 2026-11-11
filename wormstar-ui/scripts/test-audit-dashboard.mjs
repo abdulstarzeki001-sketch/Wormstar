@@ -78,3 +78,18 @@ test('local imports select duplicate names by path and reject incomplete oversiz
   assert.equal(requests.length,before,'Import must not send data to any service');
   assert.equal(coreCalls,0);
 });
+
+test('UBOOR JavaScript reports display names and marker counts locally',async()=>{
+ const {elements,requests}=renderDashboard();
+ await new Promise(resolve=>setImmediate(resolve));
+ const before=requests.length;
+ const report={mode:'OFFLINE_READ_ONLY',files_analyzed:1,files:[{
+  file:'demo/mock.js',bytes:40,sha256:'a'.repeat(64),marker_counts:{Authorization:2}
+ }]};
+ await elements.upload.listeners.change({target:{files:[{size:100,text:async()=>JSON.stringify(report)}],value:'test'}});
+ assert.equal(elements.sceneFiles.textContent,'1');
+ assert.match(elements.detail.textContent,/demo\/mock\.js/);
+ assert.match(elements.detail.textContent,/MARKER \(review only\): Authorization/);
+ assert.equal(requests.length,before,'Import must remain in the browser');
+ assert.equal(coreCalls,0);
+});

@@ -32,7 +32,7 @@ def build(js_report, har_report, response_report):
         "response_document_id_present": response_report.get("document_id_present"),
         "response_weight_comparison": response_report.get("weight_comparison"),
         "disclaimer": (
-            "These sample reports are synthetic. A client-side marker, "
+            "Verify the provenance of each input report. A client-side marker, "
             "matching payload, or HTTP 200 does not prove server authorization "
             "or a database update."
         )

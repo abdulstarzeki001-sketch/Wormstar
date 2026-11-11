@@ -15,10 +15,10 @@ export const RULES=Object.freeze([
  {id:'hardcoded-credential',severity:'high',message:'Possible committed access token',test:/(?:ghp_|github_pat_|sk-proj-|AKIA[0-9A-Z]{16}|(?:CLOUDFLARE_API_TOKEN|WORMSTAR_ACCESS_TOKEN)\s*[:=]\s*["'][^\s"']{12,})/},
  {id:'disabled-tls',severity:'high',message:'TLS verification disabled in source',test:/(?:rejectUnauthorized\s*:\s*false|NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*['"]?0)/}
 ]);
-const PATHS=/^(?:cloudflare-worker|wormstar-ui|integrations\/star-cyber-audit-ish)\/.*\.(?:js|mjs|ts|tsx|jsx|html|py)$/;
+const PATHS=/^(?:cloudflare-worker|wormstar-ui|integrations\/star-cyber-audit-ish|integrations\/wormstar-linux-terminal|training\/uboor-security-lab)\/.*\.(?:js|mjs|ts|tsx|jsx|html|py|sh)$/;
 const EXCLUSIONS=/(?:^|\/)(?:tests?|fixtures|samples|research|raw-uploads)\//;
 export function analyzeDiff(diff){
- const findings=[];let file='',line=0,added=0;
+ const findings=[];let file='',line=0,added=0,scanned=0;
  for(const raw of diff.split(/\r?\n/)){
   if(raw.startsWith('+++ b/')){file=raw.slice(6);continue}
   if(raw.startsWith('+++ /dev/null')){file='';continue}
@@ -31,6 +31,7 @@ export function analyzeDiff(diff){
    added++;
    const body=raw.slice(1);
    if(PATHS.test(file)&&!EXCLUSIONS.test(file)){
+     scanned++;
     for(const rule of RULES){
       if(rule.test.test(body))findings.push({id:rule.id,severity:rule.severity,file,line,message:rule.message});
     }
@@ -38,7 +39,7 @@ export function analyzeDiff(diff){
    line++;
   }else if(raw.startsWith(' ')&&!raw.startsWith('+++'))line++;
  }
- return {findings,addedLines:added};
+ return {findings,addedLines:added,scannedAddedLines:scanned};
 }
 function git(...args){return execFileSync('git',args,{encoding:'utf8',maxBuffer:12*1024*1024}).trim()}
 function validSha(value){return /^[a-f0-9]{40}$/i.test(value)}
@@ -49,14 +50,14 @@ function main(){
  const base=validSha(provided)&&!/^0+$/.test(provided)?provided:git('rev-parse','HEAD~1');
  if(!validSha(sha)||!validSha(base))throw Error('Unable to resolve Git SHAs');
  const diff=git('diff','--no-ext-diff','--unified=0','--diff-filter=ACMR',base,sha,'--');
- const {findings,addedLines}=analyzeDiff(diff);
+ const {findings,addedLines,scannedAddedLines}=analyzeDiff(diff);
  const failing=findings.filter(x=>x.severity==='high'||x.severity==='medium');
  const report={schemaVersion:1,kind:'wormstar-security-change-gate',git_sha:sha,base_sha:base,
-  analyzedAddedLines:addedLines,findings,summary:{high:findings.filter(x=>x.severity==='high').length,
+  totalAddedLines:addedLines,analyzedAddedLines:scannedAddedLines,findings,summary:{high:findings.filter(x=>x.severity==='high').length,
   medium:findings.filter(x=>x.severity==='medium').length,pass:failing.length===0}};
  mkdirSync(dirname(out),{recursive:true});
  writeFileSync(out,JSON.stringify(report,null,2)+'\n',{mode:0o600});
- console.log('Security gate '+(failing.length?'FAILED':'PASSED')+': '+addedLines+' added lines, '+findings.length+' findings. '+out);
+ console.log('Security gate '+(failing.length?'FAILED':'PASSED')+': '+scannedAddedLines+' of '+addedLines+' added lines scanned, '+findings.length+' findings. '+out);
  for(const f of findings)console.log('::warning file='+f.file+',line='+f.line+'::'+f.id+' ('+f.severity+') '+f.message);
  if(failing.length)process.exitCode=1;
 }

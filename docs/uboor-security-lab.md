@@ -13,6 +13,7 @@ bash scripts/run-uboor-lab.sh
 ستُشغّل اختبارات Python ووحدة الأوزان، ومحاكاة ترويسة المصادقة، ومختبر SQLite للتزامن، وتحليلات HAR وJSON وJavaScript على بيانات اصطناعية.
 
 عند اكتمال التشغيل، سيظهر `ALL LOCAL LABS COMPLETED`. تُحفظ التقارير محليًا في `training/uboor-security-lab/reports/` ولا تدخل Git.
+يمكن استيراد تقرير `reports/js_static_report.json` في لوحة `/audit/` لعرض أسماء الملفات وعدّ مؤشرات المراجعة. ملفات HAR والاستجابات الخام لا تُرفع إلى اللوحة. راجع أسماء الملفات وبصماتها قبل مشاركة أي تقرير.
 
 ## GitHub Actions
 

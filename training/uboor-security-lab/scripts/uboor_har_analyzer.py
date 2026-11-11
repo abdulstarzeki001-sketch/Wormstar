@@ -12,6 +12,7 @@ import argparse
 import json
 import re
 import sys
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -107,25 +108,36 @@ def quantity_check(payload):
     """
     if not isinstance(payload, dict):
         return {"status": "not_applicable"}
-    vals = []
-    for k, v in payload.items():
-        if re.fullmatch(r"item\d+", str(k)) and isinstance(v, dict):
-            n = numeric_value(v.get("production_capacity"))
-            if n is not None:
-                vals.append(n)
+    def positive_decimal(value):
+        if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+            return None
+        text = str(value).strip()
+        if not re.fullmatch(r"(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)", text):
+            return None
+        try:
+            number = Decimal(text)
+        except InvalidOperation:
+            return None
+        return number if number.is_finite() and 0 < number < Decimal("1e15") else None
+
+    items = [v for k, v in payload.items() if re.fullmatch(r"item\d+", str(k))]
+    if not items:
+        return {"status": "insufficient_data"}
+    vals = [positive_decimal(v.get("production_capacity")) if isinstance(v, dict) else None for v in items]
     info = payload.get("vihcle_info")
     if not isinstance(info, dict):
         info = payload.get("vehicle_info", {})
-    total = numeric_value(info.get("weight_quantity")) if isinstance(info, dict) else None
-    if not vals or total is None:
-        return {"status": "insufficient_data"}
-    diff = abs(sum(vals) - total)
+    total = positive_decimal(info.get("weight_quantity")) if isinstance(info, dict) else None
+    if total is None or any(value is None for value in vals):
+        return {"status": "invalid_value"}
+    summed = sum(vals, Decimal("0"))
+    diff = abs(summed - total)
     return {
-        "status": "matching" if diff <= 1e-6 else "mismatch",
+        "status": "matching" if diff == 0 else "mismatch",
         "item_count_with_quantity": len(vals),
-        "sum_item_quantities": round(sum(vals), 6),
-        "claimed_weight_quantity": total,
-        "absolute_difference": round(diff, 6),
+        "sum_item_quantities": float(summed),
+        "claimed_weight_quantity": float(total),
+        "absolute_difference": float(diff),
         "note": "This checks client-submitted fields only, not server validation.",
     }
 
@@ -142,14 +154,24 @@ def analyze(har):
         raw_url = req.get("url", "")
         if not isinstance(raw_url, str):
             continue
-        path = urlsplit(raw_url).path
+        try:
+            path = urlsplit(raw_url).path
+        except ValueError:
+            continue
         if TARGET.lower() not in path.lower():
             continue
         payload, payload_format = parse_postdata(req)
+        method = req.get("method")
+        method = method.upper() if isinstance(method, str) else "UNKNOWN"
+        if method not in {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}:
+            method = "UNKNOWN"
+        status = resp.get("status")
+        status = status if type(status) is int and 100 <= status <= 599 else None
         results.append({
-            "method": str(req.get("method", "UNKNOWN"))[:12],
-            "endpoint_path_only": path,  # no query or tokens
-            "http_status": resp.get("status"),
+            "method": method,
+            # A URL path can itself contain document IDs or credentials.
+            "endpoint_path_only": TARGET,
+            "http_status": status,
             "payload_format": payload_format,
             "sanitized_payload": sanitize(payload) if payload is not None else None,
             "quantity_consistency": quantity_check(payload),

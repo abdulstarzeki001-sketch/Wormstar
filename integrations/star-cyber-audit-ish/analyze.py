@@ -289,6 +289,9 @@ def main():
         records = collect_records(directories)
     except ValueError as exc:
         parser.error(str(exc))
+    if not records:
+        print("No source files found. Use --local /path/to/your-js-and-html; no report was updated.", file=sys.stderr)
+        return 2
     write_csv(reports / "inventory.csv", records)
     (reports / "analysis.json").write_text(json.dumps(
         {"generated_utc": datetime.now(timezone.utc).isoformat(),

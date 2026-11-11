@@ -74,9 +74,14 @@ def inspect_qr(url):
     }
     if not isinstance(url, str) or not url:
         return output
-    parsed = urlsplit(url)
-    output["hostname"] = parsed.hostname
-    output["path"] = parsed.path
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        output["fernet_shape"] = "invalid_url"
+        return output
+    # Hostnames, path segments, and arbitrary type labels can contain IDs.
+    output["hostname"] = "[REDACTED]" if parsed.hostname else None
+    output["path"] = "[REDACTED]" if parsed.path else ""
     values = parse_qs(parsed.query).get("url", [])
     if not values:
         output["fernet_shape"] = "no_url_parameter"
@@ -86,7 +91,7 @@ def inspect_qr(url):
         output["fernet_shape"] = "no_type_separator"
         return output
     token, kind = token_and_kind.rsplit("|", 1)
-    output["document_kind"] = kind
+    output["document_kind"] = kind if kind in {"Export_product", "Import_product"} else "other"
     try:
         if not re.fullmatch(r"[A-Za-z0-9_-]+={0,2}", token):
             raise ValueError("Invalid base64url alphabet")
@@ -134,7 +139,10 @@ def analyze(status, headers, payload):
         "weight_quantity": str(weight) if weight is not None else None,
         "weight_input_type": type(payload.get("weight_quantity")).__name__,
         "weight_comparison": comparison,
-        "unit_labels": sorted({str(item.get("unit")) for item in items if isinstance(item, dict) and item.get("unit")}),
+        # Only known unit labels are safe to copy from an untrusted response.
+        "unit_labels": sorted({item["unit"] for item in items if isinstance(item, dict)
+                               and isinstance(item.get("unit"), str)
+                               and item["unit"] in {"kg", "g", "t", "ton", "tonne", "كغ", "كغم", "طن", "كيلوغرام"}}),
         "server_message_mentions_success": isinstance(msg, str) and "بنجاح" in msg,
         "qr": inspect_qr(payload.get("qr_code")),
         "limitations": [

@@ -24,6 +24,44 @@ jobs:
       - name: Test authentication, sandbox validation and terminal protocol
         run: python -m unittest discover -s integrations/wormstar-linux-terminal/tests -v
 
+  terminal-docker:
+    name: Docker Terminal Smoke Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: integrations/wormstar-linux-terminal
+    env:
+      TERMINAL_ACCESS_TOKEN: ci_only_terminal_token_1234567890abcdef
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install isolated terminal dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements.txt
+      - name: Exercise a disposable real Docker sandbox and WebSocket
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker container inspect wormstar-linux-terminal-sandbox >/dev/null 2>&1; then
+            echo 'Refusing to reuse an existing sandbox in the smoke test.' >&2
+            exit 1
+          fi
+          cleanup() {
+            if [[ -n "${server_pid:-}" ]]; then kill "$server_pid" 2>/dev/null || true; fi
+            docker rm -f wormstar-linux-terminal-sandbox >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          bash start.sh > "$RUNNER_TEMP/wormstar-terminal.log" 2>&1 &
+          server_pid=$!
+          if ! .venv/bin/python tests/docker_smoke.py; then
+            cat "$RUNNER_TEMP/wormstar-terminal.log" >&2
+            exit 1
+          fi
+
   uboor:
     name: UBOOR Offline Lab Tests
     runs-on: ubuntu-latest

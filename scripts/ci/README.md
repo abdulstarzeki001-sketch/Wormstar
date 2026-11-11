@@ -5,7 +5,7 @@ CI validates these code paths **before** running either Cloudflare deployment:
 - Sentinel UI bundle and same-origin audit routes.
 - iSH Python static analyzer and local read-only source inventory.
 - UBOOR synthetic offline lab and its regression tests.
-- Private terminal authentication, sandbox configuration and protocol tests using mocks.
+- Private terminal authentication and protocol tests, plus an ephemeral Docker/WebSocket smoke test.
 
 `security-gate.mjs` examines **newly added lines** between the event's base SHA
 and the tested Git commit and emits a SHA-bound JSON artifact. New high/medium

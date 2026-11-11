@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = ROOT / "scripts" / "sync_star_audit.py"
@@ -71,6 +72,61 @@ class SyncStarAuditTests(unittest.TestCase):
             sync_module.sync(source, dest, inventory)
             self.assertFalse((dest / "README.md").exists())
             self.assertTrue((dest / "analyze.py").exists())
+
+    def test_untrusted_symlinks_and_large_files_are_never_opened(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            source = self.setup_repo(base)
+            outside = base / "outside.txt"
+            outside.write_text("PRIVATE_OUTSIDE_CONTENT")
+            link = source / "docs" / "external.md"
+            try:
+                link.symlink_to(outside)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks unavailable")
+            large = source / "docs" / "large.md"
+            large.write_bytes(b"x" * (sync_module.MAX_SAFE_BYTES + 1))
+            subprocess.run(["git", "-C", str(source), "add", "docs/external.md", "docs/large.md"], check=True)
+            subprocess.run(["git", "-C", str(source), "-c", "user.name=Tester", "-c", "user.email=test@example.invalid", "commit", "-qm", "fixtures"], check=True)
+            original_read = Path.read_bytes
+            def guarded_read(path):
+                if path in (link, large, outside):
+                    raise AssertionError("Untrusted link or large file was read")
+                return original_read(path)
+            with patch.object(Path, "read_bytes", guarded_read):
+                info = sync_module.sync(source, base / "mirror", base / "inventory.json")
+            rows = {row["path"]: row for row in info["files"]}
+            self.assertEqual(rows["docs/external.md"]["reason"], "non_regular_git_entry")
+            self.assertIsNone(rows["docs/external.md"]["bytes"])
+            self.assertEqual(rows["docs/large.md"]["reason"], "size_limit")
+            self.assertEqual(rows["docs/large.md"]["bytes"], sync_module.MAX_SAFE_BYTES + 1)
+            self.assertTrue(rows["docs/large.md"]["source_git_blob"])
+
+    def test_dirty_source_is_rejected_before_creating_a_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            source = self.setup_repo(base)
+            (source / "README.md").write_text("changed after commit")
+            with self.assertRaisesRegex(ValueError, "uncommitted"):
+                sync_module.sync(source, base / "mirror", base / "inventory.json")
+            self.assertFalse((base / "inventory.json").exists())
+
+    def test_mirror_directory_symlink_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            source = self.setup_repo(base)
+            (source / "docs" / "safe.md").write_text("safe fixture")
+            subprocess.run(["git", "-C", str(source), "add", "docs/safe.md"], check=True)
+            subprocess.run(["git", "-C", str(source), "-c", "user.name=Tester", "-c", "user.email=test@example.invalid", "commit", "-qm", "fixture"], check=True)
+            destination, outside = base / "mirror", base / "outside"
+            destination.mkdir(); outside.mkdir()
+            try:
+                (destination / "docs").symlink_to(outside, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks unavailable")
+            with self.assertRaisesRegex(ValueError, "symbolic link"):
+                sync_module.sync(source, destination, base / "inventory.json")
+            self.assertFalse((outside / "safe.md").exists())
 
 
 if __name__ == "__main__":

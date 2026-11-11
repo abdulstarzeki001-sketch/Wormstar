@@ -403,7 +403,25 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
  <div class="ops-panel">
   <h3>Linux Sandbox</h3>
   <p>بانتظار ربط خادم Docker الآمن.</p>
-  <pre id="terminalOutput"
+  
+<div id="terminalControls" style="display:grid;gap:12px;margin:16px 0">
+ <label>مفتاح الوصول المحلي</label>
+ <input id="terminalAccessKey" class="ops-input"
+        type="password" autocomplete="off">
+
+ <label>المهمة للذكاء الاصطناعي</label>
+ <textarea id="terminalTask" class="ops-input"
+           rows="3"></textarea>
+ <button id="terminalSuggestBtn" class="btn"
+         type="button">اقتراح أمر باستخدام Ollama</button>
+
+ <label>أمر Linux</label>
+ <textarea id="terminalCommand" class="ops-input"
+           rows="3" dir="ltr"></textarea>
+ <button id="terminalRunBtn" class="btn primary"
+         type="button">الموافقة وتنفيذ داخل Docker</button>
+</div>
+<pre id="terminalOutput"
    style="background:#08111e;color:#6ee7b7;
    padding:20px;min-height:250px;
    border-radius:12px;direction:ltr;
@@ -806,5 +824,60 @@ document.addEventListener("click",(event)=>{
 });
 $("#profileMore").addEventListener("click",()=>toast(lang==="ar"?"ملف محلي تجريبي":"Local demo profile"));
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+</script>
+
+<script>
+(() => {
+ const el = id => document.getElementById(id);
+ if (!el('terminalRunBtn')) return;
+
+ async function api(path, data) {
+   const key = el('terminalAccessKey').value.trim();
+   if (!key) throw new Error('أدخل مفتاح الوصول');
+   const response = await fetch(path, {
+     method: 'POST',
+     headers: {
+       'Content-Type': 'application/json',
+       'X-Terminal-Key': key
+     },
+     body: JSON.stringify(data)
+   });
+   const result = await response.json();
+   if (!response.ok) {
+     throw new Error(result.detail || 'Request failed');
+   }
+   return result;
+ }
+
+ el('terminalSuggestBtn').addEventListener('click', async () => {
+   const output = el('terminalOutput');
+   output.textContent = 'جاري سؤال Ollama...';
+   try {
+     const result = await api('/api/local-terminal/suggest', {
+       task: el('terminalTask').value
+     });
+     el('terminalCommand').value = result.command;
+     output.textContent = 'راجع الأمر قبل تنفيذه.';
+   } catch (error) {
+     output.textContent = String(error);
+   }
+ });
+
+ el('terminalRunBtn').addEventListener('click', async () => {
+   const command = el('terminalCommand').value.trim();
+   if (!command) return;
+   if (!confirm('الموافقة على تنفيذ الأمر داخل Docker؟\\n' + command)) return;
+
+   const output = el('terminalOutput');
+   output.textContent = '$ ' + command + '\\nجاري التنفيذ...';
+   try {
+     const result = await api('/api/local-terminal/run', {command});
+     output.textContent = '$ ' + command + '\\n' +
+       result.output + '\\nExit code: ' + result.exit_code;
+   } catch (error) {
+     output.textContent = String(error);
+   }
+ });
+})();
 </script>
 </body></html>

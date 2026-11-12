@@ -10,6 +10,12 @@ spec.loader.exec_module(module)
 
 
 class SyncStatusTests(unittest.TestCase):
+    def test_missing_prerequisites_never_claims_success(self):
+        level, text = module.status("skipped", "skipped", "skipped", "", "failure")
+        self.assertEqual(level, "warning")
+        self.assertIn("no checkout or sync", text)
+        self.assertNotIn("no new PR", text)
+
     def test_failed_checkout_never_claims_no_changes(self):
         level, text = module.status("failure", "skipped", "skipped", "")
         self.assertEqual(level, "warning")

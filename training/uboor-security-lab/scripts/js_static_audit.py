@@ -42,7 +42,7 @@ def analyze(directory):
         "files": files,
         "notes": [
             "A string occurrence is not a proven vulnerability.",
-            "Source is not sent anywhere; no token or personal data values are emitted.",
+            "Source content is not sent anywhere; filenames and hashes may still be sensitive.",
             "Server-side authorization cannot be inferred from client JavaScript.",
         ],
     }

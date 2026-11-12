@@ -19,3 +19,11 @@ test('marks newly added committed credentials as high',()=>{
  const diff=['+++ b/cloudflare-worker/worker.js','@@ -0,0 +1 @@',"+const secret='sk-proj-FAKE_TEST_SECRET_DO_NOT_DEPLOY';"].join('\n');
  assert.equal(analyzeDiff(diff).findings[0].severity,'high');
 });
+test('checks UBOOR lab sources and reports actual scanned lines',()=>{
+ const diff=['+++ b/training/uboor-security-lab/scripts/new.py','@@ -0,0 +1 @@','+eval(value)',
+             '+++ b/docs/readme.md','@@ -0,0 +1 @@','+eval(value)'].join('\n');
+ const out=analyzeDiff(diff);
+ assert.equal(out.addedLines,2);
+ assert.equal(out.scannedAddedLines,1);
+ assert.equal(out.findings.length,1);
+});

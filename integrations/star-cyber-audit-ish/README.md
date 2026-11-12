@@ -52,9 +52,13 @@ cd integrations/star-cyber-audit-ish
 sh run.sh --local /path/to/your-js-and-html
 # If you're already in the repo directory with offline snapshots:
 sh run.sh --local ./my-files
+# Try the included synthetic UBOOR sample without a network request:
+sh run.sh --local ../../training/uboor-security-lab/samples/js
 ```
 
 The analyzer creates its report artifacts under `reports/`.
+Running without `--local` uses existing local snapshots/downloads only. In a
+fresh checkout these directories can be empty; supply `--local` as above.
 Open `reports/analysis.json` on the unified `/audit/` dashboard using
 **Import analysis.json**. The file is read by your browser; it is *not uploaded*.
 For AI interpretation, manually choose a short, reviewed text report/code file
@@ -77,6 +81,17 @@ with JavaScript source.
 - تم دمج النسخة الأولية عبر [Pull Request #39](https://github.com/abdulstarzeki001-sketch/Wormstar/pull/39).
 - عند توافر مصدر عام قابل للقراءة، قد تحتاج المزامنة إلى صلاحية إنشاء Pull Request في إعدادات GitHub Actions. لا يفترض ملخص التشغيل أن فرع المراجعة أُنشئ إذا فشلت خطوة الطلب.
 - المصدر الأصلي خاص حالياً بينما Wormstar عام، لذلك لا يمكن لرمز هذا المستودع الافتراضي قراءته، وقد فشل آخر تشغيل مجدول. لا تُنشر محتويات المصدر الخاص أو أسماء ملفاته إلى فرع عام تلقائياً؛ يلزم تحديد آلية وصول ومراجعة تسمح بالنشر قبل استعادة المزامنة. يظهر سبب التعذر في ملخص التشغيل ولا يُعرض على أنه «لا توجد تغييرات».
+
+### إعداد المزامنة للمصدر الخاص
+
+المزامنة الجديدة **متوقفة افتراضيًا** حتى يضبط المالك شرطين منفصلين:
+
+1. أنشئ رمز GitHub محدود الصلاحية يقتصر على مستودع `Star-Cyber-Audit-iSH` الخاص مع صلاحية **Contents: read-only**، ثم أضفه إلى أسرار Actions في مستودع Wormstar باسم `STAR_AUDIT_READ_TOKEN`. لا ترسل الرمز في المحادثة ولا تضعه في ملف بالمستودع.
+2. قرر صراحةً السماح بالنشر العلني قبل تشغيل المزامنة: للتشغيل اليدوي اختر `approve_public_export`، أو للمزامنة المجدولة المستمرة اضبط متغير Actions باسم `STAR_AUDIT_PUBLIC_SYNC_APPROVED` إلى `true`.
+
+مستودع Wormstar عام. **فرع المراجعة نفسه عام قبل دمجه**، وقد يحتوي على الملفات المختارة وأسماء جميع الملفات وبصماتها. فلاتر الأسرار تستبعد أنماطًا معروفة فقط ولا تضمن اكتشاف كل البيانات الخاصة؛ راجع ما تسمح بنشره قبل تفعيل الشرط الثاني. إذا غاب أي شرط، تتوقف المهمة قبل فتح المستودع الخاص وتوضح السبب في سجل التشغيل.
+
+تستخدم المهمة الرمز المخصص لقراءة المصدر فقط، ورمز Wormstar المعتاد لإنشاء طلب المراجعة. لا تستبدل ملفات التشغيل المنشورة تلقائيًا؛ يجب مراجعة الفروقات والاختبارات قبل الدمج.
 
 ## Tests and maintenance
 

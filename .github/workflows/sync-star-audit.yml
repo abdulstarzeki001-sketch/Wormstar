@@ -5,12 +5,20 @@ on:
     # Every day at 05:17 Asia/Baghdad (02:17 UTC)
     - cron: "17 2 * * *"
   workflow_dispatch:
+    inputs:
+      approve_public_export:
+        description: "Allow selected private source, paths and hashes to be published in a public review branch"
+        type: boolean
+        required: true
+        default: false
   push:
     branches: [main]
     paths:
       - "scripts/sync_star_audit.py"
       - "scripts/tests/test_sync_star_audit.py"
       - "scripts/tests/test_sync_status.py"
+      - "scripts/tests/test_sync_prereqs.py"
+      - "scripts/ci/check-sync-prereqs.py"
       - "scripts/ci/report-sync-status.py"
       - ".github/workflows/sync-star-audit.yml"
 
@@ -23,7 +31,7 @@ concurrency:
 
 jobs:
   stage-upstream-review:
-    name: Mirror safe upstream files and open a review PR
+    name: Stage approved upstream export and open a public review PR
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -35,6 +43,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Verify private-source access and public export approval
+        id: prerequisites
+        env:
+          SYNC_PUBLIC_EXPORT_APPROVED: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.approve_public_export || vars.STAR_AUDIT_PUBLIC_SYNC_APPROVED }}
+          SYNC_READ_TOKEN: ${{ secrets.STAR_AUDIT_READ_TOKEN }}
+        run: python3 scripts/ci/check-sync-prereqs.py
+
       - name: Check out original audit lab (untrusted content; never execute)
         id: checkout_upstream
         uses: actions/checkout@v4
@@ -42,6 +57,7 @@ jobs:
           repository: abdulstarzeki001-sketch/Star-Cyber-Audit-iSH
           ref: main
           path: .star-audit-upstream
+          token: ${{ secrets.STAR_AUDIT_READ_TOKEN }}
           persist-credentials: false
 
       - name: Setup Python
@@ -86,9 +102,9 @@ jobs:
           body: |
             Automatically proposed by the daily 05:17 Asia/Baghdad sync.
 
-            - Copies verified **active source and tooling** into the isolated `upstream/` snapshot.
+            - Copies allowlisted source and tooling into the `upstream/` snapshot after explicit export approval.
             - Generates a deterministic inventory of **every tracked upstream file** with Git blob hashes and byte sizes.
-            - **Does not copy** OneDrive captures, raw external JavaScript, research snapshots, sensitive archives, or unreviewed reports.
+            - Filters known restricted paths and secret patterns; this does not guarantee all private information was detected.
             - Does **not** overwrite active Core/Sentinel/iSH code or automatically deploy untrusted source.
             - Review this diff, run Quality Gate and merge only when appropriate.
           labels: |
@@ -98,6 +114,7 @@ jobs:
       - name: Record PR status and publish a review link
         if: always()
         env:
+          PREREQUISITES_OUTCOME: ${{ steps.prerequisites.outcome }}
           UPSTREAM_CHECKOUT_OUTCOME: ${{ steps.checkout_upstream.outcome }}
           MIRROR_OUTCOME: ${{ steps.mirror_source.outcome }}
           PR_OUTCOME: ${{ steps.sync_pr.outcome }}

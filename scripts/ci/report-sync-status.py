@@ -5,7 +5,10 @@ import re
 from pathlib import Path
 
 
-def status(checkout: str, mirror: str, pr: str, url: str) -> tuple[str, str]:
+def status(checkout: str, mirror: str, pr: str, url: str, prerequisites: str = "success") -> tuple[str, str]:
+    if prerequisites != "success":
+        return ("warning", "Private-source prerequisites did not pass; no checkout or sync occurred. "
+                "Check the public-export approval and read-only token setup.")
     if checkout != "success":
         return ("warning", "Upstream checkout did not complete; no synchronization was performed. "
                 "The source may be private, inaccessible, or unavailable; check the checkout logs.")
@@ -25,7 +28,8 @@ def status(checkout: str, mirror: str, pr: str, url: str) -> tuple[str, str]:
 def main() -> None:
     level, message = status(os.getenv("UPSTREAM_CHECKOUT_OUTCOME", ""),
                             os.getenv("MIRROR_OUTCOME", ""),
-                            os.getenv("PR_OUTCOME", ""), os.getenv("PR_URL", ""))
+                            os.getenv("PR_OUTCOME", ""), os.getenv("PR_URL", ""),
+                            os.getenv("PREREQUISITES_OUTCOME", ""))
     print(f"::{level}::{message}")
     if summary := os.getenv("GITHUB_STEP_SUMMARY"):
         with Path(summary).open("a", encoding="utf-8") as output:

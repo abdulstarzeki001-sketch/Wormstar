@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Safely stage public Star-Cyber-Audit-iSH source into Wormstar.
+"""Stage an explicitly approved Star-Cyber-Audit-iSH export into Wormstar.
 
 The scheduled GitHub workflow opens a review PR. It NEVER executes the upstream
 repository, deploys it or publishes raw research/OneDrive snapshots. No third-
@@ -11,7 +11,6 @@ import argparse
 import hashlib
 import json
 import re
-import shutil
 import subprocess
 from pathlib import Path, PurePosixPath
 
@@ -45,6 +44,75 @@ def candidate(path: str) -> bool:
     return path.startswith(ACTIVE_PREFIXES) and not path.startswith(DENY_PATH_PREFIXES)
 
 
+def local_file(source: Path, path: str) -> Path | None:
+    """Resolve only regular files under source, without traversing symlinks."""
+    raw = PurePosixPath(path)
+    if raw.is_absolute() or ".." in raw.parts or not raw.parts:
+        return None
+    current = source
+    for part in raw.parts:
+        current = current / part
+        if current.is_symlink():
+            return None
+    try:
+        resolved = current.resolve(strict=True)
+    except (OSError, RuntimeError):
+        return None
+    if not resolved.is_relative_to(source) or not resolved.is_file():
+        return None
+    return resolved
+
+
+def indexed_files(source: Path) -> list[tuple[str, str, str, int | None]]:
+    """Read paths and blob hashes from the Git index without opening source files."""
+    records = []
+    for entry in git(source, "ls-files", "--stage", "-z").split(b"\x00"):
+        if not entry:
+            continue
+        metadata, separator, name = entry.partition(b"\t")
+        fields = metadata.decode("ascii").split()
+        if not separator or len(fields) != 3 or fields[2] != "0":
+            raise ValueError("Source has unresolved index entries")
+        mode, sha, _stage = fields
+        if not re.fullmatch(r"[a-f0-9]{40,64}", sha):
+            raise ValueError("Invalid source blob identifier")
+        records.append((name.decode("utf-8"), mode, sha))
+    blobs = sorted({sha for _name, mode, sha in records if mode in {"100644", "100755"}})
+    sizes = {}
+    if blobs:
+        result = subprocess.run(
+            ["git", "-C", str(source), "cat-file", "--batch-check=%(objectname) %(objecttype) %(objectsize)"],
+            input=("\n".join(blobs) + "\n").encode("ascii"), capture_output=True, check=True,
+        )
+        for line in result.stdout.decode("ascii").splitlines():
+            fields = line.split()
+            if len(fields) != 3 or fields[1] != "blob" or not fields[2].isdigit():
+                raise ValueError("Unable to determine a Git blob size")
+            sizes[fields[0]] = int(fields[2])
+        if len(sizes) != len(blobs):
+            raise ValueError("Missing source Git blob metadata")
+    return sorted((name, mode, sha, sizes.get(sha)) for name, mode, sha in records)
+
+
+def output_file(destination: Path, name: str) -> Path:
+    """Create mirror directories without following links out of the mirror."""
+    if destination.is_symlink():
+        raise ValueError("Mirror destination must not be a symbolic link")
+    relative = PurePosixPath(name)
+    if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+        raise ValueError("Unsafe mirror path")
+    current = destination
+    for part in relative.parts[:-1]:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError("Mirror path contains a symbolic link")
+        current.mkdir(parents=True, exist_ok=True)
+    output = current / relative.parts[-1]
+    if output.is_symlink():
+        raise ValueError("Mirror file must not be a symbolic link")
+    return output
+
+
 def classify(source: Path, path: str) -> tuple[bool, str, bytes | None]:
     raw = PurePosixPath(path)
     if raw.is_absolute() or ".." in raw.parts or any(p == "" for p in raw.parts):
@@ -53,8 +121,8 @@ def classify(source: Path, path: str) -> tuple[bool, str, bytes | None]:
         return False, "restricted_research_or_external_archive", None
     if not candidate(path):
         return False, "metadata_only", None
-    disk = source.joinpath(*raw.parts)
-    if disk.is_symlink() or not disk.is_file() or not disk.resolve().is_relative_to(source.resolve()):
+    disk = local_file(source, path)
+    if disk is None:
         return False, "unsafe_link_or_missing_file", None
     if disk.stat().st_size > MAX_SAFE_BYTES:
         return False, "size_limit", None
@@ -75,29 +143,39 @@ def sync(source: Path, destination: Path, manifest: Path) -> dict:
     source = source.resolve(strict=True)
     if not (source / ".git").exists():
         raise ValueError("Source must be a checked-out git repository")
+    if destination.is_symlink() or manifest.is_symlink():
+        raise ValueError("Mirror and inventory paths must not be symbolic links")
+    mirror = destination.resolve()
+    inventory = manifest.resolve()
+    if mirror == source or mirror.is_relative_to(source) or source.is_relative_to(mirror):
+        raise ValueError("Source and mirror paths must not overlap")
+    if inventory.is_relative_to(source):
+        raise ValueError("Inventory must not overwrite a source file")
     commit = git(source, "rev-parse", "HEAD").decode("ascii").strip()
     if not re.fullmatch(r"[a-f0-9]{40}", commit):
         raise ValueError("Invalid source commit")
-    names = sorted(set(p.decode("utf-8") for p in git(source, "ls-files", "-z").split(b"\x00") if p))
-    if len(names) > 3000:
+    if git(source, "status", "--porcelain=v1", "-z", "--untracked-files=no"):
+        raise ValueError("Source has uncommitted tracked changes; refusing an inaccurate snapshot")
+    entries = indexed_files(source)
+    if len(entries) > 3000:
         raise ValueError("Unexpected upstream file count; refuse automated copy")
     rows = []
     synced = set()
-    for name in names:
-        allowed, status, data = classify(source, name)
-        path = source.joinpath(*PurePosixPath(name).parts)
-        file_size = path.stat().st_size if path.is_file() else None
+    for name, mode, sha, file_size in entries:
+        allowed, status, data = classify(source, name) if mode in {"100644", "100755"} else (False, "non_regular_git_entry", None)
         row = {"path": name, "bytes": file_size, "source_git_blob": None,
                "classification": "copied_source" if allowed else "metadata_only",
                "reason": status}
-        # A blob hash verifies provenance without copying restricted contents.
-        if path.is_file():
-            row["source_git_blob"] = hashlib.sha1(
-                b"blob " + str(file_size).encode() + b"\x00" + path.read_bytes()
-            ).hexdigest()
+        # Index identifiers do not require reading links or large restricted files.
+        if mode in {"100644", "100755", "120000"}:
+            row["source_git_blob"] = sha
         rows.append(row)
         if allowed:
-            output = destination.joinpath(*PurePosixPath(name).parts)
+            algorithm = "sha256" if len(sha) == 64 else "sha1"
+            digest = hashlib.new(algorithm, b"blob " + str(len(data)).encode() + b"\x00" + data).hexdigest()
+            if digest != sha:
+                raise ValueError("Source file differs from its Git index; refusing an inaccurate snapshot")
+            output = output_file(destination, name)
             output.parent.mkdir(parents=True, exist_ok=True)
             if not output.is_file() or output.read_bytes() != data:
                 output.write_bytes(data)
@@ -115,7 +193,7 @@ def sync(source: Path, destination: Path, manifest: Path) -> dict:
         "total_source_files": len(rows),
         "copied_files": sum(r["classification"] == "copied_source" for r in rows),
         "metadata_only_files": sum(r["classification"] == "metadata_only" for r in rows),
-        "warning": "Research, OneDrive exports, archived third-party JS, captured QR tokens and raw reports are not copied into the public app. Original user files must stay private.",
+        "warning": "Only allowlisted text is copied; secret patterns are not exhaustive. File paths and blob hashes are included. Review before any public export.",
         "files": rows,
     }
     manifest.parent.mkdir(parents=True, exist_ok=True)

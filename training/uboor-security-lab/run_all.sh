@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 mkdir -p reports
 
 echo "== 1/9 Generate synthetic HAR =="
-python3 -S scripts/create_training_har.py --output samples/har_training.har
+python3 -S scripts/create_training_har.py --output reports/har_training_generated.har
 
 echo "== 2/9 Unit & integration tests =="
 python3 -S -m unittest discover -s tests -v
@@ -25,7 +25,7 @@ python3 -S scripts/uboor_har_analyzer.py samples/network.har \
 echo "== 7/9 HAR forensics (one sample; then 3 entries) =="
 python3 -S scripts/har_forensic_lab.py samples/network.har \
   --output reports/har_one_report.json
-python3 -S scripts/har_forensic_lab.py samples/har_training.har \
+python3 -S scripts/har_forensic_lab.py reports/har_training_generated.har \
   --output reports/har_forensic_report.json
 
 echo "== 8/9 Response audit and JS static audit =="

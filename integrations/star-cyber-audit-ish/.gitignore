@@ -1,0 +1,16 @@
+# Local inputs and generated reports can contain sensitive source metadata.
+/offline_samples/
+/downloads/
+/reports/
+*.rejected.html
+*.har
+*.pcap
+*.pcapng
+*.zip
+*.log
+.env
+.env.*
+*.pem
+*.key
+*cookie*
+*token*

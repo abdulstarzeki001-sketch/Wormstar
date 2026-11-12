@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wormstar Linux Terminal</title>
+<style>
+body{font-family:system-ui;background:#0b1321;color:#e8f1fb;max-width:900px;margin:auto;padding:20px;line-height:1.7}section{background:#152235;padding:18px;border-radius:14px;margin:15px 0}input,textarea,button{font:inherit;box-sizing:border-box}input,textarea{display:block;width:100%;margin:6px 0 12px;padding:10px;background:#0b1321;color:#fff;border:1px solid #41536a;border-radius:8px}button{padding:9px 16px;margin:4px;border:0;border-radius:8px}pre{overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:#07101a;padding:14px;border-radius:8px;direction:ltr;text-align:left}#wsTermOutput{height:300px}a{color:#86d8ff}
+</style><script src="/terminal.js" defer></script></head><body>
+<h1>Wormstar Linux Terminal</h1><p>طرفية خاصة داخل حاوية Docker؛ هذا الخادم يعمل على جهازك المحلي.</p>
+<section><label for="wsTermEndpoint">عنوان خدمة الطرفية</label><input id="wsTermEndpoint" type="url" autocomplete="off">
+<label for="wsTermToken">مفتاح الطرفية</label><input id="wsTermToken" type="password" autocomplete="off">
+<button id="wsTermConnect" type="button">اتصال</button><button id="wsTermDisconnect" type="button" disabled>قطع الاتصال</button><p id="wsTermStatus" role="status">غير متصل.</p></section>
+<section><h2>Linux Shell</h2><pre id="wsTermOutput" aria-live="polite">غير متصل.
+</pre><form id="wsTermForm"><label for="wsTermInput">الأمر</label><input id="wsTermInput" maxlength="4000" autocomplete="off" disabled><button id="wsTermSend" disabled>تنفيذ</button></form><p>الواجهة سطرية ولا تدعم برامج الشاشة الكاملة.</p></section>
+<section><h2>مساعد الخطوات المحلي</h2><label for="wsTermGoal">المهمة</label><textarea id="wsTermGoal" maxlength="2000"></textarea><button id="wsTermPlan" type="button" disabled>اقترح الخطوة</button><button id="wsTermApprove" type="button" disabled>أوافق على التنفيذ</button><p id="wsTermExplanation"></p><pre id="wsTermCommand"></pre><pre id="wsTermResult"></pre><p>يتطلب Ollama وتفعيل صلاحيات plan وexecute. راجع كل أمر قبل الموافقة.</p></section>
+</body></html>

@@ -97,7 +97,7 @@ code{color:#a8efdd}small{font-size:12px}.warning{color:#f6d58e}.hidden{display:n
     el('domain').textContent=short(scan.domain,220)||'غير معروف';
     el('scanStatus').textContent=short(scan.status,40)||'غير معروف';
     el('count').textContent=String(records.length);
-    el('model').textContent=short(data.report?.model || data.report?.model_used || 'Qwen / Local',60);
+    el('model').textContent=short(data.report?.model || data.report?.model_used || (data.summary ? 'Ollama · محلي (بدون اسم نموذج)' : 'لم يُنفّذ'),70);
     el('executive').textContent=short(summary.executive_summary || 'لا يوجد تحليل AI محفوظ في التقرير.',4000);
     el('fingerprint').textContent='SHA-256: '+short(data.fingerprint || 'غير متاح',64);
     bullets('risks',summary.risks||summary.highlights);

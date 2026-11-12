@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block crumb %}Projects / {{project.domain}}{% endblock %}
+{% block title %}{{project.domain}} • STAR OSINT AI{% endblock %}
+{% block content %}
+<a class="back" href="/">→ العودة إلى لوحة التحكم</a>
+<div class="page-heading"><div><div class="eyebrow">PUBLIC DOMAIN / نطاق عام</div><h1>{{project.label}}</h1><p class="mono">{{project.domain}}</p></div><span class="outline-tag">PASSIVE OPEN-SOURCE RESEARCH</span></div>
+{% if error %}<div class="alert">{{error}}</div>{% endif %}
+<div class="two-col uneven">
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">SCAN CONFIGURATION</div><h2>بدء فحص OSINT جديد</h2></div><span class="square">◎</span></div>
+  <p class="subtle">حدد المصادر التي تريد جمع بياناتها. عمليات الكشف سلبيّة فقط.</p>
+  <form class="stack" action="/projects/{{project.id}}/scan" method="post">
+   <input type="hidden" name="csrf_token" value="{{csrf}}">
+   <div class="checks"><label class="tool-choice"><input type="checkbox" name="collectors" value="dns" checked><span><strong>DNS Records</strong><small>A / AAAA / MX / NS / TXT / CAA / DMARC</small></span><em>CORE</em></label>
+    <label class="tool-choice"><input type="checkbox" name="collectors" value="ct" checked><span><strong>Certificate Transparency</strong><small>crt.sh · discover public certificate hostnames</small></span><em>CORE</em></label>
+    <label class="tool-choice"><input type="checkbox" name="collectors" value="whois" {% if tools.whois %}checked{% else %}disabled{% endif %}><span><strong>WHOIS</strong><small>registrar & registration dates (no contacts)</small></span><em>{{'READY' if tools.whois else 'MISSING'}}</em></label>
+    <label class="tool-choice"><input type="checkbox" name="collectors" value="harvester" {% if not tools.harvester %}disabled{% endif %}><span><strong>theHarvester</strong><small>crtsh open-source intelligence discovery</small></span><em>{{'READY' if tools.harvester else 'MISSING'}}</em></label>
+    <label class="tool-choice"><input type="checkbox" name="collectors" value="amass" {% if not tools.amass %}disabled{% endif %}><span><strong>Amass Passive</strong><small>passive domain enumeration only</small></span><em>{{'READY' if tools.amass else 'MISSING'}}</em></label></div>
+   <button class="btn primary full" type="submit">تنفيذ الاستطلاع ←</button>
+  </form>
+ </section>
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">SCOPE DETAILS</div><h2>معلومات الهدف</h2></div></div>
+  <div class="sysline"><span>DOMAIN</span><strong class="mono">{{project.domain}}</strong></div>
+  <div class="sysline"><span>CREATED</span><strong>{{project.created_at[:16]}}</strong></div>
+  <div class="sysline"><span>COLLECTION MODE</span><strong class="good">PASSIVE / PUBLIC SOURCES</strong></div>
+  <div class="notice">لن تُرسل طلبات استغلال أو مسح منافذ أو حقن. نتائج هذه الأدوات لا تعني إثبات وجود ثغرة أمنية.</div>
+ </section>
+</div>
+<section class="panel spacing"><div class="panel-top"><div><div class="eyebrow">HISTORICAL SCANS</div><h2>سجل الفحوص</h2></div><span class="muted">{{scans|length}} عملية</span></div>
+ {% if scans %}<div class="table-scroll"><table><thead><tr><th>ID</th><th>الحالة</th><th>الأدلة</th><th>المصادر</th><th>التاريخ</th><th>فتح</th></tr></thead><tbody>
+ {% for s in scans %}<tr><td class="mono">#{{s.id}}</td><td><span class="status {{s.status}}">{{s.status}}</span></td><td>{{s.findings}}</td><td class="mono source-cell">{{s.options_json}}</td><td>{{s.created_at[:16]}}</td><td><a class="inline-link" href="/scans/{{s.id}}">عرض ←</a></td></tr>{% endfor %}
+ </tbody></table></div>{% else %}<div class="empty">لم يتم تنفيذ أي فحص لهذا النطاق.</div>{% endif %}
+</section>
+{% endblock %}

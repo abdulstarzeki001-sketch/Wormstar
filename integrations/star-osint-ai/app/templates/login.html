@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}الدخول • STAR OSINT AI{% endblock %}
+{% block public %}
+<div class="login-wrap"><section class="login-card">
+ <div class="login-icon">✧</div>
+ <div class="eyebrow center">PRIVATE INTELLIGENCE ENVIRONMENT</div>
+ <h1>STAR <span>OSINT</span> AI</h1>
+ <p class="login-desc">منصة الاستطلاع والتحليل محلياً على Kali Linux</p>
+ {% if error %}<div class="alert">{{error}}</div>{% endif %}
+ <form action="/login" method="post" class="stack">
+ <input type="hidden" name="csrf_token" value="{{csrf}}">
+ <label>اسم المستخدم<input name="username" autocomplete="username" required autofocus placeholder="admin"></label>
+ <label>كلمة المرور<input type="password" name="password" autocomplete="current-password" required placeholder="••••••••••••"></label>
+ <button class="btn primary full" type="submit">فتح مساحة العمل ←</button>
+ </form>
+ <p class="login-foot">LOCALHOST ONLY · ENCRYPTED SESSION COOKIE SIGNATURE</p>
+</section></div>
+{% endblock %}

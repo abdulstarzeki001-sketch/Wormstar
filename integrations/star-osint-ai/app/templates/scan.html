@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block crumb %}Scan #{{scan.id}}{% endblock %}
+{% block title %}فحص #{{scan.id}} • STAR OSINT AI{% endblock %}
+{% block content %}
+<a class="back" href="/projects/{{scan.project_id}}">→ العودة إلى المشروع</a>
+<div class="page-heading"><div><div class="eyebrow">INTELLIGENCE COLLECTION / نتيجة فحص</div><h1>الاستطلاع <span class="accent">#{{scan.id}}</span></h1><p class="mono">{{scan.domain}}</p></div><span class="status large {{scan.status}}">{{scan.status|upper}}</span></div>
+<div class="metrics mini"><div class="metric"><span>الأدلة المستخرجة</span><b>{{findings|length}}</b><small>EVIDENCE COUNT</small></div><div class="metric"><span>الحالة</span><b class="text-status">{{scan.status}}</b><small>SCAN EXECUTION</small></div><div class="metric"><span>التحليل المحلي</span><b class="text-status">{{report.status if report else 'غير منفذ'}}</b><small>{{model}}</small></div></div>
+{% if scan.error %}<div class="notice">تحذير جزئي / خطأ: {{scan.error}}</div>{% endif %}
+{% if report and report.error %}<div class="alert">تعذر التحليل: {{report.error}} — تحقق من خدمة Ollama واسم النموذج.</div>{% endif %}
+{% if scan.status in ['queued','running'] or (report and report.status in ['queued','running']) %}
+<div class="notice updating" data-poll-scan="{{scan.id}}">عملية قيد التنفيذ. تُحدّث الصفحة تلقائياً بعد انتهاء المهمة. <span class="spinner"></span></div>
+{% endif %}
+<div class="two-col spacing">
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">COLLECTION PIPELINE</div><h2>تقدم مصادر الجمع</h2></div><span class="square">◎</span></div>
+ {% if sources %}<div class="source-grid" data-sources-grid>{% for item in sources %}<div class="source-pill"><span>{{item.source}}</span><span class="status {{item.status}}">{{item.status}}</span><b>{{item.findings}}</b></div>{% endfor %}</div>
+ {% else %}<p class="muted">تفاصيل تقدم المصادر تتوفر للفحوص المنشأة بعد تحديث v2.0.</p>{% endif %}
+ </section>
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">HISTORICAL DIFF</div><h2>التغيرات مقارنة بالفحص السابق</h2></div><span class="square">⇆</span></div>
+ {% if diff.baseline %}<p class="subtle">مقارنة مع الفحص #{{diff.baseline}} من نفس النطاق والمصادر المشتركة.</p><div class="diff-stats"><span class="good">+{{diff.added_count}} جديد</span><span class="warn">−{{diff.removed_count}} غير مرصود</span></div><a class="btn primary" href="/scans/{{scan.id}}/compare">عرض الفروقات ←</a>
+ {% else %}<p class="subtle">{{diff.message}}</p>{% endif %}
+ </section>
+</div>
+<section class="panel spacing"><div class="panel-top"><div><div class="eyebrow">DNS POSTURE OBSERVATIONS</div><h2>مؤشرات إعدادات البريد والشهادات</h2></div><span class="square">◈</span></div>
+<div class="observation-grid">{% for obs in observations %}<div class="observation {{obs.state}}"><strong>{{obs.label}}</strong><span>{{'مرصود' if obs.state == 'observed' else 'غير مرصود' if obs.state == 'unobserved' else 'غير محدد'}}</span><p>{{obs.detail}}</p></div>{% endfor %}</div>
+<p class="subtle">ملاحظة: عدم رصد سجل في مصدر سلبي لا يثبت غيابه ولا يمثل ثغرة مؤكدة.</p>
+<div class="fingerprint">SHA-256 SNAPSHOT: <span class="mono">{{fingerprint}}</span></div>
+</section>
+<div class="two-col uneven">
+<section class="panel"><div class="panel-top"><div><div class="eyebrow">AI SYNTHESIS</div><h2>تحليل الأدلة بالذكاء المحلي</h2></div><span class="square">✧</span></div>
+ <p class="subtle">يستخدم النموذج بيانات الفحص المحفوظة فقط، ويعيد ملخصاً وتوصيات مع ذكر القيود.</p>
+ {% if scan.status == 'done' %}
+ <form action="/scans/{{scan.id}}/analyze" method="post"><input type="hidden" name="csrf_token" value="{{csrf}}"><button class="btn primary full" type="submit" {% if report and report.status in ['queued','running'] %}disabled{% endif %}>{{'إعادة تحليل النتائج' if report and report.status in ['done','failed'] else 'تحليل باستخدام Ollama' }} ←</button></form>
+ {% else %}<button class="btn full disabled" disabled>أكمل الفحص أولاً</button>{% endif %}
+ {% if summary %}<div class="analysis-preview"><div class="eyebrow">EXECUTIVE SUMMARY</div><p>{{summary.executive_summary}}</p><a href="/reports/{{scan.id}}" class="inline-link">مشاهدة التقرير الكامل ←</a></div>{% endif %}
+</section>
+<section class="panel"><div class="panel-top"><div><div class="eyebrow">EXPORT CENTER</div><h2>التقارير والتصدير</h2></div><span class="square">⇩</span></div>
+ <div class="export-links"><a href="/reports/{{scan.id}}" class="export">▤ تقرير تفاعلي <span>↗</span></a><a href="/reports/{{scan.id}}/download?format=html" class="export">◈ HTML / Print PDF <span>↓</span></a><a href="/reports/{{scan.id}}/download?format=md" class="export">≡ Markdown <span>↓</span></a><a href="/reports/{{scan.id}}/download?format=json" class="export">{} JSON <span>↓</span></a><a href="/reports/{{scan.id}}/download?format=csv" class="export">▦ CSV <span>↓</span></a></div>
+</section>
+</div>
+<section class="panel spacing"><div class="panel-top"><div><div class="eyebrow">EVIDENCE TABLE</div><h2>سجل الأدلة المجموعة</h2></div><span class="muted">{{findings|length}} نتيجة</span></div>
+{% if findings %}<div class="filter-toolbar"><input type="search" data-evidence-filter placeholder="ابحث في النوع أو القيمة أو المصدر..." aria-label="تصفية الأدلة"><span class="muted" data-evidence-count>{{findings|length}} نتيجة</span></div>{% endif %}
+{% if findings %}<div class="table-scroll"><table><thead><tr><th>ID</th><th>النوع</th><th>القيمة</th><th>المصدر</th><th>الثقة</th></tr></thead><tbody data-evidence-body>
+{% for f in findings %}<tr id="evidence-{{f.id}}"><td class="mono">{{f.id}}</td><td><span class="kind">{{f.kind}}</span></td><td class="mono value-cell">{{f.value}}</td><td>{{f.source}}</td><td><span class="confidence">{{f.confidence}}</span></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty">لم تُجمع أدلة بعد. قد يكون المصدر غير متاح أو لم تُنشر بيانات للنطاق.</div>{% endif %}
+</section>
+{% endblock %}

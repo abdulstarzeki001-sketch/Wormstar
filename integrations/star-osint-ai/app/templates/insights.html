@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block crumb %}Intelligence / Analytics{% endblock %}
+{% block title %}التحليلات • STAR OSINT AI{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow">MISSION INTELLIGENCE / ANALYTICS</div><h1>مركز <span class="accent">التحليلات</span></h1><p>إحصاءات مستخرجة مباشرة من الأدلة المحفوظة؛ دون ادّعاء إثبات ثغرات.</p></div><span class="outline-tag">v2.0 / LOCAL</span></div>
+<div class="metrics">
+ <div class="metric"><span>المشاريع</span><b>{{stats.counts.projects}}</b><small>PROJECTS</small></div>
+ <div class="metric"><span>الفحوص الكلية</span><b>{{stats.counts.scans}}</b><small>SCANS</small></div>
+ <div class="metric"><span>الأدلة المسجلة</span><b>{{stats.counts.findings}}</b><small>FINDINGS</small></div>
+ <div class="metric"><span>تقارير التحليل</span><b>{{stats.counts.reports}}</b><small>ANALYSES</small></div>
+</div>
+<div class="two-col">
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">SCAN STATES</div><h2>حالات الفحوص</h2></div></div>
+ {% for name,count in stats.status.items() %}<div class="bar-stat"><div><span class="status {{name}}">{{name}}</span><b>{{count}}</b></div><progress class="bar-progress" max="{{stats.counts.scans or 1}}" value="{{count}}">{{count}}</progress></div>{% else %}<p class="muted">لا توجد فحوص حتى الآن.</p>{% endfor %}
+ </section>
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">EVIDENCE MIX</div><h2>أنواع الأدلة</h2></div></div>
+ {% for item in stats.kinds %}<div class="sysline"><span>{{item.kind}}</span><strong>{{item.count}}</strong></div>{% else %}<p class="muted">لا توجد أدلة بعد.</p>{% endfor %}
+ </section>
+</div>
+<div class="two-col spacing">
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">DOMAIN INVENTORY</div><h2>المشاريع حسب حجم الأدلة</h2></div></div>
+ {% for item in stats.top %}<div class="sysline"><span class="mono">{{item.domain}}</span><strong>{{item.findings}}</strong></div>{% else %}<p class="muted">لا توجد مشاريع.</p>{% endfor %}
+ </section>
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">AUDIT TRAIL</div><h2>سجل النشاط</h2></div></div>
+ {% for item in stats.audit %}<div class="audit-entry"><strong>{{item.action}}</strong><span class="muted">{{item.created_at[:19]}}</span><p class="mono">{{item.detail}}</p></div>{% else %}<p class="muted">لا نشاط مسجل.</p>{% endfor %}
+ </section>
+</div>
+{% endblock %}

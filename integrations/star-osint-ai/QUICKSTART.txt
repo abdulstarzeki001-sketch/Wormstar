@@ -1,0 +1,19 @@
+STAR OSINT AI • Kali Linux
+
+1) unzip star-osint-ai.zip
+2) cd star-osint-ai
+3) chmod +x install_kali.sh start.sh
+4) ./install_kali.sh
+5) ./start.sh
+6) Browser: http://127.0.0.1:8787
+
+Local Ollama (optional for AI):
+- Install from https://ollama.com/download/linux
+- ollama serve
+- ollama pull qwen2.5:7b
+
+Read README_AR.md for full instructions and security notes.
+
+v2.0: يقبل أي دومين عام أو رابط HTTPS كامل. لا يلزم تأكيد الملكية لجمع OSINT السلبي.
+
+For existing installations: follow UPDATE_V2_AR.txt. For local diagnostics: ./doctor.sh

@@ -4,6 +4,6 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-worker.mjs",
-    "test": "node scripts/build-worker.mjs && node --check worker.js && node --check audit-worker.js && node --check terminal.js && node scripts/test-worker.mjs && node --test scripts/test-audit-dashboard.mjs scripts/test-ui-behavior.mjs scripts/test-terminal-ui.mjs"
+    "test": "node scripts/build-worker.mjs && node --check worker.js && node --check audit-worker.js && node --check osint-worker.js && node --check terminal.js && node scripts/test-worker.mjs && node --test scripts/test-audit-dashboard.mjs scripts/test-ui-behavior.mjs scripts/test-terminal-ui.mjs"
   }
 }

@@ -159,4 +159,19 @@ assert.equal(response.status,200);
 assert.equal(await response.text(),'');
 assert.equal(forwarded.length,beforeOsintCalls,'OSINT must not invoke owner Core');
 
+// Owner API forwards to Core only with the correct method and bearer token.
+const beforeCloudJobs=forwarded.length;
+assert.equal((await go('/api/osint/jobs')).status,401);
+assert.equal((await go('/api/osint/agent/claim',{method:'POST',headers:jsonHeaders,body:'{}'})).status,405);
+response=await go('/api/osint/jobs',{method:'GET',headers:{Authorization:bearer}});
+assert.equal(response.status,200);
+assert.equal(forwarded.at(-1).pathname,'/api/osint/jobs');
+response=await go('/api/osint/jobs',{method:'POST',headers:jsonHeaders,
+  body:JSON.stringify({domain:'owned-site.org',collectors:['dns'],confirmed:true})});
+assert.equal(response.status,200);
+assert.equal(forwarded.at(-1).pathname,'/api/osint/jobs');
+assert.equal(JSON.parse(forwarded.at(-1).body).domain,'owned-site.org');
+assert.equal((await go('/api/osint/jobs',{method:'DELETE',headers:jsonHeaders})).status,405);
+assert.equal(forwarded.length,beforeCloudJobs+2);
+
 console.log("Unified Sentinel + iSH + STAR OSINT: offline dashboard and Core isolation passed");

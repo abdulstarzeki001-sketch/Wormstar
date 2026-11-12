@@ -49,7 +49,8 @@ function apiReply(value, status = 200) {
 // Only the existing Core's token verification decides who may chat.
 // The preview Worker never stores, logs, or embeds a shared secret.
 async function forwardCore(request, env, path) {
-  const readonly = path === "/api/rag/status" || path === "/api/agents" || path === "/api/repo/status" || path === "/api/goclaw/status";
+  const osintRead=(path==='/api/osint/jobs'||/^\/api\/osint\/jobs\/[a-f0-9-]{36}$/i.test(path))&&request.method==='GET';
+  const readonly = osintRead || path === "/api/rag/status" || path === "/api/agents" || path === "/api/repo/status" || path === "/api/goclaw/status";
   if (request.method !== (readonly ? "GET" : "POST")) return apiReply({error:"Method not allowed"}, 405);
   const origin = request.headers.get("Origin");
   if (origin && origin !== new URL(request.url).origin) return apiReply({error:"Forbidden origin"}, 403);
@@ -128,6 +129,10 @@ export default {
     const path = new URL(request.url).pathname;
     if (["/api/auth","/api/chat","/api/rag/status","/api/rag/reindex","/api/security/header-audit","/api/agents","/api/agents/run","/api/repo/status","/api/repo/sync","/api/repo/ask","/api/goclaw/status"].includes(path)) {
       return forwardCore(request, env, path);
+    }
+    if ((path === '/api/osint/jobs' || /^\/api\/osint\/jobs\/[a-f0-9-]{36}$/i.test(path)) &&
+        ['GET','POST'].includes(request.method)) {
+      return forwardCore(request,env,path);
     }
     if (path === "/audit" || path.startsWith("/audit/")) {
       return auditPage(request,path);

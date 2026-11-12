@@ -110,7 +110,7 @@ code{color:#a8efdd}small{font-size:12px}.warning{color:#f6d58e}.hidden{display:n
   }
   el('reportFile').addEventListener('change',async event=>{
     const file=event.target.files?.[0];if(!file)return;
-    reset();el('reportFile').files=event.target.files;
+    reset();
     if(file.size>2*1024*1024){message('الملف أكبر من الحد المسموح: 2 MB');return;}
     try{render(JSON.parse(await file.text()));}catch(err){reset();message('تعذّر فتح التقرير: '+short(err.message,200));}
   });

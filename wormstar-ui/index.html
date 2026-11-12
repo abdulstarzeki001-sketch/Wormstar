@@ -45,6 +45,8 @@ button,input,textarea{font:inherit}button{cursor:pointer}a{color:inherit;text-de
 .nav button:hover{background:var(--surface-2);color:var(--text)}.nav button.active{color:var(--text);background:var(--accent-wash)}
 .nav button.active:before{content:"";position:absolute;right:0;top:10px;bottom:10px;width:3px;border-radius:6px;background:var(--accent)}
 .nav svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;flex:none}
+.nav a.osint-nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;color:var(--muted);font-size:13px;transition:.2s}
+.nav a.osint-nav:hover{background:var(--surface-2);color:var(--text);text-decoration:none}
 .nav .count{margin-right:auto;color:var(--muted);font-size:10px;background:var(--surface-3);padding:3px 7px;border-radius:20px}
 .sidebar-spacer{flex:1}.plan-card{padding:14px;background:linear-gradient(145deg,var(--surface-2),var(--surface));border:1px solid var(--line);border-radius:15px;margin:16px 0}
 .plan-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600}.plan-head span:last-child{color:var(--accent);font-family:Inter,sans-serif;font-size:10px}
@@ -231,6 +233,7 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
   <button data-page="incidents"><svg viewBox="0 0 24 24"><path d="M12 3 21 19H3L12 3Z"/><path d="M12 9v4M12 16h.01"/></svg><span data-i18n="incidents">الحوادث والتنبيهات</span><span class="count">4</span></button>
   <button data-page="intel"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8 10.5h5M10.5 8v5"/></svg><span data-i18n="intel">تحليل المؤشرات IOC</span></button>
   <button data-page="lab"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M8 15h8"/></svg><span data-i18n="lab">المختبر التدريبي</span></button>
+  <a class="osint-nav" href="/osint/" aria-label="فتح لوحة STAR OSINT"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 7h14M5 17h14"/></svg><span>استخبارات OSINT</span><span class="count">NEW</span></a>
   <button data-open-audit type="button" aria-label="Open iSH Static Audit"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 10l3 3-3 3M13 16h5"/></svg><span data-i18n="static_audit">التحليل الساكن iSH</span><span class="count">iSH</span></button>
 
 <button data-page="terminal" type="button">
@@ -365,6 +368,14 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
    <div class="feature"><div class="feature-icon">02</div><strong data-i18n="malware_lab">تحليل عينات</strong><p data-i18n="malware_desc">تحليل ثابت للملفات مع تجنب تشغيل الملفات المشبوهة على الجهاز الأساسي.</p></div>
    <div class="feature"><div class="feature-icon">03</div><strong data-i18n="scope">نطاق الاختبار</strong><p data-i18n="scope_desc">تسجيل النطاق المصرح به ومدة الاختبار والإجراءات المسموحة.</p></div>
   </div><div class="disclaimer" data-i18n="lab_notice">أي اختبار نشط يجب أن يكون محصوراً بنظام تملكه أو لديك تفويض مكتوب لاختباره.</div></div>
+  <div class="ops-panel" id="osintLabCard">
+    <h3>STAR OSINT · خريطة الأصول الرقمية</h3>
+    <p>تم دمج محرك OSINT في Wormstar. يستخدم Kali Linux لجمع المعلومات السلبية بعد ضبط نطاق العمل المصرّح، بينما تعرض واجهة Cloudflare تقارير <code>report.json</code> و<code>infrastructure.json</code> داخل المتصفح دون رفعها إلى الخادم. لا يتم تشغيل أدوات OSINT عن بُعد من هذه الواجهة.</p>
+    <div class="ops-actions">
+      <a class="btn primary" href="/osint/" target="_blank" rel="noopener noreferrer">فتح لوحة OSINT</a>
+      <a class="btn" href="https://github.com/abdulstarzeki001-sketch/Wormstar/tree/main/integrations/star-osint" target="_blank" rel="noopener noreferrer">المحرك والتوثيق</a>
+    </div>
+  </div>
   <div class="ops-panel" id="staticAuditCard">
     <h3>مختبر iSH · Static JavaScript Audit</h3>
     <p>المختبر الثاني أصبح جزءًا من Wormstar على نفس النطاق. يعرض التقارير النموذجية المنقحة ويستورد <code>analysis.json</code> محليًا من الجهاز دون رفعه إلى Cloudflare. لتحليل ملفات JavaScript الخام استخدم أداة Python الموجودة في GitHub عبر iSH أو Linux، ثم افتح التقرير هنا.</p>

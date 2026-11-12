@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { Script } from "node:vm";
 import { readFileSync } from "node:fs";
 
 const source = readFileSync(new URL("../worker.js", import.meta.url), "utf8");
@@ -139,6 +140,10 @@ assert.match(response.headers.get('Cache-Control'),/no-store/);
 const osintHtml=await response.text();
 assert.match(osintHtml,/STAR OSINT AI/);
 assert.match(osintHtml,/id="reportFile"/);
+const embedded=osintHtml.match(/<script>([\s\S]*?)<\/script>/);
+assert.ok(embedded,'OSINT browser script present');
+assert.doesNotThrow(()=>new Script(embedded[1]),'OSINT browser script valid');
+
 assert.match(osintHtml,/127\.0\.0\.1:8787/);
 assert.match(osintHtml,/\.textContent/);
 assert.doesNotMatch(osintHtml,/fetch\s*\(/);

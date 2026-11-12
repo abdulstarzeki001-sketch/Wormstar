@@ -48,7 +48,8 @@ export default {
     "agents.opencode.messages.read": true,
     "agents.opencode.progress": true,
     "agents.opencode.interrupt": true,
-    "network.header_audit": true
+    "network.header_audit": true,
+    "osint.passive_scan": true
   },
   "limits": {
     "maxPromptCharacters": 12000,

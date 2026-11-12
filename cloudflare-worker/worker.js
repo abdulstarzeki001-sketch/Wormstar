@@ -4,6 +4,7 @@ import {chooseReasoningEffort,extractModelAnswer} from './model-runtime.js';
 import {hybridKnowledge,indexKnowledgeBatch} from './advanced-rag.js';
 import {syncRepository,repoIndexStatus,findRepoEvidence,repoQuestionSupported,buildRepoMessages,NO_EVIDENCE} from './repository-memory.js';
 import {runAuthorizedScan,runBoundedAgent,listAgents} from './security-ops.js';
+import {handleOsintBridge} from './osint-bridge.js';
 import LAB_POLICY_MANIFEST from './permissions-module.js';
 import FUTURE_UI from './future-ui.js';
 import REDESIGN_HTML from './redesign-ui.js';
@@ -731,6 +732,14 @@ export default {
         nodes:'requires-device-pairing'}});
     }
     if(request.method==='POST'&&url.pathname==='/api/auth')return (await allow(request,env))?json({ok:true}):json({error:'Unauthorized'},401);
+    if(url.pathname.startsWith('/api/osint/')){
+      // Separate dedicated agent secret; owner credentials never reach Kali.
+      const agentRoute=url.pathname.startsWith('/api/osint/agent/');
+      const authorized=agentRoute?false:await allow(request,env);
+      if(!agentRoute && !authorized)return json({error:'Unauthorized'},401);
+      if(!capabilityEnabled('osint.passive_scan'))return permissionDenied('osint.passive_scan');
+      return handleOsintBridge(request,env,url.pathname,readBoundedJson,{ownerAuthenticated:authorized});
+    }
     if(url.pathname.startsWith('/api/lab/')){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
       if(url.pathname==='/api/lab/policy'&&request.method==='GET'){

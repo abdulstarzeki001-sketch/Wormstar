@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="description" content="STAR OSINT AI - Local passive intelligence workspace">
+ <title>{% block title %}STAR OSINT AI{% endblock %}</title>
+ <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="ambient"></div>
+{% if request.session.get('username') %}
+<div class="shell">
+ <aside class="sidebar">
+  <a href="/" class="brand"><span class="logo">✧</span><span><strong>STAR <em>OSINT</em></strong><small>INTELLIGENCE OPERATIONS</small></span></a>
+  <div class="nav-label">WORKSPACE / مساحة العمل</div>
+  <a class="nav-link {% if request.url.path == '/' %}active{% endif %}" href="/"><span>▦</span> لوحة التحكم</a>
+  <a class="nav-link" href="/"><span>◎</span> المشاريع والأهداف</a>
+  <a class="nav-link {% if request.url.path == '/insights' %}active{% endif %}" href="/insights"><span>◈</span> مركز التحليلات</a>
+  <div class="nav-label">ENVIRONMENT / البيئة</div>
+  <div class="env-row"><span class="light-dot"></span> Local Mode</div>
+  <div class="env-row"><span class="light-dot blue"></span> SQLite Storage</div>
+  <div class="env-row"><span class="light-dot amber"></span> Passive OSINT</div>
+  <div class="sidebar-footer"><div class="small-cap">SYSTEM STATUS</div><strong>LOCAL • 127.0.0.1</strong><p>البيانات محفوظة على جهازك</p>
+   <form action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{csrf}}"><button class="ghost exit" type="submit">تسجيل الخروج ↗</button></form>
+  </div>
+ </aside>
+ <div class="main-area">
+  <header class="topbar"><div class="crumb">STAR / <span>{% block crumb %}Dashboard{% endblock %}</span></div><div class="top-actions"><span class="pill"><span class="light-dot"></span> LOCAL SECURE</span><span class="avatar">S</span></div></header>
+  <main class="content">{% block content %}{% endblock %}</main>
+ </div>
+</div>
+{% else %}
+{% block public %}{% endblock %}
+{% endif %}
+<script src="/static/app.js" defer></script>
+</body>
+</html>

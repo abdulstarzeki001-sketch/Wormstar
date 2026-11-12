@@ -1,0 +1,16 @@
+STAR OSINT AI v2.0 | تشغيل Kali Linux (WSL/Windows)
+
+1) أوقف السيرفر القديم بـ Ctrl+C.
+2) حمّل ملف STAR_OSINT_AI_Kali_v2_update.zip إلى Windows، ثم:
+   unzip -t "/mnt/c/Users/hp/Downloads/STAR_OSINT_AI_Kali_v2_update.zip"
+   cd ~/Downloads/star-osint-ai
+   .venv/bin/python scripts/backup.py
+   unzip -o "/mnt/c/Users/hp/Downloads/STAR_OSINT_AI_Kali_v2_update.zip" -d ~/Downloads
+   cd ~/Downloads/star-osint-ai
+   .venv/bin/python -m pytest -q
+   ./start.sh
+3) افتح http://127.0.0.1:8787 ثم «مركز التحليلات».
+4) إذا كان المتصفح خزّن ملف ZIP في مجلد Edge المؤقت، ابحث عنه:
+   find /mnt/c/Users/hp -name 'STAR_OSINT_AI_Kali_v2_update.zip' -type f 2>/dev/null
+
+تظل ملفات .env / data/*.db / reports محفوظة؛ التحديث لا يكتب فوقها.

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block crumb %}Intelligence Report{% endblock %}
+{% block title %}التقرير • STAR OSINT AI{% endblock %}
+{% block content %}
+<a class="back" href="/scans/{{data.scan.id}}">→ العودة إلى الفحص</a>
+<div class="page-heading"><div><div class="eyebrow">INTELLIGENCE BRIEF / التقرير التحليلي</div><h1>التقرير <span class="accent">#{{data.scan.id}}</span></h1><p class="mono">{{data.scan.domain}}</p></div><a class="btn primary" href="/reports/{{data.scan.id}}/download?format=html">تحميل للطباعة / PDF ↓</a></div>
+<div class="panel report-panel"><div class="eyebrow">REPORT SUMMARY</div>
+{% if data.summary %}
+<h2>الملخص التنفيذي</h2><p class="lead">{{data.summary.executive_summary}}</p>
+{% for label,key in [('أهم الملاحظات','highlights'),('مخاطر أو مؤشرات تستحق المتابعة','risks'),('الإجراءات الموصى بها','recommendations'),('حدود الاستنتاج','limitations')] %}
+<h2>{{label}}</h2>{% if data.summary[key] %}<ul class="report-list">{% for item in data.summary[key] %}<li>{{item}}</li>{% endfor %}</ul>{% else %}<p class="muted">لا توجد نقاط صادرة عن النموذج لهذا القسم.</p>{% endif %}
+{% endfor %}
+<div class="notice">{{data.summary.notice}}</div>
+{% if data.cited_evidence %}<h2>الأدلة المرجعية التي اختارها النموذج</h2><ul class="report-list">{% for f in data.cited_evidence %}<li><a href="/scans/{{data.scan.id}}#evidence-{{f.id}}" class="inline-link">[{{f.id}}]</a> <span class="kind">{{f.kind}}</span> <span class="mono">{{f.value}}</span> — {{f.source}}</li>{% endfor %}</ul><p class="muted">راجع ارتباط هذه الأدلة بالاستنتاجات يدوياً.</p>{% endif %}
+{% else %}<h2>نتائج أولية</h2><p class="lead">هذا التقرير يحتوي {{data.findings|length}} دليلاً من المصادر العامة. لم يتم إصدار تحليل ذكاء اصطناعي مكتمل بعد. افتح صفحة الفحص واضغط «تحليل باستخدام Ollama».</p>{% endif %}
+<div class="divider-line"></div><h2>ملاحظات إعدادات DNS</h2>
+<div class="observation-grid">{% for item in data.observations %}<div class="observation {{item.state}}"><strong>{{item.key}}</strong><p>{{item.detail}}</p></div>{% endfor %}</div>
+{% if data.diff.baseline %}<h2>مقارنة مع الفحص #{{data.diff.baseline}}</h2><p class="lead">إضافات مرصودة: {{data.diff.added_count}}، عناصر لم تعد مرصودة: {{data.diff.removed_count}}. <a href="/scans/{{data.scan.id}}/compare" class="inline-link">الاختلافات ←</a></p>{% endif %}
+<p class="fingerprint">SHA-256: <span class="mono">{{data.fingerprint}}</span></p>
+<div class="divider-line"></div><h2>الإحصاءات حسب نوع الدليل</h2>
+<div class="chips">{% for name,count in data.stats.items() %}<span class="chip">{{name}} <b>{{count}}</b></span>{% endfor %}</div>
+<div class="divider-line"></div><h2>ملفات التقرير</h2>
+<div class="export-links horizontal"><a class="export" href="/reports/{{data.scan.id}}/download?format=html">HTML / PDF ↗</a><a class="export" href="/reports/{{data.scan.id}}/download?format=md">Markdown ↓</a><a class="export" href="/reports/{{data.scan.id}}/download?format=json">JSON ↓</a><a class="export" href="/reports/{{data.scan.id}}/download?format=csv">CSV ↓</a></div>
+</div>
+{% endblock %}

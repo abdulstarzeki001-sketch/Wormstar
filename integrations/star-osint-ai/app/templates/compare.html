@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block crumb %}Scans / Diff / #{{scan.id}}{% endblock %}
+{% block title %}مقارنة الفحوص • STAR OSINT AI{% endblock %}
+{% block content %}
+<a class="back" href="/scans/{{scan.id}}">→ العودة للفحص</a>
+<div class="page-heading"><div><div class="eyebrow">CHANGE INTELLIGENCE</div><h1>مقارنة <span class="accent">الأدلة</span></h1><p class="mono">{{scan.domain}} / #{{scan.id}}</p></div><span class="outline-tag">HISTORICAL SNAPSHOT</span></div>
+{% if diff.baseline %}
+<div class="metrics mini">
+ <div class="metric"><span>الفحص السابق</span><b>#{{diff.baseline}}</b><small>BASELINE</small></div>
+ <div class="metric"><span>إضافات مرصودة</span><b class="good">+{{diff.added_count}}</b><small>OBSERVED NEW</small></div>
+ <div class="metric"><span>لم تعد مرصودة</span><b class="warn">−{{diff.removed_count}}</b><small>NOT OBSERVED NOW</small></div>
+</div>
+<div class="notice">{{diff.message}} المصادر المشتركة: {{diff.common_sources|join(', ')}}.</div>
+<div class="two-col spacing">
+ {% for heading,items,tag in [('الجديد في الفحص الحالي',diff.added,'ADDED'),('غير المرصود الآن',diff.removed,'NO LONGER OBSERVED')] %}
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">{{tag}}</div><h2>{{heading}}</h2></div><b>{{items|length}}</b></div>
+ <div class="table-scroll"><table><thead><tr><th>النوع</th><th>القيمة</th><th>المصدر</th></tr></thead><tbody>
+ {% for row in items %}<tr><td><span class="kind">{{row.kind}}</span></td><td class="value-cell mono">{{row.value}}</td><td>{{row.source}}</td></tr>{% else %}<tr><td colspan="3">لا اختلافات مرصودة من نفس المصادر.</td></tr>{% endfor %}
+ </tbody></table></div></section>{% endfor %}
+</div>
+{% else %}<div class="empty">{{diff.message}}</div>{% endif %}
+{% endblock %}

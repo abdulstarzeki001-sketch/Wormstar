@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block crumb %}Dashboard<div class="quick-action"><div><div class="eyebrow">INTELLIGENCE WORKSPACE</div><h2>لوحة القياسات ومقارنة الفحوص متاحة في v2.0</h2><p class="subtle">عرض إحصاءات الأدلة، سجل الأحداث وحالة جميع الفحوص.</p></div><a class="btn primary" href="/insights">فتح التحليلات ←</a></div>
+{% endblock %}
+{% block title %}لوحة التحكم • STAR OSINT AI<div class="quick-action"><div><div class="eyebrow">INTELLIGENCE WORKSPACE</div><h2>لوحة القياسات ومقارنة الفحوص متاحة في v2.0</h2><p class="subtle">عرض إحصاءات الأدلة، سجل الأحداث وحالة جميع الفحوص.</p></div><a class="btn primary" href="/insights">فتح التحليلات ←</a></div>
+{% endblock %}
+{% block content %}
+<div class="page-heading"><div><div class="eyebrow">INTELLIGENCE COMMAND CENTER / مركز العمليات</div><h1>لوحة <span class="accent">التحكم</span></h1><p>إدارة نطاقات الفحص، الأدلة العامة، والتقارير المستندة إلى نموذج محلي.</p></div><span class="outline-tag">WORKSPACE v2.0</span></div>
+{% if error %}<div class="alert">{{error}}</div>{% endif %}
+<div class="metrics">
+ <div class="metric"><span>النطاقات المسجلة</span><b>{{projects|length}}</b><small>DOMAINS IN SCOPE</small><i>◎</i></div>
+ <div class="metric"><span>عدد الفحوص الحديثة</span><b>{{recent|length}}</b><small>LATEST ACTIVITY</small><i>▤</i></div>
+ <div class="metric"><span>الأدلة المخزنة</span><b>{{projects|sum(attribute='findings')}}</b><small>RECORDED FINDINGS</small><i>◈</i></div>
+ <div class="metric"><span>Ollama المحلي</span><b class="text-status {{'good' if ollama.online and ollama.model_installed else 'warn'}}">{{'جاهز' if ollama.online and ollama.model_installed else 'غير جاهز'}}</b><small>{{model}}</small><i>✧</i></div>
+</div>
+<div class="two-col">
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">NEW TARGET</div><h2>إضافة نطاق للعمل</h2></div><span class="square">+</span></div>
+ <p class="subtle">يمكنك إدخال أي نطاق عام أو رابط HTTPS/HTTP؛ نأخذ اسم النطاق تلقائياً. الجمع من مصادر علنية فقط، دون مسح نشط.</p>
+ <form class="stack" action="/projects" method="post"><input type="hidden" name="csrf_token" value="{{csrf}}">
+  <label>النطاق أو الرابط / Domain or URL<input name="domain" required placeholder="example.org أو https://example.org/page" dir="ltr" maxlength="2048"></label>
+  <label>اسم المشروع<input name="label" placeholder="مشروع تدقيق البنية الرقمية" maxlength="100"></label>
+  <button type="submit" class="btn primary full">إنشاء المشروع <span>←</span></button>
+ </form></section>
+ <section class="panel"><div class="panel-top"><div><div class="eyebrow">AI ENGINE STATUS</div><h2>محرك التحليل المحلي</h2></div><span class="square">✧</span></div>
+  <div class="sysline"><span>ENGINE</span><strong>Ollama API</strong></div>
+  <div class="sysline"><span>MODEL</span><strong>{{model}}</strong></div>
+  <div class="sysline"><span>CONNECTION</span><strong class="{{'good' if ollama.online else 'warn'}}">{{'CONNECTED' if ollama.online else 'OFFLINE'}}</strong></div>
+  <div class="sysline"><span>MODEL LOADED</span><strong class="{{'good' if ollama.model_installed else 'warn'}}">{{'INSTALLED' if ollama.model_installed else 'NOT FOUND'}}</strong></div>
+  <div class="notice">التحليل عبر 127.0.0.1:11434. أدوات OSINT قد تتصل بمصادر الإنترنت العامة أثناء الجمع، أما الاستدلال فيبقى محلياً.</div>
+ </section>
+</div>
+<section class="panel spacing"><div class="panel-top"><div><div class="eyebrow">ACTIVE SCOPES</div><h2>المشاريع والنطاقات</h2></div><span class="muted">{{projects|length}} مشاريع</span></div>
+ {% if projects %}<div class="table-scroll"><table><thead><tr><th>المشروع</th><th>النطاق</th><th>الفحوص</th><th>الأدلة</th><th>التفاصيل</th></tr></thead><tbody>
+ {% for p in projects %}<tr><td><strong>{{p.label}}</strong></td><td class="mono">{{p.domain}}</td><td>{{p.scans}}</td><td>{{p.findings}}</td><td><a href="/projects/{{p.id}}" class="inline-link">فتح ←</a></td></tr>{% endfor %}
+ </tbody></table></div>{% else %}<div class="empty">لا توجد مشاريع حتى الآن. ابدأ بإضافة نطاق.</div>{% endif %}
+</section>
+<section class="panel spacing"><div class="panel-top"><div><div class="eyebrow">RECENT EXECUTIONS</div><h2>آخر عمليات الاستطلاع</h2></div></div>
+ {% if recent %}<div class="table-scroll"><table><thead><tr><th>الفحص</th><th>النطاق</th><th>الحالة</th><th>الأدلة</th><th>التاريخ</th></tr></thead><tbody>
+ {% for s in recent %}<tr><td><a class="inline-link mono" href="/scans/{{s.id}}">#{{s.id}}</a></td><td class="mono">{{s.domain}}</td><td><span class="status {{s.status}}">{{s.status}}</span></td><td>{{s.findings}}</td><td>{{s.created_at[:16]}}</td></tr>{% endfor %}
+ </tbody></table></div>{% else %}<div class="empty">لا توجد فحوص مسجلة.</div>{% endif %}
+</section>
+<div class="quick-action"><div><div class="eyebrow">INTELLIGENCE WORKSPACE</div><h2>لوحة القياسات ومقارنة الفحوص متاحة في v2.0</h2><p class="subtle">عرض إحصاءات الأدلة، سجل الأحداث وحالة جميع الفحوص.</p></div><a class="btn primary" href="/insights">فتح التحليلات ←</a></div>
+{% endblock %}

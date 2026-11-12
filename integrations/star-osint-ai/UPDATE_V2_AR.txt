@@ -1,0 +1,35 @@
+STAR OSINT AI v2.0 — تحديث من v1.1 بدون فقدان البيانات
+=======================================================
+
+مهم: احفظ ملف UPDATE ZIP في Windows Downloads أو حدده بمسار من Windows.
+لا تحذف مجلد ~/Downloads/star-osint-ai؛ يحتفظ بكلمة مرور المدير في .env
+وقاعدة البيانات في data/.
+
+1. أوقف السيرفر باستخدام Ctrl+C في نافذة تشغيل ./start.sh.
+2. نفذ في Kali:
+
+cd "$HOME/Downloads/star-osint-ai"
+# نسخة احتياطية يدوية قبل التحديث، تعمل حتى لو لم تكن أداة backup.py مثبتة بعد
+BACKUP="$HOME/star-osint-v1-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+tar -czf "$BACKUP" .env data reports
+chmod 600 "$BACKUP"
+echo "Backup saved: $BACKUP"
+
+# البحث في مجلد التنزيلات العادي ثم Temp الخاص بـ Edge
+ZIP="$(find /mnt/c/Users/hp/Downloads /mnt/c/Users/hp/AppData/Local/Temp/MicrosoftEdgeDownloads \
+ -type f -name 'STAR_OSINT_AI_Kali_v2_update.zip' -print -quit 2>/dev/null)"
+if [ -z "$ZIP" ]; then echo 'Download ZIP via ChatGPT and Ctrl+J in Edge first'; else
+ unzip -t "$ZIP" && unzip -o "$ZIP" -d "$HOME/Downloads"
+fi
+
+cd "$HOME/Downloads/star-osint-ai"
+.venv/bin/python -m pytest -q
+./doctor.sh
+./start.sh
+
+3. افتح http://127.0.0.1:8787
+4. جرب القائمة «مركز التحليلات».
+5. شغّل فحصاً جديداً لرؤية حالة كل مصدر، ثم كرّر الفحص للمقارنة.
+
+لا يتم الوصول إلى شبكة عند إجراء الاختبارات الآلية (مع mock للأدوات).
+Ollama يحتاج أن يعمل منفصلاً، ويمكن اختباره عبر ./doctor.sh.

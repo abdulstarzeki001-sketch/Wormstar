@@ -49,8 +49,13 @@ def domain_permitted(value: str, allowlist: str) -> bool:
             continue
         if entry == domain:
             return True
-        if entry.startswith("*.") and domain.endswith(entry[1:]) and domain != entry[2:]:
-            return True
+        if entry.startswith("*."):
+            try:
+                base = canonical_domain(entry[2:])
+            except ValueError:
+                continue
+            if base == entry[2:] and domain.endswith("." + base) and domain != base:
+                return True
     return False
 
 

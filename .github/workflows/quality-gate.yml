@@ -10,6 +10,21 @@ permissions:
   contents: read
 
 jobs:
+  osint:
+    name: STAR OSINT Offline Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate OSINT module Python sources
+        run: |
+          python3 -m py_compile integrations/star-osint/engine.py integrations/star-osint/infra.py integrations/star-osint/api_adapter.py
+      - name: Run authorized-scope and offline correlation tests
+        run: python3 -m unittest discover -s integrations/star-osint/tests -p 'test_*.py' -v
+
   terminal:
     name: Private Terminal Tests
     runs-on: ubuntu-latest

@@ -1,0 +1,10 @@
+# Local OSINT outputs and authorization files must not reach public GitHub.
+reports/
+raw/
+output/
+*.sqlite3
+*.sqlite3-*
+scope.json
+*.scope.json
+__pycache__/
+*.py[cod]

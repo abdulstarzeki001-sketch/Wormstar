@@ -106,6 +106,8 @@ assert.equal((await go("/api/admin/secrets",{method:"POST",headers:jsonHeaders,b
 
 const beforeAuditCalls=forwarded.length;
 assert.match(html,/data-open-audit/);
+assert.match(html,/data-page="osint"/);
+assert.match(html,/href="\/osint\/"/);
 assert.match(html,/closest\("\[data-open-audit\]"\)/);
 assert.match(html,/href="\/audit\/"/);
 assert.match(html,/SOURCE_INVENTORY\.json/);
@@ -128,4 +130,28 @@ assert.equal((await go("/audit/missing")).status,404);
 assert.equal((await go("/audit/",{method:"POST",body:"ignored"})).status,405);
 assert.equal(forwarded.length,beforeAuditCalls,"Local audit must not invoke private Core");
 
-console.log("Unified Sentinel + iSH audit: layout, auth, origin, size, and chat proxy tests passed");
+// STAR OSINT stays on the Sentinel origin and never forwards to private Core.
+const beforeOsintCalls=forwarded.length;
+response=await go('/osint/');
+assert.equal(response.status,200);
+assert.match(response.headers.get('Content-Security-Policy'),/frame-ancestors 'none'/);
+assert.match(response.headers.get('Cache-Control'),/no-store/);
+const osintHtml=await response.text();
+assert.match(osintHtml,/STAR OSINT AI/);
+assert.match(osintHtml,/id="reportFile"/);
+assert.match(osintHtml,/127\.0\.0\.1:8787/);
+assert.match(osintHtml,/\.textContent/);
+assert.doesNotMatch(osintHtml,/fetch\s*\(/);
+assert.doesNotMatch(osintHtml,/innerHTML\s*=/);
+assert.equal((await go('/osint')).status,200);
+assert.equal((await go('/osint/index.html')).status,200);
+assert.equal((await go('/osint/health')).status,200);
+assert.equal((await go('/osint/health')).headers.get('Cache-Control'),'no-store');
+assert.equal((await go('/osint/missing')).status,404);
+assert.equal((await go('/osint/',{method:'POST',body:'{}'})).status,405);
+response=await go('/osint/',{method:'HEAD'});
+assert.equal(response.status,200);
+assert.equal(await response.text(),'');
+assert.equal(forwarded.length,beforeOsintCalls,'OSINT must not invoke owner Core');
+
+console.log("Unified Sentinel + iSH + STAR OSINT: offline dashboard and Core isolation passed");

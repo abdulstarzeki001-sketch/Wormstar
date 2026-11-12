@@ -448,6 +448,32 @@ bash scripts/run-uboor-lab.sh</pre>
    <div class="feature"><div class="feature-icon">02</div><strong data-i18n="osint_analyze">تحليل Qwen محلي</strong><p data-i18n="osint_analyze_desc">يقوم Ollama بإعداد التقرير على جهازك، ولا نرسل الأدلة تلقائياً إلى Wormstar Core.</p></div>
    <div class="feature"><div class="feature-icon">03</div><strong data-i18n="osint_review">عرض التقارير داخل Wormstar</strong><p data-i18n="osint_review_desc">استورد JSON يدوياً لعرض النتائج والأدلة والملخص في متصفحك فقط.</p></div>
   </div>
+  <div class="ops-panel" id="osintCloudPanel" style="margin-top:20px">
+   <h3>تشغيل فحص Kali من Wormstar Cloud</h3>
+   <p>يضع Wormstar مهمة فحص سلبي في طابور Cloudflare؛ يستلمها وكيل Kali عبر اتصال HTTPS صادر فقط. يتطلب تشغيل الوكيل محلياً وإعداد قائمة النطاقات المصرح بها.</p>
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px">
+    <div>
+     <label for="osintCloudDomain">النطاق المسموح</label>
+     <input id="osintCloudDomain" type="text" placeholder="your-owned-domain.com" maxlength="253" autocomplete="off" style="width:100%">
+    </div>
+    <div><div>مصادر OSINT السلبية</div>
+     <label><input type="checkbox" name="osintCloudCollector" value="dns" checked> DNS</label>
+     <label><input type="checkbox" name="osintCloudCollector" value="ct" checked> CT</label>
+     <label><input type="checkbox" name="osintCloudCollector" value="whois"> WHOIS</label>
+     <label><input type="checkbox" name="osintCloudCollector" value="harvester"> theHarvester</label>
+     <label><input type="checkbox" name="osintCloudCollector" value="amass"> Amass passive</label>
+    </div>
+   </div>
+   <p><label><input id="osintCloudAnalyze" type="checkbox"> تحليل النتيجة بواسطة Ollama المحلي بعد الفحص (اختياري)</label></p>
+   <p><label><input id="osintCloudConfirm" type="checkbox"> أؤكد امتلاكي أو تفويضي بفحص هذا النطاق وأنه ضمن قائمة السماح على Kali وCloudflare.</label></p>
+   <div class="ops-actions">
+    <button type="button" class="btn primary" id="osintCloudStart">بدء الفحص من السحابة</button>
+    <button type="button" class="btn" id="osintCloudRefresh">تحديث حالة الفحوص</button>
+    <button type="button" class="btn" data-goto="assistant">تسجيل دخول Wormstar Core</button>
+   </div>
+   <p id="osintCloudStatus" role="status" aria-live="polite">سجّل الدخول إلى Wormstar Core باستخدام مفتاح المالك قبل إصدار المهام.</p>
+   <div id="osintCloudJobs" aria-label="قائمة مهام OSINT"></div>
+  </div>
   <div class="ops-panel" style="margin-top:20px">
    <h3>STAR OSINT AI · Browser Review</h3>
    <p data-i18n="osint_note">افتح عارض التقارير الآمن أو لوحة Kali المحلية. الرابط المحلي يعمل فقط من الجهاز الذي يشغّل الخدمة؛ لا يوجد وصول بعيد تلقائي.</p>
@@ -770,6 +796,72 @@ async function repositoryControl(path,body){
 }
 $("#repoStatusBtn").addEventListener("click",()=>repositoryControl("/api/repo/status"));
 $("#repoSyncBtn").addEventListener("click",()=>repositoryControl("/api/repo/sync",{maxFiles:4}));
+
+// Cloud-origin OSINT jobs use the existing in-memory Wormstar Core owner token.
+let osintCloudRefreshing=false;
+function osintCloudNotice(value){$("#osintCloudStatus").textContent=String(value).slice(0,300);}
+async function osintCloudRequest(path,method="GET",body){
+  if(!wormstarAccess)throw Error("اتصل بمفتاح Wormstar Core من صفحة المساعد أولاً.");
+  const response=await fetch(path,{method,cache:"no-store",
+    headers:{Authorization:"Bearer "+wormstarAccess,...(body?{"Content-Type":"application/json"}:{})},
+    ...(body?{body:JSON.stringify(body)}:{})});
+  const payload=await response.json();
+  if(!response.ok)throw Error(payload.error||("HTTP "+response.status));
+  return payload;
+}
+async function osintCloudRefresh(){
+  if(osintCloudRefreshing)return;
+  osintCloudRefreshing=true;
+  try{
+    const payload=await osintCloudRequest("/api/osint/jobs");
+    const root=$("#osintCloudJobs");root.replaceChildren();
+    for(const job of (payload.jobs||[]).slice(0,12)){
+      const card=document.createElement("div");card.className="ops-panel";card.style.marginTop="10px";
+      const head=document.createElement("strong");
+      head.textContent=job.domain+" — "+job.status+" — #"+job.id.slice(0,8);
+      card.append(head);
+      const note=document.createElement("p");
+      note.textContent="المصادر: "+job.collectors.join(", ")+(job.result?" · أدلة: "+job.result.count:"");
+      card.append(note);
+      if(job.error){const err=document.createElement("p");err.textContent="ملاحظة: "+job.error;card.append(err);}
+      if(job.result){
+        const detail=document.createElement("details");
+        const summary=document.createElement("summary");summary.textContent="عرض الأدلة والتحليل";
+        const pre=document.createElement("pre");
+        pre.style.whiteSpace="pre-wrap";pre.style.overflowWrap="anywhere";
+        pre.textContent=JSON.stringify(job.result,null,2).slice(0,36000);
+        detail.append(summary,pre);card.append(detail);
+      }
+      root.append(card);
+    }
+    osintCloudNotice((payload.jobs||[]).length?"تم تحديث المهام من Cloudflare D1.":"لا توجد مهام بعد.");
+  }catch(error){osintCloudNotice("تعذر قراءة المهام: "+String(error.message).slice(0,170));}
+  finally{osintCloudRefreshing=false;}
+}
+$("#osintCloudStart").addEventListener("click",async()=>{
+  const domain=$("#osintCloudDomain").value.trim().toLowerCase();
+  const collectors=$('input[name="osintCloudCollector"]:checked').map(x=>x.value);
+  if(!$("#osintCloudConfirm").checked){osintCloudNotice("يجب تأكيد صلاحية النطاق أولاً.");return;}
+  if(!domain||collectors.length===0){osintCloudNotice("حدد نطاقاً ومصدراً واحداً على الأقل.");return;}
+  const btn=$("#osintCloudStart");btn.disabled=true;
+  osintCloudNotice("جارٍ إنشاء المهمة لدى Wormstar Core...");
+  try{
+    const job=await osintCloudRequest("/api/osint/jobs","POST",{domain,collectors,
+      analyze:$("#osintCloudAnalyze").checked,confirmed:true});
+    $("#osintCloudConfirm").checked=false;
+    osintCloudNotice("تم إنشاء المهمة #"+job.id.slice(0,8)+". سيستلمها وكيل Kali عند اتصاله.");
+    await osintCloudRefresh();
+  }catch(error){osintCloudNotice("فشل إنشاء المهمة: "+String(error.message).slice(0,170));}
+  finally{btn.disabled=false;}
+});
+$("#osintCloudRefresh").addEventListener("click",osintCloudRefresh);
+$('[data-page="osint"]').forEach(b=>b.addEventListener("click",()=>{
+  if(wormstarAccess)void osintCloudRefresh();
+}));
+setInterval(()=>{
+  if(wormstarAccess&&$("#page-osint").classList.contains("active"))void osintCloudRefresh();
+},12000);
+
 $("#sendBtn").addEventListener("click",sendMessage);
 $("#chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();void sendMessage();}});
 $("#attachBtn").addEventListener("click",()=>$("#aiTextFile").click());

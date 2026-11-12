@@ -1,0 +1,61 @@
+name: STAR OSINT Cloud Bridge Security Gate
+
+on:
+  push:
+    branches:
+      - feature/star-osint-ai-v2-20261112
+      - main
+    paths:
+      - 'cloudflare-worker/osint-bridge.js'
+      - 'cloudflare-worker/worker.js'
+      - 'cloudflare-worker/permissions.json'
+      - 'cloudflare-worker/permissions-module.js'
+      - 'cloudflare-worker/tests/osint-bridge.test.mjs'
+      - 'wormstar-ui/**'
+      - 'integrations/star-osint-ai/**'
+      - '.github/workflows/osint-cloud-bridge.yml'
+  pull_request:
+    paths:
+      - 'cloudflare-worker/osint-bridge.js'
+      - 'cloudflare-worker/worker.js'
+      - 'cloudflare-worker/tests/osint-bridge.test.mjs'
+      - 'wormstar-ui/**'
+      - 'integrations/star-osint-ai/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cloud-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Core JS safety tests and versioned policy
+        working-directory: cloudflare-worker
+        run: |
+          node --check osint-bridge.js
+          npm test
+      - name: Sentinel routing and UI tests
+        working-directory: wormstar-ui
+        run: npm test
+  kali-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install local agent test dependencies
+        working-directory: integrations/star-osint-ai
+        run: |
+          python -m pip install -r requirements.txt
+      - name: Run offline collector and cloud-agent tests
+        working-directory: integrations/star-osint-ai
+        run: |
+          python -m pytest -q

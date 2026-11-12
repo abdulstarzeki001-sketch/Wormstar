@@ -1,6 +1,6 @@
 // STAR OSINT — same-origin, browser-local read-only report viewer.
 // No API collection, no remote upload, no access to CORE, D1, tokens or filesystem.
-const HTML = String.raw\`<!doctype html>
+const HTML = String.raw`<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -65,9 +65,9 @@ footer{padding:20px 0;color:#91a9bb;font-size:12px}
 </main>
 <script defer src="/osint/app.js"></script>
 </body>
-</html>\`;
+</html>`;
 
-const CLIENT_JS = String.raw\`(() => {
+const CLIENT_JS = String.raw`(() => {
   'use strict';
   const byId = id => document.getElementById(id);
   const state = { report: null, infrastructure: null };
@@ -171,7 +171,7 @@ const CLIENT_JS = String.raw\`(() => {
   });
   byId('filter').addEventListener('input', render);
   render();
-})();\`;
+})();`;
 
 const BASE_HEADERS = {
   "X-Content-Type-Options": "nosniff",

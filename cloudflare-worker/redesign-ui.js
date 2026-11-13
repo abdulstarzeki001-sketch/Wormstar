@@ -3,6 +3,9 @@ const REDESIGN_HTML = "<!doctype html>\n<html lang=\"ar\" dir=\"rtl\" data-theme
  * Keep Railway's own password page and access controls unchanged.
  * Never append Wormstar tokens or secrets to this external URL.
  */
-const TERMINAL_NAV_LINK = '<a class="nav-btn ws-terminal-nav" href="https://terminal-production-fb16bd35.up.railway.app/" aria-label="Linux Terminal — Railway" style="display:flex;align-items:center;gap:10px;min-height:41px;text-decoration:none"><span aria-hidden="true" style="font-size:19px">⌘</span><span>Linux Terminal</span><small style="margin-inline-start:auto;color:#76e9cb">Railway</small></a>';
+const TERMINAL_NAV_LINK = '<a class="nav-btn ws-terminal-nav" href="/terminal/" aria-label="Linux Terminal — Wormstar One" style="display:flex;align-items:center;gap:10px;min-height:41px;text-decoration:none"><span aria-hidden="true" style="font-size:19px">⌘</span><span>Linux Terminal</span><small style="margin-inline-start:auto;color:#76e9cb">Railway</small></a>' +
+ '<a class="nav-btn" href="/suite/" aria-label="جميع وحدات Wormstar" style="display:flex;align-items:center;gap:10px;min-height:41px;text-decoration:none"><span aria-hidden="true">▦</span><span>Wormstar ONE</span></a>' +
+ '<a class="nav-btn" href="/osint/" aria-label="OSINT Intelligence" style="display:flex;align-items:center;gap:10px;min-height:41px;text-decoration:none"><span aria-hidden="true">◎</span><span>OSINT</span></a>' +
+ '<a class="nav-btn" href="/audit/" aria-label="Security Audit" style="display:flex;align-items:center;gap:10px;min-height:41px;text-decoration:none"><span aria-hidden="true">⬡</span><span>Audit</span></a>';
 const TERMINAL_UI = REDESIGN_HTML.replace('</nav>', TERMINAL_NAV_LINK+'</nav>');
 export default TERMINAL_UI;

@@ -104,7 +104,9 @@ export async function openTerminalWebSocket(request,env,deps={}) {
   if((request.headers.get('Upgrade')||'').toLowerCase()!=='websocket')
     return json({error:'WebSocket upgrade required'},426);
   if(!sameOrigin(request,true))return json({error:'Forbidden origin'},403);
-  if(!secretsReady(env))return configurationError(env);
+  // Do not expose binding inventory to unauthenticated WebSocket requests.
+  // Owner-only diagnostics are returned from /api/terminal/session instead.
+  if(!secretsReady(env))return json({error:'Terminal unavailable'},503);
   const offered=(request.headers.get('Sec-WebSocket-Protocol')||'').split(',').map(x=>x.trim());
   if(offered.length!==2 || offered[0]!=='wormstar-terminal' ||
      !offered[1].startsWith('ticket.'))

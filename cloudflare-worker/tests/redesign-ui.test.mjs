@@ -50,7 +50,7 @@ test('UI does not create an arbitrary execution or network-scan surface', () => 
 test('Cloudflare Worker serves the redesign but retains protected backend routes', () => {
   assert.match(worker, /import REDESIGN_HTML from '\.\/redesign-ui\.js'/);
   assert.match(worker, /const FUTURE_HTML=REDESIGN_HTML/);
-  assert.match(worker, /new Response\(FUTURE_HTML/);
+  assert.match(worker, /compactPage\(FUTURE_HTML\.replace/);
   assert.match(worker, /url\.pathname==='\/api\/chat'/);
   assert.match(worker, /url\.pathname\.startsWith\('\/api\/studio\/'\)/);
   assert.match(worker, /async function allow\(request,env\)/);

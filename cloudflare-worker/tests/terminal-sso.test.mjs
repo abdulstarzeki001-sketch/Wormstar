@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createTerminalTicket,openTerminalWebSocket,terminalGatewayInternals} from '../terminal-gateway.js';
+import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway,terminalGatewayInternals} from '../terminal-gateway.js';
 import {TERMINAL_HTML} from '../terminal-page.js';
 
 const origin='https://wormstar-ai-lab.abdulstarzeki001.workers.dev';
@@ -19,7 +19,7 @@ class Socket {
   addEventListener(type,fn){(this.handlers[type] ||= []).push(fn);}
   emit(type,data){for(const fn of this.handlers[type]||[])fn({data});}
   send(value){this.sent.push(value);}
-  close(){this.readyState=3;this.emit('close');}
+  close(code=1000,reason=''){this.closedWith={code,reason};this.readyState=3;this.emit('close');}
 }
 
 test('terminal HTML reuses AI Lab owner login without a second password form',()=>{
@@ -28,6 +28,8 @@ test('terminal HTML reuses AI Lab owner login without a second password form',()
   assert.match(TERMINAL_HTML,/\/api\/auth/);
   assert.match(TERMINAL_HTML,/\/api\/terminal\/session/);
   assert.match(TERMINAL_HTML,/\/api\/terminal\/ws/);
+  assert.match(TERMINAL_HTML,/\/api\/terminal\/diagnose/);
+  assert.match(TERMINAL_HTML,/RAILWAY_AUTH_REJECTED/);
   assert.doesNotMatch(TERMINAL_HTML,/type="password"|id="pw"|id="password"/);
   assert.doesNotMatch(TERMINAL_HTML,/terminal-production-fb16bd35\.up\.railway\.app/);
   const match=TERMINAL_HTML.match(/<script>([\s\S]*?)<\/script>/);
@@ -141,9 +143,92 @@ test('Core routes preserve owner allow and do not expose Railway password in HTM
  const ui=readFileSync(new URL('../redesign-ui.js',import.meta.url),'utf8');
  assert.match(core,/createTerminalTicket\(request,env,await allow\(request,env\)\)/);
  assert.match(core,/openTerminalWebSocket\(request,env\)/);
+ assert.match(core,/diagnoseTerminalGateway\(request,env,await allow\(request,env\)\)/);
  assert.match(core,/if\(request.method==='GET'&&\['\/terminal','\/terminal\/'\]\.includes\(url.pathname\)\)/);
  assert.match(ui,/href="\/terminal"/);
  assert.match(core,/frame-ancestors 'none'/);
  assert.doesNotMatch(ui,/TERMINAL_RAILWAY_PASSWORD|TERMINAL_TICKET_SECRET/);
  assert.doesNotMatch(TERMINAL_HTML,/TERMINAL_RAILWAY_PASSWORD|TERMINAL_TICKET_SECRET/);
+});
+
+
+test('authenticated diagnostics distinguishes health, handshake and rejected password',async()=>{
+  assert.equal((await diagnoseTerminalGateway(request('/api/terminal/diagnose'),goodEnv,false)).status,401);
+  assert.equal((await diagnoseTerminalGateway(request('/api/terminal/diagnose','GET'),goodEnv,true)).status,405);
+  assert.equal((await diagnoseTerminalGateway(
+    request('/api/terminal/diagnose','POST',{Origin:'https://evil.example'}),goodEnv,true)).status,403);
+  const badSecrets=await diagnoseTerminalGateway(request('/api/terminal/diagnose'),{},true);
+  assert.equal(badSecrets.status,503);
+  const badHealth=await diagnoseTerminalGateway(request('/api/terminal/diagnose'),goodEnv,true,{
+    fetchBackend:async()=>({ok:false})
+  });
+  assert.equal((await badHealth.json()).code,'RAILWAY_HEALTH_FAILED');
+  const badUpgrade=await diagnoseTerminalGateway(request('/api/terminal/diagnose'),goodEnv,true,{
+    fetchBackend:async url=>url.endsWith('/health')
+      ? {ok:true}:{status:400,webSocket:null}
+  });
+  assert.equal((await badUpgrade.json()).code,'BACKEND_WS_UPGRADE_REJECTED');
+  for(const success of [true,false]){
+    const upstream=new Socket();
+    upstream.send=value=>{
+      upstream.sent.push(value);
+      const msg=JSON.parse(value);
+      assert.equal(msg.type,'auth');
+      if(success)upstream.emit('message',JSON.stringify({type:'ready'}));
+      else upstream.emit('message',JSON.stringify({type:'error',message:'UNTRUSTED_SECRET_INJECTION'}));
+    };
+    const r=await diagnoseTerminalGateway(request('/api/terminal/diagnose'),goodEnv,true,{
+      fetchBackend:async url=>url.endsWith('/health')
+        ? {ok:true}:{status:101,webSocket:upstream}
+    });
+    const body=await r.json();
+    assert.equal(body.stage,'authentication');
+    assert.equal(body.code,success?'READY':'RAILWAY_AUTH_REJECTED');
+    assert.equal(r.status,success?200:503);
+    assert.equal(JSON.stringify(body).includes(goodEnv.TERMINAL_RAILWAY_PASSWORD),false);
+    assert.equal(JSON.stringify(body).includes('UNTRUSTED_SECRET_INJECTION'),false);
+    assert.equal(upstream.closedWith.code,1000);
+  }
+});
+
+test('Railway authentication rejection reaches Safari with explicit close code and no secrets',async()=>{
+  const minted=await createTerminalTicket(request('/api/terminal/session'),goodEnv,true);
+  const ticket=(await minted.json()).ticket;
+  const remote=new Socket(),client=new Socket(),server=new Socket();
+  const result=await openTerminalWebSocket(request('/api/terminal/ws','GET',{
+    Upgrade:'websocket','Sec-WebSocket-Protocol':'wormstar-terminal, ticket.'+ticket
+  }),goodEnv,{
+    fetchBackend:async()=>({status:101,webSocket:remote}),
+    createPair:()=>({0:client,1:server}),
+    makeUpgradeResponse:(s,h)=>({status:101,webSocket:s,headers:h})
+  });
+  assert.equal(result.status,101);
+  assert.deepEqual(JSON.parse(remote.sent[0]),{
+    type:'auth',password:goodEnv.TERMINAL_RAILWAY_PASSWORD
+  });
+  remote.emit('message',JSON.stringify({type:'error',message:'UNTRUSTED_SECRET_INJECTION'}));
+  assert.deepEqual(server.closedWith,{code:1008,reason:'RAILWAY_AUTH_REJECTED'});
+  assert.ok(server.sent.some(v=>JSON.parse(v).code==='RAILWAY_AUTH_REJECTED'));
+  assert.ok(!server.sent.some(v=>v.includes('UNTRUSTED_SECRET_INJECTION')));
+  assert.ok(!server.sent.some(v=>v.includes(goodEnv.TERMINAL_RAILWAY_PASSWORD)));
+});
+
+test('Railway close before ready and after ready are different statuses',async()=>{
+  for(const started of [false,true]){
+    const minted=await createTerminalTicket(request('/api/terminal/session'),goodEnv,true);
+    const ticket=(await minted.json()).ticket;
+    const remote=new Socket(),client=new Socket(),server=new Socket();
+    await openTerminalWebSocket(request('/api/terminal/ws','GET',{
+      Upgrade:'websocket','Sec-WebSocket-Protocol':'wormstar-terminal, ticket.'+ticket
+    }),goodEnv,{
+      fetchBackend:async()=>({status:101,webSocket:remote}),
+      createPair:()=>({0:client,1:server}),
+      makeUpgradeResponse:(sock,headers)=>({status:101,webSocket:sock,headers})
+    });
+    if(started)remote.emit('message',JSON.stringify({type:'ready'}));
+    remote.close(1000,'backend closed');
+    assert.deepEqual(server.closedWith,started
+      ? {code:1000,reason:'RAILWAY_CLOSED'}
+      : {code:1011,reason:'RAILWAY_CLOSED_BEFORE_READY'});
+  }
 });

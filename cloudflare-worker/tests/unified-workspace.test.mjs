@@ -16,6 +16,9 @@ test('unified hub exposes accessible navigation and 15 real project entries',()=
   assert.match(WORKSPACE_HTML,/href="\/academy"/);
   assert.match(WORKSPACE_HTML,/\/api\/chat/);
   assert.match(WORKSPACE_HTML,/\/api\/repo\/ask/);
+  for(const model of ['gpt-oss-120b','gpt-oss-20b','qwen-coder','llama-3.3']){
+    assert.ok(WORKSPACE_HTML.includes('value="'+model+'"'), 'Missing selectable model '+model);
+  }
   assert.match(WORKSPACE_HTML,/\/api\/security\/header-audit/);
   assert.match(WORKSPACE_HTML,/Cloud Bridge/);
 });
@@ -52,4 +55,15 @@ test('hub never embeds credentials or arbitrary execution endpoints',()=>{
   assert.doesNotMatch(WORKSPACE_HTML,/\/api\/(?:shell|exec|execute)\b/);
   assert.match(WORKSPACE_HTML,/sessionStorage/);
   assert.doesNotMatch(WORKSPACE_HTML,/localStorage/);
+});
+
+test('repository-only endpoint accepts Llama 3.3 before checking backend bindings',async()=>{
+  const secret='test-model-selection-owner-token';
+  const response=await worker.fetch(new Request(url+'/api/repo/ask',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+secret,'Content-Type':'application/json'},
+    body:JSON.stringify({message:'Explain repository entry points',engine:'llama-3.3',mode:'assistant'})
+  }),{WORMSTAR_ACCESS_TOKEN:secret},{waitUntil(){}});
+  assert.equal(response.status,503);
+  assert.equal((await response.json()).error,'Knowledge or inference binding missing');
 });

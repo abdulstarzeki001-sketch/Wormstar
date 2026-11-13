@@ -10,7 +10,7 @@ import FUTURE_UI from './future-ui.js';
 import REDESIGN_HTML from './redesign-ui.js';
 import {WORKSPACE_HTML,WORKSPACE_SHORTCUT} from './unified-workspace.js';
 import {TERMINAL_HTML} from './terminal-page.js';
-import {createTerminalTicket,openTerminalWebSocket} from './terminal-gateway.js';
+import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway} from './terminal-gateway.js';
 import ACADEMY_HTML from './academy-page.js';
 import {compactPage} from './compact-layout.js';
 import { invokeWormGPT, wormgptConfigured } from './wormgpt-provider.js';
@@ -741,6 +741,8 @@ export default {
       return createTerminalTicket(request,env,await allow(request,env));
     if(url.pathname==='/api/terminal/ws')
       return openTerminalWebSocket(request,env);
+    if(url.pathname==='/api/terminal/diagnose')
+      return diagnoseTerminalGateway(request,env,await allow(request,env));
     if(request.method==='POST'&&url.pathname==='/api/auth')return (await allow(request,env))?json({ok:true}):json({error:'Unauthorized'},401);
     if(url.pathname.startsWith('/api/lab/')){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);

@@ -63,6 +63,7 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
    <strong>terminal@wormstar:~</strong>
    <div class="buttons">
      <button type="button" id="connect" class="btn primary">اتصال</button>
+     <button type="button" id="diagnose" class="btn">فحص الاتصال</button>
      <button type="button" id="interrupt" class="btn" disabled>Ctrl+C</button>
      <button type="button" id="copy" class="btn">نسخ المخرجات</button>
      <button type="button" id="clear" class="btn">مسح الشاشة</button>
@@ -87,7 +88,7 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
 const el=id=>document.getElementById(id);
 const out=el('output');
 const status=(state,text)=>{el('status').dataset.state=state;el('statusText').textContent=text};
-let socket=null,ready=false,connecting=false;
+let socket=null,ready=false,connecting=false,diagnosing=false,lastCode='';
 const ownerKey=()=>{try{return sessionStorage.getItem('wormstar-access')||''}catch(_){return ''}};
 function log(line){
  const plain=String(line||'').replace(/\x1b\[[0-?]*[ -/]*[@-~]/g,'').replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g,'').replace(/\r/g,'');
@@ -105,11 +106,50 @@ function disconnected(message){
  ready=false;connecting=false;socket=null;updateUi();status('idle',message);
 }
 function send(data){if(socket&&socket.readyState===WebSocket.OPEN)socket.send(JSON.stringify(data))}
+
+const FAILURE_MESSAGES={
+ RAILWAY_AUTH_REJECTED:'رفض Railway كلمة المرور المحفوظة لدى Cloudflare. يجب أن تطابق كلمة مرور Railway نفسها حرفياً.',
+ RAILWAY_UNREACHABLE:'Cloudflare لا يستطيع الاتصال بخدمة Railway. افحص الدومين وحالة الخدمة.',
+ RAILWAY_HEALTH_FAILED:'Railway لا يستجيب لفحص /health بنجاح.',
+ BACKEND_WS_CONNECT_FAILED:'تعذّر فتح WebSocket من Cloudflare إلى Railway.',
+ BACKEND_WS_UPGRADE_REJECTED:'Railway رفض ترقية اتصال WebSocket. تحقق من مسار /ws.',
+ BACKEND_WS_ACCEPT_FAILED:'تعذّر تهيئة WebSocket لدى Cloudflare.',
+ RAILWAY_AUTH_TIMEOUT:'انتهت مهلة مصادقة Railway.',
+ RAILWAY_CLOSED_BEFORE_READY:'أغلق Railway الاتصال قبل تشغيل جلسة Linux.',
+ RAILWAY_SOCKET_ERROR:'حدث خطأ في WebSocket الخاص بخادم Railway.',
+ RAILWAY_AUTH_SEND_FAILED:'فشل إرسال طلب المصادقة إلى Railway.'
+};
+function displayFailure(code){
+ const label=FAILURE_MESSAGES[code]||'فشل اتصال الطرفية: '+String(code||'UNKNOWN');
+ status('error',label);
+ log('\n['+label+']\n');
+}
+async function diagnose(){
+ if(diagnosing)return;
+ const token=ownerKey();
+ if(!token){status('error','سجّل دخول المالك إلى AI Lab أولاً');return;}
+ diagnosing=true;el('diagnose').disabled=true;
+ status('idle','جارٍ فحص Railway وWebSocket والمصادقة...');
+ try{
+  const res=await fetch('/api/terminal/diagnose',{
+   method:'POST',headers:{Authorization:'Bearer '+token},cache:'no-store'
+  });
+  const data=await res.json().catch(()=>({}));
+  if(data.ok&&data.code==='READY'){
+   status('ready','Railway وWebSocket وكلمة المرور جاهزة — اضغط اتصال');
+   log('\n[فحص الاتصال: جميع المراحل ناجحة]\n');
+  }else if(data.code) displayFailure(data.code);
+  else if(data.invalidSecrets)displayFailure('CLOUDFLARE_SECRET_INVALID');
+  else if(res.status===401)status('error','انتهت جلسة المالك. سجّل الدخول مجدداً.');
+  else displayFailure('HTTP_'+res.status);
+ }catch(_){displayFailure('NETWORK_DIAGNOSTIC_ERROR')}
+ finally{diagnosing=false;el('diagnose').disabled=false}
+}
 async function connect(){
  if(socket||connecting)return;
  const token=ownerKey();
  if(!token){status('error','سجّل الدخول إلى Wormstar AI Lab أولاً');log('\n[تحتاج دخول المالك من الصفحة الرئيسية]\n');return;}
- connecting=true;updateUi();status('idle','جارٍ التحقق من دخول المالك...');
+ lastCode='';connecting=true;updateUi();status('idle','جارٍ التحقق من دخول المالك...');
  try{
   const verified=await fetch('/api/auth',{method:'POST',headers:{Authorization:'Bearer '+token},cache:'no-store'});
   if(!verified.ok)throw Error('انتهت الجلسة. ارجع للصفحة الرئيسية وسجّل الدخول.');
@@ -129,19 +169,37 @@ async function connect(){
   const proto=location.protocol==='https:'?'wss:':'ws:';
   const ws=new WebSocket(proto+'//'+location.host+ticket.wsPath,['wormstar-terminal','ticket.'+ticket.ticket]);
   socket=ws;status('idle','جارٍ فتح قناة الطرفية...');
+  ws.onopen=()=>{if(socket===ws)status('idle','تم فتح WebSocket — جارٍ مصادقة Railway...')};
   ws.onmessage=event=>{
     let msg;try{msg=JSON.parse(event.data)}catch(_){return;}
     if(msg.type==='ready'){
       ready=true;connecting=false;updateUi();status('ready','متصل — جلسة Linux فعالة');el('command').focus();
     }else if(msg.type==='output'||msg.type==='info')log(msg.data);
-    else if(msg.type==='error')log('\n[حدث خطأ بالجلسة]\n');
+    else if(msg.type==='error'){
+      lastCode=typeof msg.code==='string'?msg.code:'RAILWAY_AUTH_REJECTED';
+      displayFailure(lastCode);
+    }
   };
-  ws.onclose=()=>{if(socket===ws){disconnected('انتهى اتصال الطرفية');log('\n[اتصال الطرفية انتهى]\n')}};
-  ws.onerror=()=>{if(socket===ws)status('error','فشل اتصال الطرفية. تحقق من إعداد بوابة Railway.');};
+  ws.onclose=event=>{
+    if(socket!==ws)return;
+    const hadShell=ready;
+    const reason=lastCode||event.reason||'';
+    disconnected('انتهى اتصال الطرفية');
+    if(reason && FAILURE_MESSAGES[reason])displayFailure(reason);
+    else if(!hadShell){
+      status('idle','فشل بدء الجلسة — جارٍ تحديد السبب...');
+      void diagnose();
+    }else{
+      status('idle','انتهت جلسة Linux. اضغط اتصال لإعادة الفتح.');
+      log('\n[انتهى اتصال الطرفية]\n');
+    }
+  };
+  ws.onerror=()=>{if(socket===ws)status('error','فشل اتصال WebSocket — جارٍ تحديد السبب...')};
   updateUi();
  }catch(error){disconnected('الطرفية غير متاحة');log('\n['+String(error.message||error)+']\n');}
 }
 el('connect').addEventListener('click',connect);
+el('diagnose').addEventListener('click',diagnose);
 el('disconnect').addEventListener('click',()=>{if(socket)socket.close(1000,'User disconnected');disconnected('تم قطع الاتصال')});
 el('interrupt').addEventListener('click',()=>send({type:'input',data:'\x03'}));
 el('clear').addEventListener('click',()=>{out.textContent='';});

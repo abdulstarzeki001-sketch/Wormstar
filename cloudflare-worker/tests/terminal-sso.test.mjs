@@ -95,7 +95,9 @@ test('WebSocket denies missing, stale, forged, and cross-origin credentials',asy
     assert.equal(res.status,status);
   }
   assert.equal((await openTerminalWebSocket(request('/api/terminal/ws','POST',validHeader),goodEnv)).status,405);
-  assert.equal((await openTerminalWebSocket(request('/api/terminal/ws','GET',validHeader),{})).status,503);
+  const noConfig=await openTerminalWebSocket(request('/api/terminal/ws','GET',validHeader),{});
+  assert.equal(noConfig.status,503);
+  assert.equal(JSON.stringify(await noConfig.json()).includes('invalidSecrets'),false);
 });
 
 test('gateway authenticates Railway only server-side and filters browser messages',async()=>{

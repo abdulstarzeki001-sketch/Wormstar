@@ -102,6 +102,49 @@ async function forwardCore(request, env, path) {
 
 // The second lab is served as a local module, not proxied across
 // Cloudflare accounts. Its static analysis dashboard never uploads files.
+// Suite health probes never forward user credentials or return upstream data.
+// Core is reached exclusively through the existing private service binding.
+async function suiteStatus(env) {
+  const checks = await Promise.allSettled([
+    (async () => {
+      if (!env?.CORE || typeof env.CORE.fetch !== "function") return false;
+      const response = await env.CORE.fetch(new Request("https://wormstar-core.internal/api/health", {method:"GET"}));
+      if (!response.ok) return false;
+      const data = await response.json().catch(() => ({}));
+      return data?.ok === true;
+    })(),
+    (async () => {
+      const response = await OSINT_APP.fetch(new Request("https://local-module.invalid/health", {method:"GET"}));
+      const data = response.ok ? await response.json() : null;
+      return data?.ok === true && data?.read_only === true;
+    })(),
+    (async () => {
+      const response = await AUDIT_APP.fetch(new Request("https://local-module.invalid/health", {method:"GET"}));
+      const data = response.ok ? await response.json() : null;
+      return data?.status === "ok" && data?.read_only === true;
+    })()
+  ]);
+  const available = index => checks[index].status === "fulfilled" && checks[index].value === true;
+  return apiReply({ok:true,modules:{
+    core:{reachable:available(0),authRequired:true},
+    osint:{reachable:available(1),readOnly:true,localOnly:true},
+    audit:{reachable:available(2),readOnly:true,localOnly:true}
+  }});
+}
+
+function suiteRedirect(path) {
+  // Fixed allowlist: credentials never pass through Sentinel or URL parameters.
+  const destination = path.startsWith("/core/workspace")
+    ? "https://wormstar-ai-lab.abdulstarzeki001.workers.dev/workspace"
+    : "https://wormstar-ai-lab.abdulstarzeki001.workers.dev/";
+  return new Response(null, {status:302,headers:{
+    "Location":destination,
+    "Cache-Control":"no-store",
+    "Referrer-Policy":"no-referrer",
+    "X-Content-Type-Options":"nosniff"
+  }});
+}
+
 async function auditPage(request, path) {
   const url=new URL(request.url);
   url.pathname=path.slice('/audit'.length)||'/';
@@ -129,6 +172,15 @@ export default {
     if (["/api/auth","/api/chat","/api/rag/status","/api/rag/reindex","/api/security/header-audit","/api/agents","/api/agents/run","/api/repo/status","/api/repo/sync","/api/repo/ask","/api/goclaw/status"].includes(path)) {
       return forwardCore(request, env, path);
     }
+    if (path === "/api/suite/status") {
+      if (request.method !== "GET") return apiReply({error:"Method not allowed"}, 405);
+      return suiteStatus(env);
+    }
+    if (["/core","/core/","/core/workspace","/core/workspace/"].includes(path)) {
+      if (request.method !== "GET" && request.method !== "HEAD")
+        return response("Method not allowed","text/plain; charset=utf-8",405);
+      return suiteRedirect(path);
+    }
     if (path === "/osint" || path.startsWith("/osint/")) {
       const url = new URL(request.url);
       url.pathname = path === "/osint" ? "/" : path.slice("/osint".length) || "/";
@@ -143,7 +195,7 @@ export default {
     if (request.method !== "GET" && request.method !== "HEAD") {
       return response("Method not allowed", "text/plain; charset=utf-8", 405);
     }
-    if (path === "/" || path === "/index.html") {
+    if (path === "/" || path === "/index.html" || path === "/workspace" || path === "/workspace/") {
       return response(request.method === "HEAD" ? null : INDEX, "text/html; charset=utf-8", 200, env?.TERMINAL_UI_BACKEND_ORIGIN || "");
     }
     if (path === "/terminal.js") {

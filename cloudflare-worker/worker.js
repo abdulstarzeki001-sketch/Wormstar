@@ -11,6 +11,7 @@ import REDESIGN_HTML from './redesign-ui.js';
 import {WORKSPACE_HTML,WORKSPACE_SHORTCUT} from './unified-workspace.js';
 import {TERMINAL_HTML} from './terminal-page.js';
 import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway} from './terminal-gateway.js';
+import {serveRailwayTerminal,serveSentinelModule,suiteLanding} from './unified-suite-proxy.js';
 import ACADEMY_HTML from './academy-page.js';
 import {compactPage} from './compact-layout.js';
 import { invokeWormGPT, wormgptConfigured } from './wormgpt-provider.js';
@@ -698,6 +699,16 @@ export default {
   },
   async fetch(request,env,ctx){
     const url=new URL(request.url);
+    // WORMSTAR ONE: serve fixed, credential-isolated pages on the AI Lab origin.
+    if(url.pathname==='/suite'||url.pathname==='/suite/') {
+      if(request.method!=='GET')return new Response('Method not allowed',{status:405});
+      return suiteLanding();
+    }
+    if(url.pathname==='/terminal'||url.pathname.startsWith('/terminal/'))
+      return serveRailwayTerminal(request);
+    if(url.pathname==='/osint'||url.pathname.startsWith('/osint/')||
+       url.pathname==='/audit'||url.pathname.startsWith('/audit/'))
+      return serveSentinelModule(request,env);
     if(request.method==='GET'&&url.pathname==='/service-worker.js'){
       return new Response(PWA_SERVICE_WORKER,{headers:{...PUBLIC_ASSET_HEADERS,'Content-Type':'application/javascript;charset=utf-8','Cache-Control':'no-cache','Service-Worker-Allowed':'/'}});
     }

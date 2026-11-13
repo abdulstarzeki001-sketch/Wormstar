@@ -34,3 +34,8 @@ index_name = "wormstar-repository-m3"
 # Incremental GitHub sync; catches source changes without any browser credentials.
 [triggers]
 crons = ["7,22,37,52 * * * *"]
+
+# Internal, credential-free routes to the local-only OSINT/Audit viewers.
+[[services]]
+binding = "SENTINEL_SUITE"
+service = "wormstar-sentinel-preview"

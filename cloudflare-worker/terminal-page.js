@@ -117,7 +117,8 @@ async function connect(){
   if(!response.ok){
    const body=await response.json().catch(()=>({}));
    if(body.code==='TERMINAL_CONFIGURATION_INVALID' && Array.isArray(body.invalidSecrets)){
-    const names=body.invalidSecrets.filter(name=>name==='TERMINAL_TICKET_SECRET'||name==='TERMINAL_RAILWAY_PASSWORD');
+    const names=body.invalidSecrets.filter(name=>typeof name==='string' &&
+      /^[A-Z][A-Z0-9_]{3,80}$/.test(name)).slice(0,2);
     throw Error('إعداد Cloudflare غير مكتمل: راجع قيمة '+(names.join(' و ')||'Secrets')+
       ' في Settings → Variables and Secrets. لا ترسل قيمة السر إلى المحادثة.');
    }

@@ -31,5 +31,5 @@ test('academy is a static GET route with private headers and strict CSP',()=>{
   assert.ok(worker.includes("'X-Robots-Tag':'noindex, nofollow'"));
   assert.ok(worker.includes("url.pathname==='/api/chat'"));
   assert.ok(worker.includes("url.pathname.startsWith('/api/studio/')"));
-  assert.ok(worker.includes("new Response(FUTURE_HTML"));
+  assert.ok(worker.includes("compactPage(FUTURE_HTML.replace"));
 });

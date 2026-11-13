@@ -701,7 +701,7 @@ export default {
   async fetch(request,env,ctx){
     const url=new URL(request.url);
     // Only public, fixed-path first-party motion assets; no API credentials.
-    if(url.pathname==='/ui/engine.js'||url.pathname.startsWith('/ui/vendor/'))
+    if(url.pathname==='/ui/engine.js'||url.pathname==='/ui/bootstrap.js'||url.pathname.startsWith('/ui/vendor/'))
       return serveUiAsset(request,env);
     // WORMSTAR ONE: serve fixed, credential-isolated pages on the AI Lab origin.
     if(url.pathname==='/suite'||url.pathname==='/suite/') {

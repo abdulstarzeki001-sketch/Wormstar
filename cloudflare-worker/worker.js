@@ -796,7 +796,7 @@ export default {
       catch{return json({error:'Invalid request'},400);}
       if(typeof body?.message!=='string'||!body.message.trim()||body.message.length>LAB_POLICY.limits.maxPromptCharacters)return json({error:'Invalid question'},400);
       const engine=body.engine??'auto';
-      if(!['auto','gpt-oss-120b','gpt-oss-20b','qwen-coder'].includes(engine))return json({error:'Repository AI only supports hosted Cloudflare models'},400);
+      if(!['auto','gpt-oss-120b','gpt-oss-20b','qwen-coder','llama-3.3'].includes(engine))return json({error:'Repository AI only supports hosted Cloudflare models'},400);
       if(body.reasoningEffort!==undefined&&!['auto','low','medium','high'].includes(body.reasoningEffort))return json({error:'Invalid reasoning effort'},400);
       if(!env.DB||!env.AI)return json({error:'Knowledge or inference binding missing'},503);
       let policy;try{policy=await getPolicy(env);}catch{return json({error:'Owner policy unavailable'},503);}

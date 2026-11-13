@@ -1,29 +1,30 @@
 FROM node:20-bookworm
 
-# Userland tools the terminal and the AI command allowlist rely on.
-# build-essential + python3 are needed to compile node-pty.
+# Everyday shell tools. build-essential + python3 also compile node-pty.
+# `setpriv` (util-linux, already in the base image) performs the privilege drop.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 build-essential ca-certificates git curl \
+      python3 build-essential ca-certificates git curl nano less \
     && rm -rf /var/lib/apt/lists/*
 
-# Non-root user. NO sudo is installed: unlike the standalone linux-terminal
-# image, this backend must not grant root, so the deployment container itself
-# stays the isolation boundary.
-RUN useradd -m -s /bin/bash tuser
+# Unprivileged shell user. NO sudo is installed.
+RUN useradd -m -s /bin/bash tuser \
+    && mkdir -p /home/tuser/workspace \
+    && chown -R tuser:tuser /home/tuser
 
 WORKDIR /app
-COPY package.json ./
+COPY package.json package-lock.json ./
 ENV npm_config_nodedir=/usr/local
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 COPY server.js ./
 
-# Confined, writable working directory for shell and AI commands.
-RUN mkdir -p /home/tuser/workspace && chown -R tuser:tuser /app /home/tuser
-USER tuser
-ENV HOME=/home/tuser
+# The server intentionally stays root: it needs that only to launch every shell
+# through `setpriv` as `tuser` with groups cleared, all capabilities dropped and
+# no-new-privileges set. Root-owned /app and the server's environment (the
+# access token) are therefore out of the shell's reach. Do not add a USER line:
+# with a shared UID the service refuses to start.
+ENV TERMINAL_RUN_AS=tuser
 ENV TERMINAL_WORKSPACE=/home/tuser/workspace
-WORKDIR /home/tuser
 
 EXPOSE 8080
 CMD ["node", "/app/server.js"]

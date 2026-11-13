@@ -6,6 +6,7 @@ CI validates these code paths **before** running either Cloudflare deployment:
 - iSH Python static analyzer and local read-only source inventory.
 - UBOOR synthetic offline lab and its regression tests.
 - Private terminal authentication and protocol tests, plus an ephemeral Docker/WebSocket smoke test.
+- Cloud terminal contract tests, including a root run that verifies shell privilege separation.
 
 `security-gate.mjs` examines **newly added lines** between the event's base SHA
 and the tested Git commit and emits a SHA-bound JSON artifact. New high/medium

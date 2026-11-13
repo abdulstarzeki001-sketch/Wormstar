@@ -7,6 +7,7 @@ import {runAuthorizedScan,runBoundedAgent,listAgents} from './security-ops.js';
 import LAB_POLICY_MANIFEST from './permissions-module.js';
 import FUTURE_UI from './future-ui.js';
 import REDESIGN_HTML from './redesign-ui.js';
+import {WORKSPACE_HTML,WORKSPACE_SHORTCUT} from './unified-workspace.js';
 import ACADEMY_HTML from './academy-page.js';
 import { invokeWormGPT, wormgptConfigured } from './wormgpt-provider.js';
 import { goClawConfigured, goClawBudgetAllowed, probeGoClaw, invokeGoClaw } from './goclaw-gateway.js';
@@ -964,11 +965,17 @@ export default {
       logModelFailure('workers-ai',503);
       return json({error:'AI service unavailable; all approved model backends failed',engineRequested:engine,modelsTried:attemptedModels},503);
     }
+    // Unified first-party project navigation; the existing owner-authenticated APIs remain unchanged.
+    if(request.method==='GET'&&['/workspace','/workspace/','/projects','/projects/'].includes(url.pathname))
+      return new Response(WORKSPACE_HTML,{headers:{
+        ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',
+        'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+      }});
     if(request.method==='GET'&&(url.pathname==='/academy'||url.pathname==='/academy/'||url.pathname==='/academy/index.html'))return new Response(ACADEMY_HTML,{headers:{
       ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',
       'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
     }});
-    if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))return new Response(FUTURE_HTML,{headers:{
+    if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))return new Response(FUTURE_HTML.replace('</body></html>',WORKSPACE_SHORTCUT+'</body></html>'),{headers:{
       ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',
       'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; worker-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; connect-src 'self' https://xwigjsrbalbjwwjkxyma.supabase.co; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
     }});

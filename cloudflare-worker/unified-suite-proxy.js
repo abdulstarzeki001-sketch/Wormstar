@@ -110,9 +110,10 @@ export async function serveSentinelModule(request,env) {
   const path=url.pathname;
   if(!/^(?:\/osint|\/audit)(?:\/|$)/.test(path))return err('Not found',404);
   if(request.method!=='GET'&&request.method!=='HEAD')return err('Method not allowed',405);
+  // Slash canonicalization is public and must work before checking the binding.
+  if(path==='/osint'||path==='/audit')return safeNavigationResponse(request);
   if(!env?.SENTINEL_SUITE || typeof env.SENTINEL_SUITE.fetch!=='function')
     return err('Sentinel service binding unavailable');
-  if(path==='/osint'||path==='/audit')return safeNavigationResponse(request);
   // Only the original public, local-only viewer routes are allowed. Nothing
   // under Core /api or token-bearing headers is proxied to Sentinel.
   const allowed=path.startsWith('/osint/')

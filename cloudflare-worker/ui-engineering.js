@@ -5,7 +5,8 @@ const vendorPaths=new Map([
 ['/ui/vendor/gsap.min.js','/assets/gsap.min.js'],
 ['/ui/vendor/ScrollTrigger.min.js','/assets/ScrollTrigger.min.js'],
 ['/ui/vendor/lenis.min.js','/assets/lenis.min.js']]);
-const CORE_SCRIPT_TAGS='<script src="/ui/vendor/gsap.min.js" defer></script>'+ '<script src="/ui/vendor/ScrollTrigger.min.js" defer></script>'+ '<script src="/ui/vendor/lenis.min.js" defer></script>'+ '<script src="/ui/engine.js" defer></script>';
+const BOOTSTRAP="/* Wormstar: lazy motion bootstrap; skipped libraries on phones/reduced motion. */\n(()=>{\n  'use strict';\n  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;\n  const fine=window.matchMedia('(pointer: fine)').matches;\n  const srcs=fine&&!reduced?[\n    '/ui/vendor/gsap.min.js',\n    '/ui/vendor/ScrollTrigger.min.js',\n    '/ui/vendor/lenis.min.js',\n    '/ui/engine.js'\n  ]:['/ui/engine.js'];\n  function load(src){\n    return new Promise(resolve=>{\n      const script=document.createElement('script');\n      script.src=src;script.async=false;\n      script.onload=resolve;script.onerror=resolve;\n      document.head.appendChild(script);\n    });\n  }\n  async function start(){for(const src of srcs)await load(src)}\n  if('requestIdleCallback' in window)window.requestIdleCallback(()=>{void start()},{timeout:900});\n  else window.requestAnimationFrame(()=>{void start()});\n})();";
+const CORE_SCRIPT_TAGS='<script src="/ui/bootstrap.js" defer></script>';
 
 const HEAD_STYLE='<style id="ws-ui-engineering">'+STYLE+'</style>';
 const SHORTCUTS='<div class="ws-suite-shortcuts" role="group" aria-label="الصفحات الموحدة">'+
@@ -20,7 +21,8 @@ export function enhanceUiPage(html,kind){
   if(typeof html!=='string'||!html.includes('</head>')||!html.includes('</body>'))
     throw Error('Invalid HTML page');
   if(html.includes('id="ws-ui-engineering"'))return html;
-  let result=html.replace('</head>',HEAD_STYLE+'</head>');
+  let result=html.replace(/<html(?=[\\s>])/, '<html data-ws-ui-engineering="on"');
+  result=result.replace('</head>',HEAD_STYLE+'</head>');
   if(kind==='workspace'){
     const target='<nav aria-label="تنقل المشاريع">';
     if(!result.includes(target))throw Error('Workspace nav contract changed');
@@ -44,6 +46,8 @@ export async function serveUiAsset(request,env){
     return assetResponse('Method not allowed','text/plain; charset=utf-8',405);
   if(path==='/ui/engine.js')
     return assetResponse(request.method==='HEAD'?null:CLIENT,'text/javascript; charset=utf-8');
+  if(path==='/ui/bootstrap.js')
+    return assetResponse(request.method==='HEAD'?null:BOOTSTRAP,'text/javascript; charset=utf-8');
   const original=vendorPaths.get(path);
   if(!original)return assetResponse('Not found','text/plain; charset=utf-8',404);
   if(!env?.SENTINEL_SUITE?.fetch)
@@ -61,4 +65,4 @@ export async function serveUiAsset(request,env){
   }catch(_){return assetResponse('Motion unavailable','text/plain; charset=utf-8',503)}
 }
 
-export const UI_ENGINEERING_SOURCE={style:STYLE,client:CLIENT,paths:[...vendorPaths.keys()]};
+export const UI_ENGINEERING_SOURCE={style:STYLE,client:CLIENT,bootstrap:BOOTSTRAP,paths:[...vendorPaths.keys()]};

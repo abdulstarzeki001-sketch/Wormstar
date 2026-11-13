@@ -32,11 +32,23 @@ th{color:#b0c6d6}td{vertical-align:top}td:first-child{font-family:ui-monospace,m
 .error{color:#ffa9a9;min-height:22px;line-height:1.6}.muted{color:#9bb2c4}
 footer{padding:20px 0;color:#91a9bb;font-size:12px}
 @media(max-width:740px){body{padding:13px}.grid{grid-template-columns:repeat(2,1fr)}.hero{padding:18px}.panel{padding:14px}}
+
+/* WORMSTAR ONE: compact accessible read-only report navigation. */
+.top nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.top nav a{display:inline-flex;align-items:center;min-height:34px;padding:6px 9px;
+ border:1px solid #30475e;border-radius:9px}
+.top nav a:focus-visible{outline:2px solid #75e2d2;outline-offset:3px}
+.panel,.hero,.card{min-width:0;overflow-wrap:anywhere}
+@media(max-width:640px){body{padding:11px}.top{gap:8px;margin-bottom:10px}
+  .hero{padding:14px}.panel{padding:12px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}
+  *,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <main>
-<header class="top"><strong class="brand">WORMSTAR / STAR CYBER LAB / OSINT</strong><nav><a href="/">الرئيسية</a> · <a href="/audit/">iSH Audit</a> · <a href="https://github.com/abdulstarzeki001-sketch/Wormstar/tree/main/integrations/star-osint" target="_blank" rel="noopener noreferrer">محرك Kali</a></nav></header>
+<header class="top"><strong class="brand">WORMSTAR / STAR CYBER LAB / OSINT</strong><nav><a href="https://wormstar-ai-lab.abdulstarzeki001.workers.dev/suite/">WORMSTAR ONE</a> · <a href="/">الرئيسية</a> · <a href="/audit/">iSH Audit</a> · <a href="https://github.com/abdulstarzeki001-sketch/Wormstar/tree/main/integrations/star-osint" target="_blank" rel="noopener noreferrer">محرك Kali</a></nav></header>
 <section class="hero">
 <p class="brand">PASSIVE INTELLIGENCE / LOCAL REPORT VIEWER</p>
 <h1>STAR OSINT — استخبارات النطاقات والبنية التحتية</h1>

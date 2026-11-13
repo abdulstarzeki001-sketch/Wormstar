@@ -10,6 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lenis.css">
+<link rel="stylesheet" href="/motion.css">
 <style>
 :root{
  --bg:#0a101d;--surface:#111a2a;--surface-2:#172337;--surface-3:#1d2b41;
@@ -840,5 +842,9 @@ document.addEventListener("click",(event)=>{
 $("#profileMore").addEventListener("click",()=>toast(lang==="ar"?"ملف محلي تجريبي":"Local demo profile"));
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
 </script>
+<script src="/assets/gsap.min.js" defer></script>
+<script src="/assets/ScrollTrigger.min.js" defer></script>
+<script src="/assets/lenis.min.js" defer></script>
+<script src="/motion.js" defer></script>
 <script src="/terminal.js" defer></script>
 </body></html>

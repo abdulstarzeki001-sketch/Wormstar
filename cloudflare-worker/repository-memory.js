@@ -110,47 +110,55 @@ async function storeText(env,file,revision,content){
  return {changed:true,chunks:chunked.length,kind};
 }
 export async function syncRepository(env,{maxFiles=8}={}){
- if(!env.DB||!env.AI||!env.REPO_VECTORS)throw Error('Repository index bindings unavailable');
- if(!Number.isInteger(maxFiles)||maxFiles<1||maxFiles>16)throw Error('maxFiles must be 1-16');
- const {head,files}=await getRepoTree();
- let state=await env.DB.prepare('SELECT head_sha,cursor,visited FROM repo_sync_state WHERE id=1').first();
- if(!state){await env.DB.prepare("INSERT OR IGNORE INTO repo_sync_state(id) VALUES(1)").run();state={head_sha:'',cursor:'',visited:0};}
- const changedHead=state.head_sha!==head;
- const cursor=changedHead?'':String(state.cursor||'');
- const pending=files.filter(x=>x.path>cursor);
- const batch=pending.slice(0,maxFiles);
- let changed=0,indexed=0,metadata=0;
- for(const file of batch){
-  const old=await env.DB.prepare('SELECT blob_sha,kind FROM repo_file_index WHERE path=?').bind(file.path).first();
-  if(old?.blob_sha===file.sha) {
-   const n=old.kind==='metadata'?{n:1}:await env.DB.prepare('SELECT COUNT(*) AS n FROM repo_fragments WHERE path=?').bind(file.path).first();
-   if(Number(n?.n)>0){
-    await env.DB.prepare('UPDATE repo_file_index SET revision=? WHERE path=?').bind(head,file.path).run();
-    continue;
-   }
+  if(!env.DB||!env.AI||!env.REPO_VECTORS)throw Error('Repository index bindings unavailable');
+  if(!Number.isInteger(maxFiles)||maxFiles<1||maxFiles>16)throw Error('maxFiles must be 1-16');
+  const {head,files}=await getRepoTree();
+  let state=await env.DB.prepare('SELECT head_sha,cursor,visited FROM repo_sync_state WHERE id=1').first();
+  if(!state){
+    await env.DB.prepare("INSERT OR IGNORE INTO repo_sync_state(id) VALUES(1)").run();
+    state={head_sha:'',cursor:'',visited:0};
   }
-  let body=null;
-  if(isKnowledgeText(file.path,file.size)){
-   const url='https://raw.githubusercontent.com/'+REPO+'/'+head+'/'+file.path.split('/').map(encodeURIComponent).join('/');
-   const result=await fetch(url,{redirect:'error',headers:{'User-Agent':'wormstar-repo-indexer/1'}});
-   if(!result.ok)throw Error('GitHub file unavailable ('+result.status+')');
-   if(Number(result.headers.get('Content-Length')||0)>MAX_BYTES)throw Error('GitHub file exceeds maximum size');
-   body=await result.text();
+  // Resume the same pinned revision, but restart traversal when GitHub HEAD changes.
+  const cursor=state.head_sha===head?String(state.cursor||''):'';
+  const pending=files.filter(x=>x.path>cursor);
+  const batch=pending.slice(0,maxFiles);
+  let changed=0,indexed=0,metadata=0,last=cursor;
+  for(const file of batch){
+    const old=await env.DB.prepare('SELECT blob_sha,kind FROM repo_file_index WHERE path=?').bind(file.path).first();
+    const intact=old?.blob_sha===file.sha &&
+      (old.kind==='metadata' ||
+        Number((await env.DB.prepare('SELECT COUNT(*) AS n FROM repo_fragments WHERE path=?')
+          .bind(file.path).first())?.n||0)>0);
+    if(intact){
+      await env.DB.prepare('UPDATE repo_file_index SET revision=? WHERE path=?').bind(head,file.path).run();
+    }else{
+      let body=null;
+      if(isKnowledgeText(file.path,file.size)){
+        const url='https://raw.githubusercontent.com/'+REPO+'/'+head+'/'+file.path.split('/').map(encodeURIComponent).join('/');
+        const result=await fetch(url,{redirect:'error',headers:{'User-Agent':'wormstar-repo-indexer/1'}});
+        if(!result.ok)throw Error('GitHub file unavailable ('+result.status+')');
+        if(Number(result.headers.get('Content-Length')||0)>MAX_BYTES)throw Error('GitHub file exceeds maximum size');
+        body=await result.text();
+      }
+      const record=await storeText(env,file,head,body);
+      if(record.changed){changed++;indexed+=record.chunks;metadata+=(record.kind==='metadata'?1:0);}
+    }
+    // Persist progress AFTER each successful file. On timeouts or failed vector
+    // upserts the next Cron run resumes instead of repeating the whole batch.
+    // A partially indexed snapshot must never be labelled complete.
+    last=file.path;
+    const visited=files.findIndex(x=>x.path===last)+1;
+    await env.DB.prepare('UPDATE repo_sync_state SET head_sha=?,cursor=?,total=?,visited=?,complete=0,updated_at=CURRENT_TIMESTAMP WHERE id=1')
+      .bind(head,last,files.length,visited).run();
   }
-  const record=await storeText(env,file,head,body);
-  if(record.changed){changed++;indexed+=record.chunks;metadata+=(record.kind==='metadata'?1:0);}
- }
- const last=batch.at(-1)?.path||cursor;
- const complete=batch.length===pending.length;
- const visited=complete?files.length:files.findIndex(x=>x.path===last)+1;
- // Only advance after every document has been written successfully.
- await env.DB.prepare('UPDATE repo_sync_state SET head_sha=?,cursor=?,total=?,visited=?,complete=?,updated_at=CURRENT_TIMESTAMP WHERE id=1')
-  .bind(head,last,files.length,visited,complete?1:0).run();
- if(complete){
-  // Remove files deleted in GitHub; no other project's data is touched.
-  await env.DB.prepare('DELETE FROM repo_file_index WHERE revision!=?').bind(head).run();
- }
- return {revision:head,total:files.length,visited,complete,processed:batch.length,changed,indexedFragments:indexed,metadataOnly:metadata};
+  const complete=batch.length===pending.length;
+  const visited=complete?files.length:(last?files.findIndex(x=>x.path===last)+1:0);
+  if(complete){
+    await env.DB.prepare('UPDATE repo_sync_state SET head_sha=?,cursor=?,total=?,visited=?,complete=1,updated_at=CURRENT_TIMESTAMP WHERE id=1')
+      .bind(head,last,files.length,visited).run();
+    await env.DB.prepare('DELETE FROM repo_file_index WHERE revision!=?').bind(head).run();
+  }
+  return {revision:head,total:files.length,visited,complete,processed:batch.length,changed,indexedFragments:indexed,metadataOnly:metadata};
 }
 export async function repoIndexStatus(env){
  if(!env.DB)return {configured:false};

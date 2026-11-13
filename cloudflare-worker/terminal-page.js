@@ -116,6 +116,12 @@ async function connect(){
   const response=await fetch('/api/terminal/session',{method:'POST',headers:{Authorization:'Bearer '+token},cache:'no-store'});
   if(!response.ok){
    const body=await response.json().catch(()=>({}));
+   if(body.code==='TERMINAL_CONFIGURATION_INVALID' && Array.isArray(body.invalidSecrets)){
+    const names=body.invalidSecrets.filter(name=>typeof name==='string' &&
+      /^[A-Z][A-Z0-9_]{3,80}$/.test(name)).slice(0,2);
+    throw Error('إعداد Cloudflare غير مكتمل: راجع قيمة '+(names.join(' و ')||'Secrets')+
+      ' في Settings → Variables and Secrets. لا ترسل قيمة السر إلى المحادثة.');
+   }
    throw Error(body.error||'خدمة الطرفية غير متاحة حالياً');
   }
   const ticket=await response.json();

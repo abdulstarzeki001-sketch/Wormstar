@@ -22,11 +22,31 @@ function json(data, status=200) {
   });
 }
 
+// The Railway server requires at least 12 password characters. Match its
+// actual contract rather than reporting a working 12-23 char password as an
+// entirely unconfigured gateway. Recommend 24+ on new password rotations.
+function configurationIssues(env) {
+  const issues = [];
+  if(typeof env?.TERMINAL_TICKET_SECRET !== 'string' ||
+     env.TERMINAL_TICKET_SECRET.length < 32)
+    issues.push('TERMINAL_TICKET_SECRET');
+  if(typeof env?.TERMINAL_RAILWAY_PASSWORD !== 'string' ||
+     env.TERMINAL_RAILWAY_PASSWORD.length < 12)
+    issues.push('TERMINAL_RAILWAY_PASSWORD');
+  return issues;
+}
 function secretsReady(env) {
-  return typeof env?.TERMINAL_TICKET_SECRET === 'string'
-    && env.TERMINAL_TICKET_SECRET.length >= 32
-    && typeof env?.TERMINAL_RAILWAY_PASSWORD === 'string'
-    && env.TERMINAL_RAILWAY_PASSWORD.length >= 24;
+  return configurationIssues(env).length === 0;
+}
+function configurationError(env) {
+  // This response is sent to a verified Wormstar owner only. Never return
+  // secret values, actual lengths, hashes or the backend credential.
+  return json({
+    error:'Terminal gateway configuration needs correction',
+    code:'TERMINAL_CONFIGURATION_INVALID',
+    invalidSecrets:configurationIssues(env),
+    requirement:'Set a 32+ character signing secret and the existing Railway password (12+ characters) as Cloudflare Secrets.'
+  },503);
 }
 
 function sameOrigin(request, required=false) {
@@ -58,7 +78,7 @@ export async function createTerminalTicket(request, env, verifiedOwner) {
   if(request.method !== 'POST')return json({error:'Method not allowed'},405);
   if(!sameOrigin(request))return json({error:'Forbidden origin'},403);
   if(!verifiedOwner)return json({error:'Owner authentication required'},401);
-  if(!secretsReady(env))return json({error:'Terminal gateway is not configured'},503);
+  if(!secretsReady(env))return configurationError(env);
   const nonce = new Uint8Array(18);
   crypto.getRandomValues(nonce);
   const body = String(Date.now()) + '.' + b64url(nonce);
@@ -84,7 +104,9 @@ export async function openTerminalWebSocket(request,env,deps={}) {
   if((request.headers.get('Upgrade')||'').toLowerCase()!=='websocket')
     return json({error:'WebSocket upgrade required'},426);
   if(!sameOrigin(request,true))return json({error:'Forbidden origin'},403);
-  if(!secretsReady(env))return json({error:'Terminal gateway is not configured'},503);
+  // Do not expose binding inventory to unauthenticated WebSocket requests.
+  // Owner-only diagnostics are returned from /api/terminal/session instead.
+  if(!secretsReady(env))return json({error:'Terminal unavailable'},503);
   const offered=(request.headers.get('Sec-WebSocket-Protocol')||'').split(',').map(x=>x.trim());
   if(offered.length!==2 || offered[0]!=='wormstar-terminal' ||
      !offered[1].startsWith('ticket.'))

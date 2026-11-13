@@ -9,6 +9,8 @@ import LAB_POLICY_MANIFEST from './permissions-module.js';
 import FUTURE_UI from './future-ui.js';
 import REDESIGN_HTML from './redesign-ui.js';
 import {WORKSPACE_HTML,WORKSPACE_SHORTCUT} from './unified-workspace.js';
+import {TERMINAL_HTML} from './terminal-page.js';
+import {createTerminalTicket,openTerminalWebSocket} from './terminal-gateway.js';
 import ACADEMY_HTML from './academy-page.js';
 import {compactPage} from './compact-layout.js';
 import { invokeWormGPT, wormgptConfigured } from './wormgpt-provider.js';
@@ -733,6 +735,12 @@ export default {
         browser:'requires-owner-approval',execution:'disabled-by-default',
         nodes:'requires-device-pairing'}});
     }
+    // Keep the original Wormstar login as the only user-entered credential.
+    // A short-lived ticket is issued only after server-side owner verification.
+    if(url.pathname==='/api/terminal/session')
+      return createTerminalTicket(request,env,await allow(request,env));
+    if(url.pathname==='/api/terminal/ws')
+      return openTerminalWebSocket(request,env);
     if(request.method==='POST'&&url.pathname==='/api/auth')return (await allow(request,env))?json({ok:true}):json({error:'Unauthorized'},401);
     if(url.pathname.startsWith('/api/lab/')){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
@@ -1009,6 +1017,11 @@ export default {
       return json({error:'AI service unavailable; all approved model backends failed',engineRequested:engine,modelsTried:attemptedModels},503);
     }
     // Unified first-party project navigation; the existing owner-authenticated APIs remain unchanged.
+    if(request.method==='GET'&&['/terminal','/terminal/'].includes(url.pathname))
+      return new Response(TERMINAL_HTML,{headers:{
+        ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',
+        'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' wss://wormstar-ai-lab.abdulstarzeki001.workers.dev; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+      }});
     if(request.method==='GET'&&['/workspace','/workspace/','/projects','/projects/'].includes(url.pathname))
       return new Response(compactPage(WORKSPACE_HTML,'workspace'),{headers:{
         ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',

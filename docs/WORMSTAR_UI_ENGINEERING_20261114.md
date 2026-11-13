@@ -23,7 +23,7 @@
 ## 2. Changes in this PR
 
 ### Cloudflare AI Lab, NEXUS and Academy
-- Added **ui-engineering.js**: one shared, idempotent static HTML/CSS enhancement for these real pages; DOM/event listeners and auth code remain unchanged.
+- Added **ui-engineering.js**: one shared, idempotent static HTML/CSS enhancement for these real pages; DOM/event listeners and auth code remain unchanged. Validated the HTML insertion and corrected Workspace's nested `nav` landmark to an accessible `div` group within its existing navigation.
 - Introduced first-party \`/ui/engine.js\` animation controller and allowlisted pinned vendor bundle endpoints \`/ui/vendor/{gsap.min.js,ScrollTrigger.min.js,lenis.min.js}\`.
 - The vendor assets are read from the **existing same-account SENTINEL_SUITE Cloudflare Service Binding**, avoiding external third-party script origins. If the binding is down, UI remains readable and native navigation continues.
 - Added compact, responsive card spacing, safe text wrapping, keyboard focus outlines and subtle spotlight hover. No invented telemetry or synthetic status values.
@@ -68,7 +68,7 @@ Official references:
 
 | Check | How to run | Result |
 |---|---|---|
-| Core Worker syntax/permissions/test suite | \`cd cloudflare-worker && npm test\` | **Pending CI** |
+| Core Worker syntax/permissions/test suite | \`cd cloudflare-worker && npm test\` | **Passed on PR head 56f39eb (GitHub Actions)** |
 | Sentinel frontend build and runtime tests | \`cd wormstar-ui && npm ci && npm test\` | **Pending CI** |
 | Three Core page templates and same-origin resource contract | \`cd cloudflare-worker && node --test tests/ui-engineering.test.mjs\` | **Pending CI** |
 | UI behavior and motion contract | \`cd wormstar-ui && node --test scripts/test-motion.mjs scripts/test-ui-behavior.mjs\` | **Pending CI** |
@@ -79,3 +79,15 @@ Official references:
 **Regression scenario:** visit \`/suite/\`, \`/workspace\`, \`/osint/\`, \`/audit/\`, and \`/terminal/\` from the original AI Lab host. Ensure the address bar stays on that host. Confirm Railway original password still governs shell sessions. Check the OSINT and Audit panels with locally supplied data and no fake entries. Confirm tab navigation, RTL, 320px and 390px Safari, >=1280px desktop, pointer hover, keyboard focus and \`prefers-reduced-motion\`.
 
 **Review warning:** \`/ui/vendor/*\` depends on the pinned first-party Sentinel deployment binding. The Core motion layer deliberately fails open to native scrolling and readable content if those optional assets fail. Do not change authentication, cookies, tokens, service bindings or WebSocket gateway merely to support UI effects.
+
+
+## 5. Verified GitHub Actions outcomes
+
+All **9 jobs** in Wormstar Quality Gate run [43520752214](https://github.com/abdulstarzeki001-sketch/Wormstar/actions/runs/43520752214) passed at PR revision 56f39eb6bdaa522aa0316baa45b22eaf05acf215:
+Core + Policy + RAG, Sentinel + Same-Origin Audit, Commit-Scoped Security,
+STAR OSINT Offline Tests, Private Terminal, Cloud Terminal Contract,
+Docker Terminal Smoke, UBOOR Offline Lab, iSH Analyzer/Report Schema.
+
+**Exact scope:** CI validates JavaScript Worker syntax/contract tests and the Sentinel bundled npm build; it does **not** validate real iPhone Safari rendered layout, a live Railway password login, cross-Worker live WebSocket, or cloud-app React/Vite TypeScript build. No standalone ESLint, React typecheck, or Cloudflare production deployment was run as part of the UI change. Those remain manual review gates.
+
+**Change control:** Keep this PR open and unmerged. The tests are evidence of correctness within their scope, not a guarantee that every production page has been visually verified.

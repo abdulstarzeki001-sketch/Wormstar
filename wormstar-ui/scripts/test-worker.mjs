@@ -72,8 +72,8 @@ for (const [path, expectedType, marker] of [
   assert.equal(head.status,200);
   assert.equal(await head.text(),'');
 }
-assert.match(html,/src="\\/assets\\/gsap\\.min\\.js"/);
-assert.match(html,/src="\\/motion\\.js"/);
+assert.ok(html.includes('src="/assets/gsap.min.js"'));
+assert.ok(html.includes('src="/motion.js"'));
 assert.match((await go('/')).headers.get('Content-Security-Policy'),/script-src 'self'/);
 
 let terminalPolicy = await worker.fetch(new Request(url('/')), {...env, TERMINAL_UI_BACKEND_ORIGIN:'https://terminal.example'});

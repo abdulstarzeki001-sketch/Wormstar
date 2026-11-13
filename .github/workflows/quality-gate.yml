@@ -39,6 +39,27 @@ jobs:
       - name: Test authentication, sandbox validation and terminal protocol
         run: python -m unittest discover -s integrations/wormstar-linux-terminal/tests -v
 
+  terminal-cloud:
+    name: Cloud Terminal Contract Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: integrations/wormstar-linux-terminal/cloud
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Test authentication, capability gating and terminal protocol
+        run: npm test
+      - name: Test privilege separation of the shell (requires root)
+        run: sudo env "PATH=$PATH" npm test
+
   terminal-docker:
     name: Docker Terminal Smoke Test
     runs-on: ubuntu-latest

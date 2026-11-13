@@ -8,11 +8,11 @@ const vendorPaths=new Map([
 const CORE_SCRIPT_TAGS='<script src="/ui/vendor/gsap.min.js" defer></script>'+ '<script src="/ui/vendor/ScrollTrigger.min.js" defer></script>'+ '<script src="/ui/vendor/lenis.min.js" defer></script>'+ '<script src="/ui/engine.js" defer></script>';
 
 const HEAD_STYLE='<style id="ws-ui-engineering">'+STYLE+'</style>';
-const SHORTCUTS='<nav class="ws-suite-shortcuts" aria-label="الصفحات الموحدة">'+
+const SHORTCUTS='<div class="ws-suite-shortcuts" role="group" aria-label="الصفحات الموحدة">'+
   '<a href="/suite/">WORMSTAR ONE</a>'+
   '<a href="/terminal/">Linux Terminal</a>'+
   '<a href="/osint/">OSINT</a>'+
-  '<a href="/audit/">Audit</a></nav>';
+  '<a href="/audit/">Audit</a></div>';
 
 /** Add assets without rewriting embedded application scripts or permission logic. */
 export function enhanceUiPage(html,kind){

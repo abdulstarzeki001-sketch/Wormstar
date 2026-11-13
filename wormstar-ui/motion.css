@@ -45,3 +45,36 @@ html[data-motion-ready="true"] .page.active { animation: none; }
   .page,.page.active {animation:none!important;}
   .feature,.stat-card,.feature::before,.stat-card::before{transition:none!important;}
 }
+
+/* Shared UI pass: density, accessible focus and Spotlight styling on existing DOM. */
+.panel,.report-card,.metric-card,.context-card{
+  min-width:0;position:relative;isolation:isolate;
+  overflow-wrap:anywhere;
+}
+.panel,.report-card,.metric-card{
+  transition:box-shadow .2s ease,border-color .2s ease;
+}
+.panel::before,.report-card::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;z-index:0;
+  pointer-events:none;opacity:0;
+  background:radial-gradient(250px circle at var(--spot-x,50%) var(--spot-y,50%),
+    rgba(82,224,194,.10),transparent 72%);
+  transition:opacity .2s ease;
+}
+.panel>* , .report-card>*{position:relative;z-index:1}
+@media (hover:hover) and (pointer:fine){
+  .panel:hover::before,.report-card:hover::before{opacity:1}
+  .panel:hover,.report-card:hover{border-color:var(--line-strong)}
+}
+:where(.sidebar,.drawer,.xterm,.xterm-viewport,.chat-history,.chat-compose,.logs,.log-view,textarea,pre,[data-native-scroll]){
+  overscroll-behavior:contain;
+}
+@media(max-width:720px){
+  .panel,.ops-panel,.context-card{min-width:0}
+  .report-card,.metric-card,.panel{border-radius:14px}
+  .page-heading{margin-bottom:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  .panel,.report-card,.metric-card,.panel::before,.report-card::before{transition:none!important}
+  .panel::before,.report-card::before{display:none}
+}

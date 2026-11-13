@@ -4,6 +4,7 @@ import {chooseReasoningEffort,extractModelAnswer} from './model-runtime.js';
 import {hybridKnowledge,indexKnowledgeBatch} from './advanced-rag.js';
 import {syncRepository,repoIndexStatus,findRepoEvidence,repoQuestionSupported,buildRepoMessages,NO_EVIDENCE} from './repository-memory.js';
 import {runAuthorizedScan,runBoundedAgent,listAgents} from './security-ops.js';
+import {runTeamTask,routeTeamTask} from './team-orchestrator.js';
 import LAB_POLICY_MANIFEST from './permissions-module.js';
 import FUTURE_UI from './future-ui.js';
 import REDESIGN_HTML from './redesign-ui.js';
@@ -788,6 +789,47 @@ export default {
       let body;try{body=await readBoundedJson(request,2048);}catch{return json({error:'Invalid JSON'},400);}
       try{return json(await syncRepository(env,{maxFiles:body?.maxFiles??6}));}
       catch(error){return json({error:'Repository sync failed; cursor unchanged',hint:String(error.message).slice(0,110)},503);}
+    }
+    // STAR AI TEAM: private, source-grounded, bounded inference. Never executes
+    // shell, modifies GitHub, or changes deployment state.
+    if(url.pathname==='/api/team/run'&&request.method==='POST'){
+      if(!(await allow(request,env)))return json({error:'Unauthorized'},401);
+      if(!capabilityEnabled('ai.chat'))return permissionDenied('ai.chat');
+      let body;
+      try{body=await readBoundedJson(request,LAB_POLICY.limits.maxRequestBytes);}
+      catch(error){return json({error:error.status===413?'Request too large':'Invalid JSON'},error.status===413?413:400);}
+      if(!body||typeof body.message!=='string'||!body.message.trim()||body.message.length>LAB_POLICY.limits.maxPromptCharacters)
+        return json({error:'Invalid task'},400);
+      const mode=body.mode===undefined?'assistant':body.mode;
+      if(!LAB_POLICY.allowedModes.includes(mode))return json({error:'Unsupported mode'},400);
+      if(!env.AI||!env.DB||!env.REPO_VECTORS)return json({error:'Repository AI bindings are unavailable'},503);
+      let route,policy;
+      try{route=routeTeamTask(body.message,mode);policy=await getPolicy(env);}
+      catch{return json({error:'Task routing or owner policy unavailable'},503);}
+      // Auto-routing cannot silently bypass an owner-disabled analysis mode.
+      const enforced=route.kind==='code-review'?'code':route.kind==='incident-triage'?'logs':mode;
+      for(const required of [...new Set([mode,enforced])]){
+        const check=checkPolicy(policy,required,body.message);
+        if(!check.allowed)return json({error:check.reason},check.status||403);
+      }
+      let index;
+      try{index=await repoIndexStatus(env);}
+      catch{return json({error:'Repository index status unavailable'},503);}
+      if(!index.complete||!/^[a-f0-9]{40}$/i.test(index.revision||''))
+        return json({error:'GitHub repository index is incomplete. Run owner-authorized repository sync first.',
+          code:'REPOSITORY_INDEX_INCOMPLETE',index:{complete:index.complete,visited:index.visited,total:index.total,revision:index.revision}},409);
+      let evidence;
+      try{evidence=await findRepoEvidence(env,body.message.trim(),{limit:4});}
+      catch{return json({error:'Repository retrieval failed'},503);}
+      if(!repoQuestionSupported(body.message,evidence.sources))
+        return json({answer:NO_EVIDENCE,scope:'repository-only',grounded:false,
+          sources:[],modelUsed:null,reviewerModelUsed:null,testsPassed:false,deploymentApproved:false,requiresCI:true});
+      try{
+        const result=await runTeamTask(env,{message:body.message.trim(),mode,policy,
+          evidence:evidence.sources,revision:index.revision});
+        if(result.status===503)return json(result,503);
+        return json({...result,scope:'repository-only',retrieval:evidence.retrieval},200);
+      }catch{return json({error:'STAR AI TEAM analysis failed without changing any files or deployments'},503);}
     }
     if(url.pathname==='/api/repo/ask'&&request.method==='POST'){
       if(!(await allow(request,env)))return json({error:'Unauthorized'},401);

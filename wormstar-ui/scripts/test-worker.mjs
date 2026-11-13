@@ -55,6 +55,27 @@ assert.match(html, /const \$=s=>document.querySelector\(s\), \$\$=s=>Array\.from
 assert.doesNotMatch(html, /Input received by the UI prototype only/);
 assert.equal((await go("/api/health")).status, 200);
 assert.equal((await go('/terminal.js')).status, 200);
+
+for (const [path, expectedType, marker] of [
+  ['/assets/gsap.min.js','text/javascript','gsap'],
+  ['/assets/ScrollTrigger.min.js','text/javascript','ScrollTrigger'],
+  ['/assets/lenis.min.js','text/javascript','Lenis'],
+  ['/assets/lenis.css','text/css','lenis'],
+  ['/motion.js','text/javascript','prefers-reduced-motion'],
+  ['/motion.css','text/css','focus-visible'],
+]) {
+  const asset=await go(path);
+  assert.equal(asset.status,200, 'asset status: ' + path);
+  assert.match(asset.headers.get('Content-Type'), new RegExp(expectedType));
+  assert.ok((await asset.text()).includes(marker), 'asset content: ' + path);
+  const head=await go(path,{method:'HEAD'});
+  assert.equal(head.status,200);
+  assert.equal(await head.text(),'');
+}
+assert.match(html,/src="\\/assets\\/gsap\\.min\\.js"/);
+assert.match(html,/src="\\/motion\\.js"/);
+assert.match((await go('/')).headers.get('Content-Security-Policy'),/script-src 'self'/);
+
 let terminalPolicy = await worker.fetch(new Request(url('/')), {...env, TERMINAL_UI_BACKEND_ORIGIN:'https://terminal.example'});
 assert.match(terminalPolicy.headers.get('Content-Security-Policy'), /https:\/\/terminal\.example wss:\/\/terminal\.example/);
 terminalPolicy = await worker.fetch(new Request(url('/')), {...env, TERMINAL_UI_BACKEND_ORIGIN:'https://terminal.example/path'});

@@ -17,15 +17,15 @@ export function compactPage(html,variant){
   if(typeof html!=='string'||!html.includes('</head>'))throw Error('Unsupported static page');
   let css;
   if(variant==='nexus'){
-    css=STYLE_NEXUS + '\\n' + "body:has(#app:not(.hidden)) .ws-unified-launch{display:none!important}@media(max-width:760px){.ws-unified-launch{bottom:auto;top:calc(9px + env(safe-area-inset-top));left:9px;padding:8px 11px;font-size:11px;max-width:calc(100vw - 18px)}}";
+    css=STYLE_NEXUS + '\n' + "body:has(#app:not(.hidden)) .ws-unified-launch{display:none!important}@media(max-width:760px){.ws-unified-launch{bottom:auto;top:calc(9px + env(safe-area-inset-top));left:9px;padding:8px 11px;font-size:11px;max-width:calc(100vw - 18px)}}";
     if(!html.includes(NEXUS_NAV_ANCHOR)||!html.includes(NEXUS_SHEET_ANCHOR))throw Error('NEXUS navigation anchors changed');
-    html=html.replace(NEXUS_NAV_ANCHOR,NEXUS_NAV+'\\n    '+NEXUS_NAV_ANCHOR)
-      .replace(NEXUS_SHEET_ANCHOR,NEXUS_SHEET_NAV+'\\n   '+NEXUS_SHEET_ANCHOR);
+    html=html.replace(NEXUS_NAV_ANCHOR,NEXUS_NAV+'\n    '+NEXUS_NAV_ANCHOR)
+      .replace(NEXUS_SHEET_ANCHOR,NEXUS_SHEET_NAV+'\n   '+NEXUS_SHEET_ANCHOR);
   }else if(variant==='workspace')css=STYLE_WORKSPACE;
   else if(variant==='academy'){
     css=STYLE_ACADEMY;
     if(!html.includes(ACADEMY_BACK_ANCHOR))throw Error('Academy navigation anchor changed');
     html=html.replace(ACADEMY_BACK_ANCHOR,ACADEMY_PROJECT_LINK+ACADEMY_BACK_ANCHOR);
   }else throw Error('Unknown static page');
-  return html.replace('</head>','<style id="ws-layout-compact-2026">\\n'+css+'\\n</style>\\n</head>');
+  return html.replace('</head>','<style id="ws-layout-compact-2026">\n'+css+'\n</style>\n</head>');
 }

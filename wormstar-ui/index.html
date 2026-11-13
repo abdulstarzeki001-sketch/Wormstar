@@ -218,6 +218,30 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
  body.ltr .drawer{right:auto;left:0}
 }
 @media(max-width:360px){.main{padding-left:11px;padding-right:11px}.hero{padding:17px 15px}.stat-value{font-size:21px}.topbar{margin-left:-11px;margin-right:-11px;padding:0 11px}.page-heading>.btn{font-size:8px}.feature-grid{grid-template-columns:1fr 1fr}}
+
+/* Unified Wormstar suite: no Core auth or data imported into public DOM. */
+.suite-strip{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 16px;padding:8px;border:1px solid var(--line);border-radius:15px;background:var(--surface);min-width:0}
+.suite-strip a{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border-radius:10px;color:var(--soft);font-size:12px;font-weight:600;min-height:38px;transition:background .16s,color .16s}
+.suite-strip a:hover,.suite-strip a:focus-visible{background:var(--accent-wash);color:var(--text)}
+.suite-strip a:focus-visible,.suite-tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.suite-strip .suite-identity{color:var(--accent);margin-inline-end:auto;white-space:nowrap;letter-spacing:.025em}
+.suite-intro{padding:20px 22px;margin-bottom:18px;border:1px solid var(--line-strong);border-radius:var(--radius-lg);background:radial-gradient(ellipse at 2% 8%,rgba(82,224,194,.13),transparent 55%),linear-gradient(125deg,var(--surface),var(--surface-2))}
+.suite-intro-head{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+.suite-intro h2{font-size:clamp(18px,2vw,24px);margin:0 0 6px;line-height:1.4}
+.suite-intro p{font-size:13px;color:var(--soft);line-height:1.75;margin:0;max-width:76ch}
+.suite-kicker{font:700 10px Inter,system-ui,sans-serif;letter-spacing:.14em;color:var(--accent)}
+.suite-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:17px}
+.suite-tile{min-width:0;display:flex;flex-direction:column;gap:7px;min-height:112px;padding:15px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);color:var(--text);transition:border-color .16s,transform .16s,background .16s}
+.suite-tile strong{font:700 14px Inter,"IBM Plex Sans Arabic",sans-serif;direction:auto}
+.suite-tile small{font-size:11px;color:var(--muted);line-height:1.6}
+.suite-tile:hover{border-color:var(--accent);background:var(--surface-3);transform:translateY(-2px)}
+.suite-tile .suite-mark{font:700 11px Inter,system-ui,sans-serif;color:var(--accent)}
+.suite-module-note{font-size:12px;color:var(--muted);line-height:1.7;margin:12px 0 0}
+.suite-ops-output{white-space:pre-wrap;overflow:auto;max-height:280px;direction:ltr;text-align:left;font-size:12px;color:var(--soft);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;max-width:100%}
+@media(max-width:1110px){.suite-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.suite-strip{gap:4px;padding:6px;margin-bottom:12px}.suite-strip a{padding:8px;font-size:11px}.suite-strip .suite-identity{width:100%;margin:0;padding-bottom:3px}.suite-intro{padding:15px;margin-bottom:12px}.suite-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.suite-tile{min-height:105px;padding:12px}.suite-intro p{font-size:12px}}
+@media(max-width:360px){.suite-grid{grid-template-columns:1fr}.suite-tile{min-height:76px}}
+@media(prefers-reduced-motion:reduce){.suite-tile,.suite-strip a{transition:none!important}.suite-tile:hover{transform:none}}
 </style>
 </head>
 <body>
@@ -228,6 +252,7 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
  <div class="section-label" data-i18n="nav">مساحة العمل</div>
  <nav class="nav" id="sideNav">
   <button class="active" data-page="overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="11" width="7" height="10" rx="2"/><rect x="3" y="14" width="8" height="7" rx="2"/></svg><span data-i18n="overview">نظرة عامة</span></button>
+  <button data-page="workspace" type="button"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="9" height="8" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/></svg><span data-suite-ar="المركز الموحد" data-suite-en="Unified workspace">المركز الموحد</span><span class="count">4</span></button>
   <button data-page="assistant"><svg viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-4.4 14.7L7 21l4-2a8 8 0 1 0 1-16Z"/><path d="M9 10h.01M15 10h.01M9 14c1.7 1.3 4.3 1.3 6 0"/></svg><span data-i18n="assistant">المساعد الذكي</span><span class="count">AI</span></button>
   <button data-page="code"><svg viewBox="0 0 24 24"><path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/></svg><span data-i18n="code">تدقيق الأكواد</span></button>
   <button data-page="incidents"><svg viewBox="0 0 24 24"><path d="M12 3 21 19H3L12 3Z"/><path d="M12 9v4M12 16h.01"/></svg><span data-i18n="incidents">الحوادث والتنبيهات</span><span class="count">4</span></button>
@@ -266,8 +291,38 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
    <button class="icon-btn mobile-menu" id="menuBtn" aria-label="Open menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   </div>
  </header>
+<nav class="suite-strip" aria-label="Wormstar modules">
+ <span class="suite-identity">◆ WORMSTAR · STAR AI</span>
+ <a href="/" data-suite-ar="الرئيسية" data-suite-en="Home">الرئيسية</a>
+ <a href="/workspace/" data-suite-ar="مركز المشاريع" data-suite-en="Workspace">مركز المشاريع</a>
+ <a href="/core/" data-suite-ar="Core AI" data-suite-en="Core AI">Core AI</a>
+ <a href="/osint/" data-suite-ar="OSINT المحلي" data-suite-en="Local OSINT">OSINT المحلي</a>
+ <a href="/audit/" data-suite-ar="تدقيق iSH" data-suite-en="iSH Audit">تدقيق iSH</a>
+</nav>
 
  <section class="page active" id="page-overview">
+ <div class="suite-intro" id="suiteWelcome">
+ <div class="suite-intro-head"><span class="suite-kicker">WORMSTAR UNIFIED SECURITY WORKSPACE</span>
+ <a class="btn primary" href="/workspace/" data-suite-ar="كل الوحدات" data-suite-en="All modules">كل الوحدات</a></div>
+ <h2 data-suite-ar="Wormstar AI Lab — منصة البداية الموحدة" data-suite-en="Wormstar AI Lab — unified launchpad">Wormstar AI Lab — منصة البداية الموحدة</h2>
+ <p data-suite-ar="ادخل إلى Core وNEXUS وOSINT وAudit من مساحة واحدة. الخدمات الحساسة تحتفظ بمصادقتها، وأدوات التقارير تعمل محلياً في متصفحك." data-suite-en="Open Core, NEXUS, OSINT and Audit from one space. Sensitive services keep their authentication; report viewers run locally in your browser.">ادخل إلى Core وNEXUS وOSINT وAudit من مساحة واحدة. الخدمات الحساسة تحتفظ بمصادقتها، وأدوات التقارير تعمل محلياً في متصفحك.</p>
+ <div class="suite-grid"><a class="suite-tile" href="/core/" aria-label="WORMSTAR AI LAB">
+ <span class="suite-mark">01 / CORE</span>
+ <strong data-suite-ar="WORMSTAR AI LAB" data-suite-en="WORMSTAR AI LAB">WORMSTAR AI LAB</strong>
+ <small data-suite-ar="واجهة الذكاء الاصطناعي الأصلية، بمصادقتها ووظائفها الكاملة." data-suite-en="Original AI Lab, full features and separate owner login.">واجهة الذكاء الاصطناعي الأصلية، بمصادقتها ووظائفها الكاملة.</small></a>
+<a class="suite-tile" href="/core/workspace" aria-label="NEXUS Workspace">
+ <span class="suite-mark">02 / NEXUS</span>
+ <strong data-suite-ar="NEXUS Workspace" data-suite-en="NEXUS Workspace">NEXUS Workspace</strong>
+ <small data-suite-ar="فريق STAR AI والمشاريع وذاكرة GitHub داخل Core." data-suite-en="STAR AI team, projects and GitHub memory inside Core.">فريق STAR AI والمشاريع وذاكرة GitHub داخل Core.</small></a>
+<a class="suite-tile" href="/osint/" aria-label="OSINT Intelligence">
+ <span class="suite-mark">03 / OSINT</span>
+ <strong data-suite-ar="استخبارات OSINT" data-suite-en="OSINT Intelligence">استخبارات OSINT</strong>
+ <small data-suite-ar="عرض تقارير النطاقات والبنية محلياً دون رفع ملفاتك." data-suite-en="Local domain and infrastructure report viewer, no uploads.">عرض تقارير النطاقات والبنية محلياً دون رفع ملفاتك.</small></a>
+<a class="suite-tile" href="/audit/" aria-label="iSH Static Audit">
+ <span class="suite-mark">04 / AUDIT</span>
+ <strong data-suite-ar="تدقيق iSH الثابت" data-suite-en="iSH Static Audit">تدقيق iSH الثابت</strong>
+ <small data-suite-ar="تحليل تقارير JavaScript الساكنة دون تنفيذ الكود." data-suite-en="Read-only static JavaScript reports, no code execution.">تحليل تقارير JavaScript الساكنة دون تنفيذ الكود.</small></a></div>
+</div>
   <div class="page-heading"><div><div class="eyebrow">SECURITY OPERATIONS / 01</div><h1 data-i18n="welcome">مساحة الرؤية الأمنية</h1><p data-i18n="welcome_sub">صورة واضحة عن نشاط مختبرك، من أول مؤشر إلى آخر تقرير.</p></div><button class="btn" id="refreshBtn"><svg viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M5.6 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.4-3"/></svg><span data-i18n="refresh">تحديث العرض</span></button></div>
   <div class="hero">
    <div class="hero-copy"><div class="hero-tag"><i></i><span data-i18n="hero_tag">مساحة عمل دفاعية ذكية</span></div><h2 data-i18n="hero_title">الأمن يبدأ من <span>رؤية أوضح.</span><br>والقرار يبدأ من دليل.</h2><p data-i18n="hero_desc">اجمع التحليل، مراجعة الشيفرات، مؤشرات الاختراق والتقارير في مساحة واحدة مصممة لتساعدك على فهم المخاطر واتخاذ إجراء مسؤول.</p><div class="hero-actions"><button class="btn primary" data-goto="assistant"><span data-i18n="start_assistant">ابدأ جلسة تحليل</span><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button class="btn" data-goto="lab"><span data-i18n="open_lab">افتح المختبر</span></button></div></div>
@@ -290,6 +345,47 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
     <div class="agent"><div class="agent-avatar">CR</div><div class="agent-info"><strong>Code Review</strong><small data-i18n="agent_code">مراجعة الشيفرة</small></div><span class="agent-state"><i></i><span data-i18n="ready">جاهز</span></span></div>
     <div class="agent"><div class="agent-avatar">TI</div><div class="agent-info"><strong>Threat Intel</strong><small data-i18n="agent_intel">تحليل المؤشرات</small></div><span class="agent-state"><i></i><span data-i18n="ready">جاهز</span></span></div>
    </div></section>
+  </div>
+ </section>
+
+<section class="page" id="page-workspace" aria-labelledby="suiteWorkspaceHeading">
+  <div class="page-heading"><div><div class="eyebrow">WORMSTAR / UNIFIED SYSTEM</div>
+  <h1 id="suiteWorkspaceHeading" data-suite-ar="مركز المشاريع والتكامل" data-suite-en="Project & Integration Hub">مركز المشاريع والتكامل</h1>
+  <p data-suite-ar="الانتقال لكل وحدات المشروع، مع أوامر Core المصادَق عليها فقط." data-suite-en="Access all modules with owner-authenticated Core operations only.">الانتقال لكل وحدات المشروع، مع أوامر Core المصادَق عليها فقط.</p></div></div>
+  <div class="suite-intro"><span class="suite-kicker">CORE · NEXUS · OSINT · AUDIT</span>
+  <div class="suite-grid"><a class="suite-tile" href="/core/" aria-label="WORMSTAR AI LAB">
+ <span class="suite-mark">01 / CORE</span>
+ <strong data-suite-ar="WORMSTAR AI LAB" data-suite-en="WORMSTAR AI LAB">WORMSTAR AI LAB</strong>
+ <small data-suite-ar="واجهة الذكاء الاصطناعي الأصلية، بمصادقتها ووظائفها الكاملة." data-suite-en="Original AI Lab, full features and separate owner login.">واجهة الذكاء الاصطناعي الأصلية، بمصادقتها ووظائفها الكاملة.</small></a>
+<a class="suite-tile" href="/core/workspace" aria-label="NEXUS Workspace">
+ <span class="suite-mark">02 / NEXUS</span>
+ <strong data-suite-ar="NEXUS Workspace" data-suite-en="NEXUS Workspace">NEXUS Workspace</strong>
+ <small data-suite-ar="فريق STAR AI والمشاريع وذاكرة GitHub داخل Core." data-suite-en="STAR AI team, projects and GitHub memory inside Core.">فريق STAR AI والمشاريع وذاكرة GitHub داخل Core.</small></a>
+<a class="suite-tile" href="/osint/" aria-label="OSINT Intelligence">
+ <span class="suite-mark">03 / OSINT</span>
+ <strong data-suite-ar="استخبارات OSINT" data-suite-en="OSINT Intelligence">استخبارات OSINT</strong>
+ <small data-suite-ar="عرض تقارير النطاقات والبنية محلياً دون رفع ملفاتك." data-suite-en="Local domain and infrastructure report viewer, no uploads.">عرض تقارير النطاقات والبنية محلياً دون رفع ملفاتك.</small></a>
+<a class="suite-tile" href="/audit/" aria-label="iSH Static Audit">
+ <span class="suite-mark">04 / AUDIT</span>
+ <strong data-suite-ar="تدقيق iSH الثابت" data-suite-en="iSH Static Audit">تدقيق iSH الثابت</strong>
+ <small data-suite-ar="تحليل تقارير JavaScript الساكنة دون تنفيذ الكود." data-suite-en="Read-only static JavaScript reports, no code execution.">تحليل تقارير JavaScript الساكنة دون تنفيذ الكود.</small></a></div>
+  <p class="suite-module-note" data-suite-ar="Core وNEXUS يحتفظان بجلساتهما وصلاحياتهما في النطاق الأصلي. لا تمرّر هذه البوابة رموزاً أو ملفات بين التطبيقات." data-suite-en="Core and NEXUS retain their own sessions and authorization at their original origin. This portal never transfers tokens or files between apps.">Core وNEXUS يحتفظان بجلساتهما وصلاحياتهما في النطاق الأصلي. لا تمرّر هذه البوابة رموزاً أو ملفات بين التطبيقات.</p></div>
+  <div class="ops-panel">
+  <h3 data-suite-ar="حالة الخدمات" data-suite-en="Service health">حالة الخدمات</h3>
+  <div class="ops-actions"><button class="btn primary" id="suiteRefresh" type="button" data-suite-ar="فحص الاتصال" data-suite-en="Check health">فحص الاتصال</button></div>
+  <pre id="suiteHealth" class="suite-ops-output" aria-live="polite">لم يجرِ الفحص بعد / Not checked yet</pre>
+  <p data-suite-ar="يعرض هذا الفحص استجابة خدمة Core والعارضين المحليين، ولا يثبت جاهزية كل وظيفة داخلها." data-suite-en="This checks Core and the two local report viewers, not every operation within them.">يعرض هذا الفحص استجابة خدمة Core والعارضين المحليين، ولا يثبت جاهزية كل وظيفة داخلها.</p>
+  </div>
+  <div class="ops-panel">
+  <h3 data-suite-ar="العمليات المصادَق عليها في Core" data-suite-en="Owner-authenticated Core operations">العمليات المصادَق عليها في Core</h3>
+  <p data-suite-ar="استخدم نفس جلسة Wormstar AI Assistant داخل هذه الصفحة. لا يوجد وصول مجهول إلى المستودعات أو الوكلاء." data-suite-en="Uses the Wormstar AI Assistant session in this tab. No anonymous access to repository memory or agents.">استخدم نفس جلسة Wormstar AI Assistant داخل هذه الصفحة. لا يوجد وصول مجهول إلى المستودعات أو الوكلاء.</p>
+  <div class="ops-actions">
+   <button class="btn" type="button" id="suiteRepoStatus" data-suite-ar="حالة GitHub RAG" data-suite-en="GitHub RAG status">حالة GitHub RAG</button>
+   <button class="btn" type="button" id="suiteMemoryStatus" data-suite-ar="حالة الذاكرة" data-suite-en="Memory status">حالة الذاكرة</button>
+   <button class="btn" type="button" id="suiteAgentsStatus" data-suite-ar="قائمة الوكلاء" data-suite-en="Agents list">قائمة الوكلاء</button>
+   <button class="btn primary" data-page="assistant" type="button" data-suite-ar="دخول AI" data-suite-en="AI sign-in">دخول AI</button>
+  </div>
+  <pre id="suiteOpsResult" class="suite-ops-output" aria-live="polite">اختر عملية بعد تسجيل الدخول / Sign in first</pre>
   </div>
  </section>
 
@@ -539,6 +635,7 @@ $$("[data-goto]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.goto)))
 function setLang(next){
   lang=next;document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
   document.body.classList.toggle("ltr",lang==="en");
+  $("[data-suite-ar]").forEach(node=>{if(node.dataset.suiteAr&&node.dataset.suiteEn)node.textContent=lang==="ar"?node.dataset.suiteAr:node.dataset.suiteEn;});
   $$("[data-i18n]").forEach(el=>{
     const key=el.dataset.i18n,val=(lang==="ar"?translations.ar:english)[key];
     if(val===undefined)return;
@@ -839,6 +936,39 @@ document.addEventListener("click",(event)=>{
 });
 $("#profileMore").addEventListener("click",()=>toast(lang==="ar"?"ملف محلي تجريبي":"Local demo profile"));
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}))}
+
+// Suite routes and authenticated Core operations share existing in-memory credentials.
+// No browser storage, cross-origin token forwarding, or automatic privileged requests.
+if(/^\/workspace\/?$/.test(location.pathname)) go("workspace");
+const suiteCheck = $("#suiteRefresh");
+if (suiteCheck) suiteCheck.addEventListener("click",async()=>{
+  const out=$("#suiteHealth");suiteCheck.disabled=true;out.textContent="جارٍ التحقق / Checking...";
+  try {
+    const response=await fetch("/api/suite/status",{method:"GET",cache:"no-store"});
+    if(!response.ok)throw Error("HTTP "+response.status);
+    const value=await response.json();
+    const core=value.modules?.core?.reachable===true?"Core: REACHABLE":"Core: UNAVAILABLE / NOT VERIFIED";
+    const osint=value.modules?.osint?.reachable===true?"OSINT: READY":"OSINT: UNAVAILABLE";
+    const audit=value.modules?.audit?.reachable===true?"AUDIT: READY":"AUDIT: UNAVAILABLE";
+    out.textContent=[core,osint,audit,"Auth: still required for owner operations"].join("\n");
+  }catch(error){out.textContent="تعذّر فحص الاتصال: "+String(error.message||error)}
+  finally{suiteCheck.disabled=false}
+});
+for (const [id,path] of [
+ ["suiteRepoStatus","/api/repo/status"],
+ ["suiteMemoryStatus","/api/rag/status"],
+ ["suiteAgentsStatus","/api/agents"]
+]) {
+  const button=$("#"+id);
+  if(!button)continue;
+  button.addEventListener("click",async()=>{
+    const out=$("#suiteOpsResult");button.disabled=true;out.textContent="جارٍ الاتصال بـCore...";
+    try {const value=await opsRequest(path);out.textContent=JSON.stringify(value,null,2).slice(0,12000)}
+    catch(error){out.textContent="يتطلب دخول المالك إلى AI Assistant: "+String(error.message||error)}
+    finally{button.disabled=false}
+  });
+}
+
 </script>
 <script src="/terminal.js" defer></script>
 </body></html>

@@ -69,9 +69,9 @@ Official references:
 | Check | How to run | Result |
 |---|---|---|
 | Core Worker syntax/permissions/test suite | \`cd cloudflare-worker && npm test\` | **Passed on PR head 56f39eb (GitHub Actions)** |
-| Sentinel frontend build and runtime tests | \`cd wormstar-ui && npm ci && npm test\` | **Pending CI** |
-| Three Core page templates and same-origin resource contract | \`cd cloudflare-worker && node --test tests/ui-engineering.test.mjs\` | **Pending CI** |
-| UI behavior and motion contract | \`cd wormstar-ui && node --test scripts/test-motion.mjs scripts/test-ui-behavior.mjs\` | **Pending CI** |
+| Sentinel frontend build and runtime tests | \`cd wormstar-ui && npm ci && npm test\` | **Passed** in Quality Gate 43520752214 (previous tested code revision) |
+| Three Core page templates and same-origin resource contract | \`cd cloudflare-worker && node --test tests/ui-engineering.test.mjs\` | **Passed** in Quality Gate 43520752214 (previous tested code revision) |
+| UI behavior and motion contract | \`cd wormstar-ui && node --test scripts/test-motion.mjs scripts/test-ui-behavior.mjs\` | **Passed** in Quality Gate 43520752214 (previous tested code revision) |
 | React Vite build/typecheck | \`cd cloud-app && npm install && npx tsc --noEmit && npm run build\` | Not executed; separate app uses \`@appdeploy/client\` SDK not listed in package.json, and should be validated in its configured build environment |
 | Real iPhone navigation / terminal WebSocket / keyboard | Manual browser test in authenticated owner session | Not executed |
 | Production deployment | Forbidden for this PR | Not executed |

@@ -54,6 +54,32 @@ test('owner must be verified before issuing a short-lived gateway ticket',async(
   assert.ok(!JSON.stringify(data).includes(goodEnv.TERMINAL_RAILWAY_PASSWORD));
 });
 
+test('gateway identifies invalid secrets to the verified owner without disclosing any value',async()=>{
+  const bad={TERMINAL_TICKET_SECRET:'too-short',
+    TERMINAL_RAILWAY_PASSWORD:'tiny'};
+  const rejected=await createTerminalTicket(request('/api/terminal/session'),bad,true);
+  assert.equal(rejected.status,503);
+  const body=await rejected.json();
+  assert.equal(body.code,'TERMINAL_CONFIGURATION_INVALID');
+  assert.deepEqual(body.invalidSecrets,
+    ['TERMINAL_TICKET_SECRET','TERMINAL_RAILWAY_PASSWORD']);
+  assert.equal(JSON.stringify(body).includes(bad.TERMINAL_TICKET_SECRET),false);
+  assert.equal(JSON.stringify(body).includes(bad.TERMINAL_RAILWAY_PASSWORD),false);
+  assert.equal((await createTerminalTicket(request('/api/terminal/session'),bad,false)).status,401);
+  const missingSigning={...goodEnv,TERMINAL_TICKET_SECRET:'short'};
+  assert.deepEqual((await (await createTerminalTicket(
+    request('/api/terminal/session'),missingSigning,true)).json()).invalidSecrets,
+    ['TERMINAL_TICKET_SECRET']);
+  // Railway accepts 12-character passwords. The gateway must match its contract.
+  const railwayMinimum={...goodEnv,TERMINAL_RAILWAY_PASSWORD:'abcdefghijkl'};
+  assert.equal((await createTerminalTicket(
+    request('/api/terminal/session'),railwayMinimum,true)).status,200);
+  const insufficientPassword={...goodEnv,TERMINAL_RAILWAY_PASSWORD:'12345678901'};
+  assert.deepEqual((await (await createTerminalTicket(
+    request('/api/terminal/session'),insufficientPassword,true)).json()).invalidSecrets,
+    ['TERMINAL_RAILWAY_PASSWORD']);
+});
+
 test('WebSocket denies missing, stale, forged, and cross-origin credentials',async()=>{
   const mint=await createTerminalTicket(request('/api/terminal/session'),goodEnv,true);
   const ticket=(await mint.json()).ticket;

@@ -36,7 +36,7 @@ footer{padding:20px 0;color:#91a9bb;font-size:12px}
 </head>
 <body>
 <main>
-<header class="top"><strong class="brand">WORMSTAR / STAR CYBER LAB / OSINT</strong><nav><a href="/">الرئيسية</a> · <a href="/audit/">iSH Audit</a> · <a href="https://github.com/abdulstarzeki001-sketch/Wormstar/tree/main/integrations/star-osint" target="_blank" rel="noopener noreferrer">محرك Kali</a></nav></header>
+<header class="top"><strong class="brand">WORMSTAR / STAR CYBER LAB / OSINT</strong><nav aria-label="Wormstar modules"><a href="/">الرئيسية</a> · <a href="/workspace/">NEXUS</a> · <a href="/core/">Core AI</a> · <a href="/audit/">iSH Audit</a> · <a href="https://github.com/abdulstarzeki001-sketch/Wormstar/tree/main/integrations/star-osint" target="_blank" rel="noopener noreferrer">محرك Kali</a></nav></header>
 <section class="hero">
 <p class="brand">PASSIVE INTELLIGENCE / LOCAL REPORT VIEWER</p>
 <h1>STAR OSINT — استخبارات النطاقات والبنية التحتية</h1>

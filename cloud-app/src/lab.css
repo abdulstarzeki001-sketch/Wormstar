@@ -863,3 +863,30 @@ button:disabled {
     flex-wrap: wrap;
   }
 }
+
+/* React UI engineering: motion-safe emphasis without layout shifts. */
+.ws-spotlight-card{position:relative;isolation:isolate;overflow:hidden}
+.ws-spotlight-card::before{
+  content:"";position:absolute;inset:0;z-index:0;border-radius:inherit;
+  pointer-events:none;opacity:0;
+  background:radial-gradient(190px circle at var(--ws-spot-x,50%) var(--ws-spot-y,50%),
+    rgba(94,234,212,.24),transparent 70%);
+  transition:opacity .22s ease
+}
+.ws-spotlight-card > *{position:relative;z-index:1}
+:where(.mode-pills,.topnav,.workspace,.auth-card,.chat-panel,.messages,.compose-box){min-width:0}
+:where(.pill,.btn-primary,.btn-ghost):focus-visible{outline:2px solid var(--cyan,#5eead4);outline-offset:3px}
+:where(.chat-panel,.auth-card,.mode-header){max-width:100%}
+@media(hover:hover) and (pointer:fine){
+  .ws-spotlight-card:hover::before{opacity:1}
+}
+@media(max-width:720px){
+  .workspace,.auth-screen{min-width:0}
+  .mode-header{gap:10px}
+  .mode-pills{gap:4px}
+  .chat-panel{border-radius:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  .ws-spotlight-card::before{display:none}
+  .ws-spotlight-card,.ws-spotlight-card::before{transition:none!important}
+}

@@ -22,6 +22,7 @@ import {
   Zap,
 } from 'lucide-react';
 import './lab.css';
+import SpotlightCard from './SpotlightCard';
 
 type Mode = 'assistant' | 'code' | 'logs' | 'ioc' | 'ctf' | 'report';
 type Access = 'checking' | 'signedout' | 'authorized' | 'denied';
@@ -279,9 +280,9 @@ export default function Lab() {
       {access !== 'authorized' ? (
         <main className="auth-screen">
           <div className="auth-card">
-            <div className="auth-orb">
+            <SpotlightCard className="auth-orb">
               <ShieldCheck size={32} strokeWidth={1.8} />
-            </div>
+            </SpotlightCard>
             <p className="auth-kicker">Private Cybersecurity Workspace</p>
             <h1>مختبر Wormstar</h1>
             <p className="auth-desc">
@@ -329,9 +330,9 @@ export default function Lab() {
         <main className="workspace">
           <section className="mode-header">
             <div className="mode-info">
-              <div className="mode-icon">
+              <SpotlightCard className="mode-icon">
                 <ModeIcon size={22} strokeWidth={1.8} />
-              </div>
+              </SpotlightCard>
               <div>
                 <h1>{activeMode.label}</h1>
                 <p>{activeMode.sub} — مساعد لتحليل الأدلة والنصوص ضمن نطاق مصرح به.</p>

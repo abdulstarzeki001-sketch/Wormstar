@@ -39,6 +39,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Install pinned frontend dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
       - name: Bundle and validate standalone interface
         run: |
           node scripts/build-worker.mjs

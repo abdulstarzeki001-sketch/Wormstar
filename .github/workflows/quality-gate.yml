@@ -132,6 +132,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Install pinned frontend dependencies
+        working-directory: wormstar-ui
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Bundle, syntax check and exercise HTTP routes
         working-directory: wormstar-ui
         run: npm test

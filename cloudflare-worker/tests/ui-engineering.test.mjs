@@ -10,11 +10,10 @@ test('UI enhancements keep fixed existing page contracts and never rewrite authe
   for(const [html,page] of [[nexus,'nexus'],[ws,'workspace'],[nexus,'academy']]){
     const output=enhanceUiPage(html,page);
     assert.match(output,/id="ws-ui-engineering"/);
-    assert.ok(output.includes('<script src="/ui/engine.js" defer></script>'));
-    assert.ok(output.includes('<script src="/ui/vendor/gsap.min.js" defer></script>'));
-    assert.ok(output.includes('<script src="/ui/vendor/ScrollTrigger.min.js" defer></script>'));
-    assert.ok(output.includes('<script src="/ui/vendor/lenis.min.js" defer></script>'));
-    assert.ok(output.includes(page==='workspace'?'<nav class="ws-suite-shortcuts"':'id="login"'));
+    assert.ok(output.includes('<script src="/ui/bootstrap.js" defer></script>'));
+    assert.equal(output.includes('<script src="/ui/vendor/gsap.min.js" defer></script>'),false);
+    assert.ok(output.includes('data-ws-ui-engineering="on"'));
+    assert.ok(output.includes(page==='workspace'?'<div class="ws-suite-shortcuts" role="group"':'id="login"'));
     assert.equal(enhanceUiPage(output,page),output,'idempotent injection');
   }
   assert.throws(()=>enhanceUiPage(nexus,'terminal'));
@@ -37,6 +36,15 @@ test('Worker serves motion and pinned vendor scripts from the same origin, no cr
   assert.equal(local.status,200);
   assert.match(await local.text(),/syncTouch:false/);
   assert.match(local.headers.get('Content-Type'),/javascript/);
+  const bootstrap=await serveUiAsset(get('/ui/bootstrap.js'),{});
+  assert.equal(bootstrap.status,200);
+  const boot=await bootstrap.text();
+  new Script(boot,{filename:'ui-bootstrap.js'});
+  assert.match(boot,/requestIdleCallback/);
+  assert.match(boot,/pointer: fine/);
+  assert.match(boot,/prefers-reduced-motion: reduce/);
+  assert.ok(boot.includes('/ui/vendor/gsap.min.js'));
+  assert.ok(boot.includes('/ui/engine.js'));
   for(const path of UI_ENGINEERING_SOURCE.paths){
     const res=await serveUiAsset(get(path),env);
     assert.equal(res.status,200);
@@ -112,4 +120,14 @@ test('Core routes are additive and keep protected API and Railway terminal untou
   const block=source.slice(source.indexOf("if(request.method==='GET'&&['/workspace'"),source.indexOf("return json({error:'Not found'},404);",source.indexOf("if(request.method==='GET'&&['/workspace'")));
   assert.equal(block.split("script-src 'self' 'unsafe-inline'").length-1,3);
   assert.equal(block.split("frame-ancestors 'none'").length-1,3);
+});
+
+
+test('Workspace shortcuts remain valid HTML landmarks without nested nav tags',()=>{
+  const html='<html><head></head><body><nav aria-label="تنقل المشاريع"></nav></body></html>';
+  const result=enhanceUiPage(html,'workspace');
+  assert.match(result,/<nav aria-label="تنقل المشاريع"><div class="ws-suite-shortcuts"/);
+  assert.doesNotMatch(result,/<nav aria-label="تنقل المشاريع"><nav /);
+  assert.equal(result.includes('href="/terminal/"'),true);
+  assert.equal(result.includes('href="/audit/"'),true);
 });

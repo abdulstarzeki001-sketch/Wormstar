@@ -9,6 +9,13 @@ const files = [
   ['MANIFEST', 'manifest.webmanifest'],
   ['SW', 'sw.js'],
   ['TERMINAL_JS', 'terminal.js'],
+  // Local, version-pinned UMD assets: obey the existing script-src 'self' CSP.
+  ['GSAP_JS', 'node_modules/gsap/dist/gsap.min.js'],
+  ['SCROLLTRIGGER_JS', 'node_modules/gsap/dist/ScrollTrigger.min.js'],
+  ['LENIS_JS', 'node_modules/lenis/dist/lenis.min.js'],
+  ['LENIS_CSS', 'node_modules/lenis/dist/lenis.css'],
+  ['MOTION_JS', 'motion.js'],
+  ['MOTION_CSS', 'motion.css'],
 ];
 
 for (const [name, filename] of files) {

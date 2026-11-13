@@ -48,3 +48,16 @@ test('auth and terminal modules remain untouched by the optional motion script',
   assert.match(html, /id="aiToken"/);
   assert.match(html, /src="\/terminal\.js"/);
 });
+
+
+test('motion improvements cover reports while keeping shell/editor/logs native',()=>{
+  for(const token of ['.report-card','.metric-card','.xterm-viewport','.monaco-editor',
+    '.cm-editor','.logs','[data-lenis-prevent]']){
+    assert.ok(motion.includes(token),'missing motion safeguard '+token);
+  }
+  assert.match(motion,/\.filter\(card => !card\.closest\(noSmooth\)\)/);
+  assert.match(motion,/\.slice\(0,28\)/);
+  assert.match(css,/\.panel::before/);
+  assert.match(css,/\.report-card::before/);
+  assert.match(css,/overscroll-behavior:contain/);
+});

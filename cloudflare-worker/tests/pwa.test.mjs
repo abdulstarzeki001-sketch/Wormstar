@@ -60,7 +60,7 @@ test('new look preserves required security and memory API contracts',()=>{
  assert.match(worker,/Object\.freeze\(LAB_POLICY_MANIFEST\)/);
  assert.match(worker,/if\(request\.method==='POST'&&url\.pathname==='\/api\/auth'\)/);
  assert.match(worker,/url\.pathname\.startsWith\('\/api\/studio\/'\)/);
- assert.match(worker,/new Response\(FUTURE_HTML/);
+ assert.match(worker,/compactPage\(FUTURE_HTML\.replace/);
  assert.doesNotMatch(worker,/service_role/);
 });
 

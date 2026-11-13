@@ -14,6 +14,7 @@ import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway} from
 import {serveRailwayTerminal,serveSentinelModule,suiteLanding} from './unified-suite-proxy.js';
 import ACADEMY_HTML from './academy-page.js';
 import {compactPage} from './compact-layout.js';
+import {enhanceUiPage,serveUiAsset} from './ui-engineering.js';
 import { invokeWormGPT, wormgptConfigured } from './wormgpt-provider.js';
 import { goClawConfigured, goClawBudgetAllowed, probeGoClaw, invokeGoClaw } from './goclaw-gateway.js';
 import { APP_ICON_PNG_B64, APP_ICON_SVG } from './app-icon.js';
@@ -699,6 +700,9 @@ export default {
   },
   async fetch(request,env,ctx){
     const url=new URL(request.url);
+    // Only public, fixed-path first-party motion assets; no API credentials.
+    if(url.pathname==='/ui/engine.js'||url.pathname.startsWith('/ui/vendor/'))
+      return serveUiAsset(request,env);
     // WORMSTAR ONE: serve fixed, credential-isolated pages on the AI Lab origin.
     if(url.pathname==='/suite'||url.pathname==='/suite/') {
       if(request.method!=='GET')return new Response('Method not allowed',{status:405});
@@ -1036,17 +1040,17 @@ export default {
         'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' wss://wormstar-ai-lab.abdulstarzeki001.workers.dev; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
       }});
     if(request.method==='GET'&&['/workspace','/workspace/','/projects','/projects/'].includes(url.pathname))
-      return new Response(compactPage(WORKSPACE_HTML,'workspace'),{headers:{
+      return new Response(enhanceUiPage(compactPage(WORKSPACE_HTML,'workspace'),'workspace'),{headers:{
         ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',
-        'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+        'Content-Security-Policy':"default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
       }});
-    if(request.method==='GET'&&(url.pathname==='/academy'||url.pathname==='/academy/'||url.pathname==='/academy/index.html'))return new Response(compactPage(ACADEMY_HTML,'academy'),{headers:{
+    if(request.method==='GET'&&(url.pathname==='/academy'||url.pathname==='/academy/'||url.pathname==='/academy/index.html'))return new Response(enhanceUiPage(compactPage(ACADEMY_HTML,'academy'),'academy'),{headers:{
       ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',
-      'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
+      'Content-Security-Policy':"default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
     }});
-    if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))return new Response(compactPage(FUTURE_HTML.replace('</body></html>',WORKSPACE_SHORTCUT+'</body></html>'),'nexus'),{headers:{
+    if(request.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))return new Response(enhanceUiPage(compactPage(FUTURE_HTML.replace('</body></html>',WORKSPACE_SHORTCUT+'</body></html>'),'nexus'),'nexus'),{headers:{
       ...PRIVATE_HEADERS,'Content-Type':'text/html;charset=utf-8','X-Robots-Tag':'noindex, nofollow',
-      'Content-Security-Policy':"default-src 'none'; script-src 'unsafe-inline'; worker-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; connect-src 'self' https://xwigjsrbalbjwwjkxyma.supabase.co; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+      'Content-Security-Policy':"default-src 'none'; script-src 'self' 'unsafe-inline'; worker-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; connect-src 'self' https://xwigjsrbalbjwwjkxyma.supabase.co; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
     }});
     return json({error:'Not found'},404);
   }

@@ -21,7 +21,7 @@ export function enhanceUiPage(html,kind){
   if(typeof html!=='string'||!html.includes('</head>')||!html.includes('</body>'))
     throw Error('Invalid HTML page');
   if(html.includes('id="ws-ui-engineering"'))return html;
-  let result=html.replace(/<html(?=[\\s>])/, '<html data-ws-ui-engineering="on"');
+  let result=html.replace('<html', '<html data-ws-ui-engineering="on"');
   result=result.replace('</head>',HEAD_STYLE+'</head>');
   if(kind==='workspace'){
     const target='<nav aria-label="تنقل المشاريع">';

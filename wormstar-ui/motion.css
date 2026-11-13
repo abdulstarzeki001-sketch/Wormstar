@@ -1,0 +1,46 @@
+/* Wormstar motion layer — native HTML/CSS alternative to React-only UI kits.
+   Preserve existing markup, RTL/LTR, keyboard navigation and security flows. */
+html[data-motion-ready="true"] .page.active { animation: none; }
+
+.feature, .stat-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+.feature::before, .stat-card::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  z-index:-1;
+  opacity:0;
+  pointer-events:none;
+  background:radial-gradient(260px circle at var(--spot-x,50%) var(--spot-y,50%),
+    rgba(82,224,194,.13), transparent 72%);
+  transition:opacity .2s ease;
+}
+@media (hover:hover) and (pointer:fine) {
+  .feature:hover, .stat-card:hover {
+    border-color:var(--line-strong);
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+  }
+  .feature:hover::before, .stat-card:hover::before {opacity:1;}
+}
+:where(.feature, .stat-card, .ops-panel, .btn, .nav button):focus-visible {
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+}
+.ops-panel {min-width:0;}
+.ops-panel pre, #wsTermOutput {overflow:auto;overscroll-behavior:contain;}
+@media (max-width:720px) {
+  .page-heading{gap:10px;margin-bottom:14px;}
+  .ops-panel{padding:13px;margin-top:12px;}
+  .feature-grid{gap:10px;}
+  .feature{min-height:unset;}
+}
+@media (prefers-reduced-motion:reduce) {
+  html{scroll-behavior:auto!important;}
+  .page,.page.active {animation:none!important;}
+  .feature,.stat-card,.feature::before,.stat-card::before{transition:none!important;}
+}

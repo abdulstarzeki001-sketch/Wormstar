@@ -157,11 +157,14 @@ export async function openTerminalWebSocket(request,env,deps={}) {
 
   try{remote.send(JSON.stringify({type:'auth',password:env.TERMINAL_RAILWAY_PASSWORD}));}
   catch(_){stop();return json({error:'Terminal service authentication failed'},503);}
-  return new Response(null,{status:101,webSocket:client,headers:{
+  const headers={
     'Sec-WebSocket-Protocol':'wormstar-terminal',
     'Cache-Control':'no-store',
     'X-Content-Type-Options':'nosniff'
-  }});
+  };
+  return deps.makeUpgradeResponse
+    ? deps.makeUpgradeResponse(client,headers)
+    : new Response(null,{status:101,webSocket:client,headers});
 }
 
 export const terminalGatewayInternals={validTicket,secretsReady};

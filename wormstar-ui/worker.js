@@ -19,6 +19,14 @@ function terminalConnectOrigins(value) {
   } catch { return ""; }
 }
 
+// Generated from pinned npm distributions by scripts/build-worker.mjs.
+const GSAP_JS = "";
+const SCROLLTRIGGER_JS = "";
+const LENIS_JS = "";
+const LENIS_CSS = "";
+const MOTION_JS = "";
+const MOTION_CSS = "";
+
 function response(body, type, status = 200, terminalBackend = "") {
   return new Response(body, {
     status,
@@ -145,6 +153,24 @@ export default {
     }
     if (path === "/" || path === "/index.html") {
       return response(request.method === "HEAD" ? null : INDEX, "text/html; charset=utf-8", 200, env?.TERMINAL_UI_BACKEND_ORIGIN || "");
+    }
+    if (path === "/assets/gsap.min.js") {
+      return response(request.method === "HEAD" ? null : GSAP_JS, "text/javascript; charset=utf-8");
+    }
+    if (path === "/assets/ScrollTrigger.min.js") {
+      return response(request.method === "HEAD" ? null : SCROLLTRIGGER_JS, "text/javascript; charset=utf-8");
+    }
+    if (path === "/assets/lenis.min.js") {
+      return response(request.method === "HEAD" ? null : LENIS_JS, "text/javascript; charset=utf-8");
+    }
+    if (path === "/assets/lenis.css") {
+      return response(request.method === "HEAD" ? null : LENIS_CSS, "text/css; charset=utf-8");
+    }
+    if (path === "/motion.js") {
+      return response(request.method === "HEAD" ? null : MOTION_JS, "text/javascript; charset=utf-8");
+    }
+    if (path === "/motion.css") {
+      return response(request.method === "HEAD" ? null : MOTION_CSS, "text/css; charset=utf-8");
     }
     if (path === "/terminal.js") {
       return response(request.method === "HEAD" ? null : TERMINAL_JS, "text/javascript; charset=utf-8");

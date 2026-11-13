@@ -9,8 +9,8 @@
   GSAP.registerPlugin(Trigger);
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = window.matchMedia('(pointer: fine)');
-  const candidates = '.feature, .stat-card, .ops-panel, .panel, .context-card';
-  const noSmooth = '#wsTermOutput, .chat-history, .chat-compose, textarea, pre, .drawer, .sidebar, .context, [data-native-scroll]';
+  const candidates = '.feature, .stat-card, .ops-panel, .panel, .context-card, .report-card, .metric-card';
+  const noSmooth = '#wsTermOutput, .terminal, .xterm, .xterm-viewport, .monaco-editor, .cm-editor, .logs, .log-view, .chat-history, .chat-compose, textarea, pre, code, dialog, .drawer, .sidebar, .context, [data-native-scroll], [data-lenis-prevent]';
   let smooth = null;
   let ticker = null;
   let activePage = null;
@@ -87,7 +87,7 @@
     }
 
     // Subtle on-enter motion only; cards never start hidden when JS cannot load.
-    const cards = Array.from(page.querySelectorAll(candidates)).slice(0,40);
+    const cards = Array.from(page.querySelectorAll(candidates)).filter(card => !card.closest(noSmooth)).slice(0,28);
     cards.forEach(card => {
       const trigger = Trigger.create({
         trigger:card,
@@ -125,8 +125,8 @@
   // Spotlight-card interaction: CSS-only fallback, no React runtime added.
   if (finePointer.matches && !reduced.matches) {
     main.addEventListener('pointermove', event => {
-      const card = event.target.closest?.('.feature, .stat-card');
-      if (!card) return;
+      const card = event.target.closest?.('.feature, .stat-card, .panel, .report-card');
+      if (!card || card.closest(noSmooth)) return;
       const rect = card.getBoundingClientRect();
       card.style.setProperty('--spot-x', (event.clientX - rect.left) + 'px');
       card.style.setProperty('--spot-y', (event.clientY - rect.top) + 'px');

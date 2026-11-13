@@ -158,7 +158,7 @@ async function auditPage(request, path) {
   const sample='fetch("/api/sample"';
   if(!html.includes(sample))return new Response('Audit dashboard source mismatch',{status:503});
   html=html.replace(sample,'fetch("/audit/api/sample"');
-  const banner='<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:13px 18px;margin-top:14px;border:1px solid #2f6d8b;border-radius:12px;background:#0c2434;color:#e5faff;font-size:13px"><strong>WORMSTAR UNIFIED LAB · STATIC AUDIT</strong><span><a style="margin-inline:8px" href="/">← Wormstar Sentinel</a><a style="margin-inline:8px" href="https://github.com/abdulstarzeki001-sketch/Star-Cyber-Audit-iSH" target="_blank" rel="noopener noreferrer">iSH Analyzer Source</a></span></div>';
+  const banner='<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:13px 18px;margin-top:14px;border:1px solid #2f6d8b;border-radius:12px;background:#0c2434;color:#e5faff;font-size:13px"><strong>WORMSTAR UNIFIED LAB · STATIC AUDIT</strong><span><a style="margin-inline:8px" href="/">الرئيسية</a><a style="margin-inline:8px" href="/workspace/">NEXUS Hub</a><a style="margin-inline:8px" href="/core/">Core AI</a><a style="margin-inline:8px" href="/osint/">OSINT</a><a style="margin-inline:8px" href="https://github.com/abdulstarzeki001-sketch/Star-Cyber-Audit-iSH" target="_blank" rel="noopener noreferrer">iSH Analyzer Source</a></span></div>';
   html=html.replace('<div class="wrapper">','<div class="wrapper">'+banner);
   const headers=new Headers(upstream.headers);
   headers.set('Cache-Control','no-store');

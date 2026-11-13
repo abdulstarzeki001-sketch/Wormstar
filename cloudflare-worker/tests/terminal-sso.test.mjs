@@ -145,7 +145,9 @@ test('Core routes preserve owner allow and do not expose Railway password in HTM
  assert.match(core,/openTerminalWebSocket\(request,env\)/);
  assert.match(core,/diagnoseTerminalGateway\(request,env,await allow\(request,env\)\)/);
  assert.match(core,/if\(request.method==='GET'&&\['\/terminal','\/terminal\/'\]\.includes\(url.pathname\)\)/);
- assert.match(ui,/href="\/terminal"/);
+ assert.match(ui,/href="https:\/\/terminal-production-fb16bd35\.up\.railway\.app\/"/);
+ assert.doesNotMatch(ui,/href="\/terminal"/);
+ assert.doesNotMatch(ui,/terminal-production-fb16bd35\.up\.railway\.app\/\?[^"]*(?:token|key|password)/i);
  assert.match(core,/frame-ancestors 'none'/);
  assert.doesNotMatch(ui,/TERMINAL_RAILWAY_PASSWORD|TERMINAL_TICKET_SECRET/);
  assert.doesNotMatch(TERMINAL_HTML,/TERMINAL_RAILWAY_PASSWORD|TERMINAL_TICKET_SECRET/);

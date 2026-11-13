@@ -19,6 +19,11 @@ export function compactPage(html,variant){
   if(variant==='nexus'){
     css=STYLE_NEXUS + '\n' + "body:has(#app:not(.hidden)) .ws-unified-launch{display:none!important}@media(max-width:760px){.ws-unified-launch{bottom:auto;top:calc(9px + env(safe-area-inset-top));left:9px;padding:8px 11px;font-size:11px;max-width:calc(100vw - 18px)}}";
     if(!html.includes(NEXUS_NAV_ANCHOR)||!html.includes(NEXUS_SHEET_ANCHOR))throw Error('NEXUS navigation anchors changed');
+    // The knowledge page is a synchronous HTML template. Leaving it async
+    // passes a Promise into the existing page renderer, producing '[object Promise]'.
+    const memoryTemplate='async function memoryHTML(){';
+    if(html.split(memoryTemplate).length!==2)throw Error('Knowledge template anchor changed');
+    html=html.replace(memoryTemplate,'function memoryHTML(){');
     html=html.replace(NEXUS_NAV_ANCHOR,NEXUS_NAV+'\n    '+NEXUS_NAV_ANCHOR)
       .replace(NEXUS_SHEET_ANCHOR,NEXUS_SHEET_NAV+'\n   '+NEXUS_SHEET_ANCHOR);
   }else if(variant==='workspace')css=STYLE_WORKSPACE;

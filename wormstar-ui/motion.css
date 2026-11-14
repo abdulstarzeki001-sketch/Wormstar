@@ -78,3 +78,63 @@ html[data-motion-ready="true"] .page.active { animation: none; }
   .panel,.report-card,.metric-card,.panel::before,.report-card::before{transition:none!important}
   .panel::before,.report-card::before{display:none}
 }
+
+/* Legibility and layout pass, verified in a real browser at 320, 390, 768 and
+   1440px. Secondary text used to render at 8–10px; the floor is now 11px. */
+.section-label,.workspace-copy small,.nav .count,.key,.eyebrow,
+.stat-foot,.activity-time,.severity,.risk-label small,.mini-row,.compose-note,
+.profile-info small,.plan-head span:last-child{font-size:11px}
+.plan-card p,.status-top,.hero-tag,.panel-head p,.activity-main p,.agent-info small,
+.agent-state,.system-line span,.system-line b,.disclaimer,.ai-auth-status,
+.ai-model-bar small,.ai-source-list{font-size:11.5px}
+.plan-head,.breadcrumb,.stat-top,.text-link,.context-card-head,
+.quick,.feature p,.prompt-chip,.ai-auth label,.ai-model-bar label{font-size:12px}
+.btn,.profile-info strong,.context-title,.toast{font-size:12.5px}
+.activity-main strong,.agent-info strong,.risk-label strong,.chat-welcome p,.ops-panel p{font-size:13px}
+.page-heading p,.hero-copy p,.feature strong,.chat-message{font-size:13.5px}
+.panel-head h3,.chat-compose textarea{font-size:14px}
+.severity{padding:3px 8px}
+.brand-sub{white-space:nowrap}
+@media(min-width:721px){.search-trigger{font-size:12px}}
+.hero-copy p,.chat-message{line-height:1.85}
+
+/* Form labels in operation panels were unstyled and outweighed their headings. */
+.ops-panel label:not(.ops-check){display:inline-block;margin-top:8px;font-size:12.5px;font-weight:600;color:var(--soft)}
+/* Empty result boxes rendered as blank bars until a step was planned. */
+#wsTermExplanation:empty,#wsTermCommand:empty,#wsTermResult:empty{display:none}
+
+/* Assistant: keep the engine name readable and the welcome prompts unclipped. */
+.ai-model-bar select{flex:1 1 220px}
+.chat-shell{height:min(80vh,860px);min-height:520px}
+.chat-history{min-height:220px}
+.chat-welcome{margin:18px auto}
+
+@media(max-width:720px){
+  .page-heading p{font-size:12.5px}
+  .page-heading>.btn{font-size:11.5px}
+  .hero-copy p{font-size:13px}
+  .hero-actions .btn{font-size:12.5px}
+  .stat-top{font-size:11.5px}
+  .mobile-nav button{font-size:10.5px}
+  .compose-note{font-size:11px}
+  .chat-message{font-size:14px;max-width:92%}
+  /* iOS Safari zooms the whole page when a focused control is under 16px. */
+  .chat-compose textarea,.ai-model-bar select,.ai-auth input,.ops-input,#iocInput{font-size:16px}
+  /* The fixed-height shell left no room for the conversation once the
+     connection and model controls stacked; let it grow with the page. */
+  .chat-shell{height:auto;min-height:0}
+  .chat-history{flex:none;min-height:260px;max-height:58dvh}
+  /* Stack each label directly above its own full-width control instead of
+     letting labels and controls wrap independently. */
+  .ai-model-bar{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+  .ai-model-bar>*{min-width:0}
+  .ai-model-bar>select{width:100%;max-width:none}
+  .ai-model-bar>label:not(.ai-repo-toggle){margin-top:4px}
+  .ai-model-bar>.btn{justify-self:start}
+  /* Keep both compose buttons on one line; the notice moves underneath. */
+  .compose-foot{flex-wrap:wrap}
+  .compose-foot .btn{white-space:nowrap}
+  .compose-note{order:3;flex:1 1 100%;margin:2px 0 0}
+  #sendBtn{margin-inline-start:auto}
+}
+@media(max-width:360px){.page-heading>.btn{font-size:11px}}

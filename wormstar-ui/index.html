@@ -11,7 +11,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/lenis.css">
-<link rel="stylesheet" href="/motion.css">
 <style>
 :root{
  --bg:#0a101d;--surface:#111a2a;--surface-2:#172337;--surface-3:#1d2b41;
@@ -221,6 +220,7 @@ body.ltr .quick{text-align:left}body.ltr .chat-message.user{margin-right:0;margi
 }
 @media(max-width:360px){.main{padding-left:11px;padding-right:11px}.hero{padding:17px 15px}.stat-value{font-size:21px}.topbar{margin-left:-11px;margin-right:-11px;padding:0 11px}.page-heading>.btn{font-size:8px}.feature-grid{grid-template-columns:1fr 1fr}}
 </style>
+<link rel="stylesheet" href="/motion.css">
 </head>
 <body>
 <div class="app">
@@ -434,7 +434,8 @@ bash scripts/run-uboor-lab.sh</pre>
  </div>
  <div class="ops-panel">
   <h3>Linux Shell</h3>
-  <pre id="wsTermOutput" aria-live="polite" style="background:#08111e;color:#6ee7b7;padding:16px;min-height:220px;max-height:400px;overflow:auto;border-radius:12px;direction:ltr;text-align:left;white-space:pre-wrap">غير متصل.\n</pre>
+  <pre id="wsTermOutput" aria-live="polite" style="background:#08111e;color:#6ee7b7;padding:16px;min-height:220px;max-height:400px;overflow:auto;border-radius:12px;direction:ltr;text-align:left;white-space:pre-wrap">غير متصل.
+</pre>
   <form id="wsTermForm" class="ops-actions"><label for="wsTermInput">الأمر</label><input class="ops-input" id="wsTermInput" autocomplete="off" spellcheck="false" maxlength="4000" disabled><button class="btn primary" id="wsTermSend" type="submit" disabled>تنفيذ</button></form>
   <p>الأوامر اليدوية تعمل داخل الحاوية فقط. واجهة الأوامر سطرية ولا تدعم البرامج التفاعلية كاملة الشاشة.</p>
  </div>
@@ -506,7 +507,7 @@ bash scripts/run-uboor-lab.sh</pre>
  <div class="section-label" data-i18n="live_context">السياق المباشر</div>
  <div class="context-title" data-i18n="risk_overview">ملخص الوضع الأمني</div>
  <div class="context-card"><div class="context-card-head"><span data-i18n="posture">المؤشر العام</span><span class="severity">DEMO</span></div><div class="risk-score"><div class="risk-ring"><strong>74</strong></div><div class="risk-label"><strong data-i18n="good_posture">وضع جيد</strong><small data-i18n="risk_copy">هذه قيمة تجريبية للعرض. اربط مصادر البيانات لعرض القياس الحقيقي.</small></div></div></div>
- <div class="context-card"><div class="context-card-head"><span data-i18n="system_health">حالة المكونات</span><span style="color:var(--success);font-size:9px">● LIVE UI</span></div><div class="system-line"><i class="system-dot"></i><span>Cloudflare Edge</span><b>Ready</b></div><div class="system-line"><i class="system-dot"></i><span>Local AI</span><b>Standby</b></div><div class="system-line"><i class="system-dot"></i><span>Policy Engine</span><b>Ready</b></div><div class="system-line"><i class="system-dot"></i><span>Audit Log</span><b>Ready</b></div></div>
+ <div class="context-card"><div class="context-card-head"><span data-i18n="system_health">حالة المكونات</span><span style="color:var(--success);font-size:11px">● LIVE UI</span></div><div class="system-line"><i class="system-dot"></i><span>Cloudflare Edge</span><b>Ready</b></div><div class="system-line"><i class="system-dot"></i><span>Local AI</span><b>Standby</b></div><div class="system-line"><i class="system-dot"></i><span>Policy Engine</span><b>Ready</b></div><div class="system-line"><i class="system-dot"></i><span>Audit Log</span><b>Ready</b></div></div>
  <div class="context-title" data-i18n="quick_actions">إجراءات سريعة</div><div class="quick-stack">
   <button class="quick" data-goto="assistant"><svg viewBox="0 0 24 24"><path d="M12 3a8 8 0 0 0-4.4 14.7L7 21l4-2"/></svg><span data-i18n="quick_chat">فتح جلسة مع المساعد</span></button>
   <button class="quick" data-goto="code"><svg viewBox="0 0 24 24"><path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 4l-4 16"/></svg><span data-i18n="quick_code">مراجعة شيفرة</span></button>

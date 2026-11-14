@@ -15,3 +15,6 @@ PentestGPT/
 .env
 .env.*
 !.env.example
+
+# Node dependencies (install with npm ci)
+node_modules/

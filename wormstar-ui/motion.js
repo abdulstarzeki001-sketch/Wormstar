@@ -58,8 +58,9 @@
       GSAP.set(previous.querySelectorAll(candidates), {
         clearProps: 'opacity,visibility,transform'
       });
-      const heading = previous.querySelector('.page-heading');
-      if (heading) GSAP.set(heading, {clearProps:'opacity,visibility,transform'});
+      // Both entrance targets: a killed tween otherwise leaves the hero copy at opacity 0.
+      const entrance = previous.querySelectorAll('.page-heading, .hero-copy');
+      if (entrance.length) GSAP.set(entrance, {clearProps:'opacity,visibility,transform'});
     }
   }
 

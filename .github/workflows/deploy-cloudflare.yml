@@ -70,3 +70,28 @@ jobs:
           done
           echo "Core post-deployment health verification failed" >&2
           exit 1
+
+      - name: Verify owner terminal route rejects unauthenticated sessions
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://wormstar-ai-lab.abdulstarzeki001.workers.dev"
+          # Terminal UI is publicly fetchable, but it may not open a shell until
+          # the owner authorizes and obtains a short-lived signed ticket.
+          curl --fail --silent --show-error --max-time 20 \
+            --output /tmp/wormstar-owner-terminal.html "$BASE/terminal/"
+          grep -q '/api/terminal/session' /tmp/wormstar-owner-terminal.html
+          grep -q '/api/terminal/ws' /tmp/wormstar-owner-terminal.html
+          if grep -q 'id="password"' /tmp/wormstar-owner-terminal.html; then
+            echo "ERROR: Password-only Railway HTML exposed at owner terminal path" >&2
+            exit 1
+          fi
+          status="$(curl --silent --show-error --max-time 20 \
+            -X POST -o /tmp/terminal-unauthorized.json \
+            -w '%{http_code}' "$BASE/api/terminal/session")"
+          test "$status" = '401' || {
+            echo "ERROR: Unauthenticated ticket request was not rejected (HTTP $status)" >&2
+            exit 1
+          }
+          node -e "const x=require('/tmp/terminal-unauthorized.json');if(x.ticket||!x.error)process.exit(1)"
+          echo "Owner terminal route and unauthorized-ticket rejection verified"

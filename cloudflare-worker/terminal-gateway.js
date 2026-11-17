@@ -33,6 +33,9 @@ function configurationIssues(env) {
   if(typeof env?.TERMINAL_RAILWAY_PASSWORD !== 'string' ||
      env.TERMINAL_RAILWAY_PASSWORD.length < 12)
     issues.push('TERMINAL_RAILWAY_PASSWORD');
+  if(typeof env?.TERMINAL_EDGE_ORIGIN_SECRET !== 'string' ||
+     env.TERMINAL_EDGE_ORIGIN_SECRET.length < 32)
+    issues.push('TERMINAL_EDGE_ORIGIN_SECRET');
   return issues;
 }
 function secretsReady(env) {
@@ -45,7 +48,7 @@ function configurationError(env) {
     error:'Terminal gateway configuration needs correction',
     code:'TERMINAL_CONFIGURATION_INVALID',
     invalidSecrets:configurationIssues(env),
-    requirement:'Set a 32+ character signing secret and the existing Railway password (12+ characters) as Cloudflare Secrets.'
+    requirement:'Configure the signing secret (32+ chars), existing Railway password and a second origin-gate secret (32+ chars) as Cloudflare Secrets.'
   },503);
 }
 
@@ -119,7 +122,8 @@ export async function openTerminalWebSocket(request,env,deps={}) {
   let response;
   try {
     response=await (deps.fetchBackend||fetch)(BACKEND_ORIGIN+'/ws',{
-      headers:{Upgrade:'websocket',Origin:BACKEND_ORIGIN},
+      headers:{Upgrade:'websocket',Origin:BACKEND_ORIGIN,
+        'X-Star-Edge-Origin':env.TERMINAL_EDGE_ORIGIN_SECRET},
       redirect:'error'
     });
   }catch(_) {
@@ -220,13 +224,15 @@ export async function diagnoseTerminalGateway(request,env,verifiedOwner,deps={})
   const backend=deps.fetchBackend||fetch;
   let health;
   try{
-    health=await backend(BACKEND_ORIGIN+'/health',{method:'GET',redirect:'error',cache:'no-store'});
+    health=await backend(BACKEND_ORIGIN+'/health',{method:'GET',redirect:'error',cache:'no-store',
+      headers:{'X-Star-Edge-Origin':env.TERMINAL_EDGE_ORIGIN_SECRET}});
     if(!health.ok)return json({ok:false,stage:'health',code:'RAILWAY_HEALTH_FAILED'},503);
   }catch(_){return json({ok:false,stage:'health',code:'RAILWAY_UNREACHABLE'},503);}
   let handshake;
   try{
     handshake=await backend(BACKEND_ORIGIN+'/ws',{
-      headers:{Upgrade:'websocket',Origin:BACKEND_ORIGIN},redirect:'error'
+      headers:{Upgrade:'websocket',Origin:BACKEND_ORIGIN,
+        'X-Star-Edge-Origin':env.TERMINAL_EDGE_ORIGIN_SECRET},redirect:'error'
     });
   }catch(_){return json({ok:false,stage:'websocket',code:'BACKEND_WS_CONNECT_FAILED'},503);}
   if(handshake.status!==101 || !handshake.webSocket)

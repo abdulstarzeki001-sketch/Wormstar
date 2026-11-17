@@ -171,9 +171,32 @@ export async function openTerminalWebSocket(request,env,deps={}) {
     if(data.type==='ready'){
       ready=true;
       clearTimeout(authTimeout);
+      try{server.send(JSON.stringify({type:'ready',aiEnabled:data.aiEnabled===true}));}
+      catch(_){end(1011,'BROWSER_SEND_FAILED');}
+      return;
     }
-    if(['ready','output','info'].includes(data.type)){
+    if(['output','info'].includes(data.type)){
       try{server.send(payload);}catch(_){end(1011,'BROWSER_SEND_FAILED');}
+      return;
+    }
+    if(!ready)return;
+    // STAR AI is advisory only. Forward a strict, bounded schema, never raw
+    // upstream JSON or credentials. Text is rendered with textContent in the UI.
+    let aiMessage=null;
+    if(data.type==='ai_status'){
+      const reason=typeof data.reason==='string' && /^[A-Z_]{3,64}$/.test(data.reason)
+        ? data.reason : 'GATEWAY_UNKNOWN';
+      aiMessage={type:'ai_status',ready:data.ready===true,reason};
+    }else if(data.type==='ai_busy'){
+      aiMessage={type:'ai_busy'};
+    }else if(data.type==='ai_reply' && typeof data.text==='string'){
+      aiMessage={type:'ai_reply',text:data.text.slice(0,8000)};
+    }else if(data.type==='ai_error' && typeof data.message==='string'){
+      aiMessage={type:'ai_error',message:data.message.slice(0,400)};
+    }
+    if(aiMessage){
+      try{server.send(JSON.stringify(aiMessage));}
+      catch(_){end(1011,'BROWSER_SEND_FAILED');}
     }
   });
   remote.addEventListener('close',()=>{
@@ -190,6 +213,11 @@ export async function openTerminalWebSocket(request,env,deps={}) {
     else if(data?.type==='resize'&&Number.isInteger(data.cols)&&Number.isInteger(data.rows))
       remote.send(JSON.stringify({type:'resize',cols:Math.max(10,Math.min(240,data.cols)),
         rows:Math.max(5,Math.min(80,data.rows))}));
+    else if(data?.type==='ai_check')
+      remote.send(JSON.stringify({type:'ai_check'}));
+    else if(data?.type==='ai_chat' && typeof data.prompt==='string' &&
+            data.prompt.trim().length>0 && data.prompt.length<=4000)
+      remote.send(JSON.stringify({type:'ai_chat',prompt:data.prompt}));
   });
   server.addEventListener('close',()=>end());
   server.addEventListener('error',()=>end(1011,'BROWSER_SOCKET_ERROR'));

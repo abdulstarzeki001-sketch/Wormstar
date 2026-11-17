@@ -41,6 +41,25 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
 .controls{display:flex;gap:9px;align-items:center;padding:12px 14px;border-top:1px solid var(--line);background:var(--panel)}
 .prompt{direction:ltr;color:var(--mint);font:700 15px monospace}
 #command{flex:1;min-width:0;padding:11px;border-radius:10px;background:#0c1524;border:1px solid #30435c;color:var(--ink);direction:ltr;text-align:left;font:14px ui-monospace,monospace}
+.ai-shell{margin-top:13px;border:1px solid var(--line);border-radius:17px;overflow:hidden;background:var(--panel)}
+.ai-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:12px 15px}
+.ai-head strong{color:var(--mint);font-size:16px}
+.ai-head small{color:var(--muted)}
+#aiPanel{padding:0 14px 14px;border-top:1px solid var(--line)}
+[hidden]{display:none!important}
+#aiState{font-size:12px;color:var(--muted);padding:10px 0}
+#aiMessages{direction:rtl;max-height:340px;min-height:110px;overflow:auto;background:#091321;border:1px solid var(--line);border-radius:11px;padding:10px}
+.ai-message{white-space:pre-wrap;overflow-wrap:anywhere;border-radius:10px;padding:10px;margin-bottom:8px;background:#17283b;font-size:13px}
+.ai-message[data-kind="assistant"]{border-right:3px solid var(--mint)}
+.ai-message[data-kind="user"]{border-right:3px solid var(--accent)}
+.ai-message[data-kind="error"]{border-right:3px solid var(--error);color:var(--error)}
+.ai-message strong{display:block;margin-bottom:4px;font-size:12px}
+.ai-form{display:flex;gap:8px;align-items:stretch;margin-top:10px}
+#aiPrompt{flex:1;resize:vertical;min-height:76px;max-height:180px;border:1px solid #30435c;background:#0c1524;border-radius:10px;padding:10px;color:var(--ink);direction:rtl;text-align:right}
+#aiPrompt:disabled{opacity:.55}
+.ai-actions{display:flex;flex-direction:column;gap:6px}
+.ai-note{margin:8px 0 0;color:var(--muted);font-size:12px}
+@media(max-width:600px){.ai-form{flex-direction:column}.ai-actions{flex-direction:row}.ai-actions button{flex:1}}
 #warning{margin:12px 0 0;color:var(--muted);font-size:12px}
 #warning a{color:var(--mint)}
 @media(max-width:600px){.wrap{padding:11px}.hero{padding:15px}.term-head{padding:10px}.controls{padding:9px}.btn{padding:8px}#output{height:48dvh;min-height:270px;padding:11px}}
@@ -80,6 +99,24 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
    <button class="btn primary" type="submit" id="send" disabled>تنفيذ</button>
  </form>
 </section>
+<section class="ai-shell" aria-label="مساعد STAR AI">
+  <div class="ai-head">
+    <div><strong>STAR AI</strong><small> — مساعد لتحليل النتائج وشرح الأوامر</small></div>
+    <button type="button" id="aiToggle" class="btn" aria-controls="aiPanel" aria-expanded="false" disabled>فتح المساعد</button>
+  </div>
+  <div id="aiPanel" hidden>
+    <div id="aiState" role="status" aria-live="polite">اتصل بالطرفية أولاً</div>
+    <div id="aiMessages" role="log" aria-label="محادثة STAR AI" aria-live="polite"></div>
+    <form id="aiForm" class="ai-form" autocomplete="off">
+      <textarea id="aiPrompt" rows="3" maxlength="4000" placeholder="اسأل STAR AI عن أمر أو نتيجة... (بدون أسرار أو مفاتيح)" aria-label="سؤال STAR AI" disabled></textarea>
+      <div class="ai-actions">
+        <button type="submit" id="aiSend" class="btn primary" disabled>اسأل STAR AI</button>
+        <button type="button" id="aiCheck" class="btn" disabled>فحص AI</button>
+      </div>
+    </form>
+    <p class="ai-note">إجابات STAR AI استشارية فقط ولا تنفّذ أي أوامر. لا ترسل بيانات خاصة أو مفاتيح API.</p>
+  </div>
+</section>
 <p id="warning">عند انتهاء جلسة Wormstar، ارجع إلى <a href="/">الواجهة الرئيسية</a> وسجّل دخولك المعتاد فقط. الوصول إلى الطرفية يتطلب اتصال Cloudflare الآمن بخدمة Railway.</p>
 </div>
 <script>
@@ -87,6 +124,38 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
 'use strict';
 const el=id=>document.getElementById(id);
 const out=el('output');
+const aiLog=el('aiMessages');
+let aiReady=false,aiBusy=false,aiOpen=false;
+function aiMessage(kind,text){
+ const entry=document.createElement('div');
+ entry.className='ai-message';
+ entry.dataset.kind=kind;
+ const heading=document.createElement('strong');
+ heading.textContent=kind==='user'?'أنت':kind==='assistant'?'STAR AI':'تنبيه';
+ const body=document.createElement('span');
+ body.textContent=String(text||'').slice(0,8000);
+ entry.append(heading,body);
+ aiLog.appendChild(entry);
+ while(aiLog.children.length>30)aiLog.firstChild.remove();
+ aiLog.scrollTop=aiLog.scrollHeight;
+}
+function updateAiUi(){
+ el('aiToggle').disabled=!ready;
+ el('aiToggle').setAttribute('aria-expanded',String(aiOpen));
+ el('aiToggle').textContent=aiOpen?'إغلاق المساعد':'فتح المساعد';
+ el('aiPanel').hidden=!aiOpen;
+ el('aiCheck').disabled=!ready;
+ el('aiPrompt').disabled=!ready||!aiReady||aiBusy;
+ el('aiSend').disabled=!ready||!aiReady||aiBusy;
+}
+const AI_REASONS={
+ GATEWAY_READY:'STAR AI جاهز للأسئلة',
+ GATEWAY_UNREACHABLE:'خدمة STAR AI غير قابلة للوصول حالياً',
+ GATEWAY_NOT_CONFIGURED:'مفتاح مزوّد الذكاء الاصطناعي غير مهيأ',
+ TERMINAL_NOT_CONFIGURED:'إعدادات STAR AI غير مكتملة على Railway',
+ GATEWAY_ERROR:'خدمة STAR AI أعادت خطأ',
+ GATEWAY_UNKNOWN:'تعذّر تحديد حالة STAR AI'
+};
 const status=(state,text)=>{el('status').dataset.state=state;el('statusText').textContent=text};
 let socket=null,ready=false,connecting=false,diagnosing=false,lastCode='';
 const ownerKey=()=>{try{return sessionStorage.getItem('wormstar-access')||''}catch(_){return ''}};
@@ -101,9 +170,12 @@ function updateUi(){
  el('interrupt').disabled=!ready;
  el('command').disabled=!ready;
  el('send').disabled=!ready;
+ updateAiUi();
 }
 function disconnected(message){
- ready=false;connecting=false;socket=null;updateUi();status('idle',message);
+ ready=false;connecting=false;socket=null;aiReady=false;aiBusy=false;
+ el('aiState').textContent='اتصل بالطرفية أولاً';
+ updateUi();status('idle',message);
 }
 function send(data){if(socket&&socket.readyState===WebSocket.OPEN)socket.send(JSON.stringify(data))}
 
@@ -173,9 +245,24 @@ async function connect(){
   ws.onmessage=event=>{
     let msg;try{msg=JSON.parse(event.data)}catch(_){return;}
     if(msg.type==='ready'){
-      ready=true;connecting=false;updateUi();status('ready','متصل — جلسة Linux فعالة');el('command').focus();
+      ready=true;connecting=false;aiReady=false;aiBusy=false;
+      el('aiState').textContent=msg.aiEnabled===true?'جارٍ التحقق من STAR AI...':'STAR AI غير مفعّل على Railway';
+      updateUi();status('ready','متصل — جلسة Linux فعالة');el('command').focus();
     }else if(msg.type==='output'||msg.type==='info')log(msg.data);
-    else if(msg.type==='error'){
+    else if(msg.type==='ai_status'){
+      aiReady=msg.ready===true;aiBusy=false;
+      const reason=typeof msg.reason==='string'?msg.reason:'GATEWAY_UNKNOWN';
+      el('aiState').textContent=AI_REASONS[reason]||(aiReady?'STAR AI جاهز':'STAR AI غير جاهز: '+reason);
+      updateAiUi();
+    }else if(msg.type==='ai_busy'){
+      aiBusy=true;el('aiState').textContent='STAR AI يفكّر...';updateAiUi();
+    }else if(msg.type==='ai_reply'){
+      aiBusy=false;aiMessage('assistant',msg.text);
+      el('aiState').textContent='تم استلام الرد';updateAiUi();
+    }else if(msg.type==='ai_error'){
+      aiBusy=false;aiMessage('error',msg.message||'فشل طلب STAR AI');
+      el('aiState').textContent='تعذّر إكمال الطلب';updateAiUi();
+    }else if(msg.type==='error'){
       lastCode=typeof msg.code==='string'?msg.code:'RAILWAY_AUTH_REJECTED';
       displayFailure(lastCode);
     }
@@ -198,6 +285,27 @@ async function connect(){
   updateUi();
  }catch(error){disconnected('الطرفية غير متاحة');log('\n['+String(error.message||error)+']\n');}
 }
+el('aiToggle').addEventListener('click',()=>{
+ if(!ready)return;
+ aiOpen=!aiOpen;updateAiUi();
+ if(aiOpen){send({type:'ai_check'});el('aiPrompt').focus();}
+});
+el('aiCheck').addEventListener('click',()=>{
+ if(!ready)return;
+ el('aiState').textContent='جارٍ فحص STAR AI...';
+ send({type:'ai_check'});
+});
+el('aiForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ if(!ready||!aiReady||aiBusy)return;
+ const prompt=el('aiPrompt').value.trim();
+ if(!prompt||prompt.length>4000)return;
+ aiMessage('user',prompt);
+ aiBusy=true;updateAiUi();
+ el('aiState').textContent='جارٍ إرسال السؤال...';
+ send({type:'ai_chat',prompt});
+ el('aiPrompt').value='';
+});
 el('connect').addEventListener('click',connect);
 el('diagnose').addEventListener('click',diagnose);
 el('disconnect').addEventListener('click',()=>{if(socket)socket.close(1000,'User disconnected');disconnected('تم قطع الاتصال')});

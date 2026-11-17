@@ -138,6 +138,54 @@ test('gateway authenticates Railway only server-side and filters browser message
   server.close();
 });
 
+test('STAR AI chat is owner-ticket gated, advisory, bounded and never forwarded before Railway auth',async()=>{
+  assert.match(TERMINAL_HTML,/id="aiToggle"/);
+  assert.match(TERMINAL_HTML,/id="aiForm"/);
+  assert.match(TERMINAL_HTML,/id="aiPrompt"/);
+  assert.match(TERMINAL_HTML,/textContent=String\(text/);
+  assert.doesNotMatch(TERMINAL_HTML,/AI_GATEWAY_TOKEN|AI_API_KEY/);
+  const ticket=(await (await createTerminalTicket(request('/api/terminal/session'),goodEnv,true)).json()).ticket;
+  const remote=new Socket(),client=new Socket(),server=new Socket();
+  const ws=await openTerminalWebSocket(request('/api/terminal/ws','GET',{
+    Upgrade:'websocket','Sec-WebSocket-Protocol':'wormstar-terminal, ticket.'+ticket
+  }),goodEnv,{
+    fetchBackend:async()=>({status:101,webSocket:remote}),
+    createPair:()=>({0:client,1:server}),
+    makeUpgradeResponse:(sock,headers)=>({status:101,webSocket:sock,headers})
+  });
+  assert.equal(ws.status,101);
+  server.emit('message',JSON.stringify({type:'ai_chat',prompt:'pre-auth'}));
+  server.emit('message',JSON.stringify({type:'ai_check'}));
+  assert.equal(remote.sent.length,1); // backend password only
+  remote.emit('message',JSON.stringify({type:'ai_status',ready:true,reason:'GATEWAY_READY'}));
+  assert.equal(server.sent.length,0); // auth not completed
+  remote.emit('message',JSON.stringify({type:'ready',aiEnabled:true}));
+  assert.deepEqual(JSON.parse(server.sent[0]),{type:'ready',aiEnabled:true});
+  server.emit('message',JSON.stringify({type:'ai_check'}));
+  server.emit('message',JSON.stringify({type:'ai_chat',prompt:'اشرح الأمر uname -a'}));
+  server.emit('message',JSON.stringify({type:'ai_chat',prompt:' '}));
+  server.emit('message',JSON.stringify({type:'ai_chat',prompt:'x'.repeat(4001)}));
+  server.emit('message',JSON.stringify({type:'auth',password:'browser-bypass'}));
+  assert.deepEqual(remote.sent.slice(1).map(v=>JSON.parse(v)),[
+    {type:'ai_check'},{type:'ai_chat',prompt:'اشرح الأمر uname -a'}
+  ]);
+  remote.emit('message',JSON.stringify({type:'ai_status',ready:true,reason:'GATEWAY_READY',secret:'never-forward'}));
+  remote.emit('message',JSON.stringify({type:'ai_busy'}));
+  remote.emit('message',JSON.stringify({type:'ai_reply',text:'SAFE RESPONSE',secret:'never-forward'}));
+  remote.emit('message',JSON.stringify({type:'ai_error',message:'AI_RATE_LIMIT',secret:'never-forward'}));
+  remote.emit('message',JSON.stringify({type:'secret',value:'never-forward'}));
+  const ai=server.sent.slice(1).map(s=>JSON.parse(s));
+  assert.deepEqual(ai,[
+    {type:'ai_status',ready:true,reason:'GATEWAY_READY'},
+    {type:'ai_busy'},
+    {type:'ai_reply',text:'SAFE RESPONSE'},
+    {type:'ai_error',message:'AI_RATE_LIMIT'}
+  ]);
+  assert.ok(!server.sent.join('').includes('never-forward'));
+  assert.ok(!server.sent.join('').includes(goodEnv.TERMINAL_RAILWAY_PASSWORD));
+  server.close();
+});
+
 test('Core routes preserve owner allow and do not expose Railway password in HTML',()=>{
  const core=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
  const ui=readFileSync(new URL('../redesign-ui.js',import.meta.url),'utf8');

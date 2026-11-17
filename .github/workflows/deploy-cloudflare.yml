@@ -71,35 +71,35 @@ jobs:
           echo "Core post-deployment health verification failed" >&2
           exit 1
 
-      - name: Verify owner terminal route rejects unauthenticated sessions
+      - name: Verify Cloudflare Access protects owner terminal and ticket API
         shell: bash
         run: |
           set -euo pipefail
           BASE="https://wormstar-ai-lab.abdulstarzeki001.workers.dev"
-          # Terminal UI is publicly fetchable, but it may not open a shell until
-          # the owner authorizes and obtains a short-lived signed ticket.
-          curl --fail --silent --show-error --max-time 20 \
-            --output /tmp/wormstar-owner-terminal.html "$BASE/terminal/"
-          # Report a safe title and marker booleans. Never print HTML or tokens.
-          node -e "const fs=require('fs');const h=fs.readFileSync('/tmp/wormstar-owner-terminal.html','utf8');const title=h.match(/<title>([^<]*)<\\/title>/i)?.[1]||'unknown';console.log(JSON.stringify({title,ownerSession:h.includes('/api/terminal/session'),ownerWebSocket:h.includes('/api/terminal/ws'),rawRailwayPrompt:h.includes('id=\\\"password\\\"')}));"
-          if ! grep -q '/api/terminal/session' /tmp/wormstar-owner-terminal.html; then
-            echo "ERROR: Owner session marker missing from deployed terminal HTML" >&2
-            exit 1
-          fi
-          if ! grep -q '/api/terminal/ws' /tmp/wormstar-owner-terminal.html; then
-            echo "ERROR: Owner WebSocket marker missing from deployed terminal HTML" >&2
-            exit 1
-          fi
-          if grep -q 'id="password"' /tmp/wormstar-owner-terminal.html; then
-            echo "ERROR: Password-only Railway HTML exposed at owner terminal path" >&2
-            exit 1
-          fi
-          status="$(curl --silent --show-error --max-time 20 \
-            -X POST -o /tmp/terminal-unauthorized.json \
-            -w '%{http_code}' "$BASE/api/terminal/session")"
-          test "$status" = '401' || {
-            echo "ERROR: Unauthenticated ticket request was not rejected (HTTP $status)" >&2
-            exit 1
+          # Access is configured on the Worker destination. Anonymous requests
+          # must redirect to the Cloudflare Access login, never reach a PTY.
+          for entry in "GET /terminal/" "POST /api/terminal/session"; do
+            method="${entry%% *}"
+            endpoint="${entry#* }"
+            status="$(curl --silent --show-error --max-time 20 \
+              -X "$method" -D /tmp/access-headers.txt -o /tmp/access-body.bin \
+              -w '%{http_code}' "$BASE$endpoint")"
+            node - "$status" "$method" /tmp/access-headers.txt <<'NODE'
+          const fs = require('fs');
+          const [code,method,path] = process.argv.slice(2);
+          const headers = fs.readFileSync(path,'utf8');
+          const location = headers.match(/^location:\s*(.+)$/im)?.[1]?.trim();
+          let target;
+          try { target = new URL(location); }
+          catch { process.stderr.write('No valid Cloudflare Access redirect\\n'); process.exit(1); }
+          const access = target.hostname.endsWith('.cloudflareaccess.com') ||
+            (target.hostname === 'wormstar-ai-lab.abdulstarzeki001.workers.dev' &&
+             target.pathname.startsWith('/cdn-cgi/access/'));
+          console.log(JSON.stringify({method,status:code,loginHost:target.hostname,loginPath:target.pathname}));
+          if (code !== '302' || !access) {
+            process.stderr.write('Anonymous request bypassed Cloudflare Access redirect\\n');
+            process.exit(1);
           }
-          node -e "const x=require('/tmp/terminal-unauthorized.json');if(x.ticket||!x.error)process.exit(1)"
-          echo "Owner terminal route and unauthorized-ticket rejection verified"
+          NODE
+          done
+          echo "Cloudflare Access denies anonymous owner-terminal and ticket API requests"

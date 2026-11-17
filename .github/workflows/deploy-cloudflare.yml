@@ -88,7 +88,7 @@ jobs:
           const fs = require('fs');
           const [code,method,path] = process.argv.slice(2);
           const headers = fs.readFileSync(path,'utf8');
-          const location = headers.match(/^location:\\s*(.+)$/im)?.[1]?.trim();
+          const location = headers.match(/^location:\s*(.+)$/im)?.[1]?.trim();
           let target;
           try { target = new URL(location); }
           catch { process.stderr.write('No valid Cloudflare Access redirect\\n'); process.exit(1); }

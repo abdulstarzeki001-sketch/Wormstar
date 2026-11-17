@@ -80,8 +80,16 @@ jobs:
           # the owner authorizes and obtains a short-lived signed ticket.
           curl --fail --silent --show-error --max-time 20 \
             --output /tmp/wormstar-owner-terminal.html "$BASE/terminal/"
-          grep -q '/api/terminal/session' /tmp/wormstar-owner-terminal.html
-          grep -q '/api/terminal/ws' /tmp/wormstar-owner-terminal.html
+          # Report a safe title and marker booleans. Never print HTML or tokens.
+          node -e "const fs=require('fs');const h=fs.readFileSync('/tmp/wormstar-owner-terminal.html','utf8');const title=h.match(/<title>([^<]*)<\\/title>/i)?.[1]||'unknown';console.log(JSON.stringify({title,ownerSession:h.includes('/api/terminal/session'),ownerWebSocket:h.includes('/api/terminal/ws'),rawRailwayPrompt:h.includes('id=\\\"password\\\"')}));"
+          if ! grep -q '/api/terminal/session' /tmp/wormstar-owner-terminal.html; then
+            echo "ERROR: Owner session marker missing from deployed terminal HTML" >&2
+            exit 1
+          fi
+          if ! grep -q '/api/terminal/ws' /tmp/wormstar-owner-terminal.html; then
+            echo "ERROR: Owner WebSocket marker missing from deployed terminal HTML" >&2
+            exit 1
+          fi
           if grep -q 'id="password"' /tmp/wormstar-owner-terminal.html; then
             echo "ERROR: Password-only Railway HTML exposed at owner terminal path" >&2
             exit 1

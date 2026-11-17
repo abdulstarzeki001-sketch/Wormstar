@@ -7,8 +7,7 @@ import {TERMINAL_HTML} from '../terminal-page.js';
 const origin='https://wormstar-ai-lab.abdulstarzeki001.workers.dev';
 const goodEnv={
   TERMINAL_TICKET_SECRET:'a-fake-test-only-hmac-secret-that-is-at-least-32-chars',
-  TERMINAL_RAILWAY_PASSWORD:'mock-password-only-for-unit-tests',
-  TERMINAL_EDGE_ORIGIN_SECRET:'mock-origin-gate-secret-longer-than-32-chars'
+  TERMINAL_RAILWAY_PASSWORD:'mock-password-only-for-unit-tests'
 };
 const request=(path,method='POST',headers={})=>
   new Request(origin+path,{method,headers:{Origin:origin,...headers}});
@@ -55,19 +54,17 @@ test('owner must be verified before issuing a short-lived gateway ticket',async(
   assert.equal(await terminalGatewayInternals.validTicket(broken,goodEnv.TERMINAL_TICKET_SECRET),false);
   assert.equal(await terminalGatewayInternals.validTicket(data.ticket,goodEnv.TERMINAL_TICKET_SECRET,Date.now()+40_000),false);
   assert.ok(!JSON.stringify(data).includes(goodEnv.TERMINAL_RAILWAY_PASSWORD));
-  assert.ok(!JSON.stringify(data).includes(goodEnv.TERMINAL_EDGE_ORIGIN_SECRET));
 });
 
 test('gateway identifies invalid secrets to the verified owner without disclosing any value',async()=>{
   const bad={TERMINAL_TICKET_SECRET:'too-short',
-    TERMINAL_RAILWAY_PASSWORD:'tiny',
-    TERMINAL_EDGE_ORIGIN_SECRET:'tiny'};
+    TERMINAL_RAILWAY_PASSWORD:'tiny'};
   const rejected=await createTerminalTicket(request('/api/terminal/session'),bad,true);
   assert.equal(rejected.status,503);
   const body=await rejected.json();
   assert.equal(body.code,'TERMINAL_CONFIGURATION_INVALID');
   assert.deepEqual(body.invalidSecrets,
-    ['TERMINAL_TICKET_SECRET','TERMINAL_RAILWAY_PASSWORD','TERMINAL_EDGE_ORIGIN_SECRET']);
+    ['TERMINAL_TICKET_SECRET','TERMINAL_RAILWAY_PASSWORD']);
   assert.equal(JSON.stringify(body).includes(bad.TERMINAL_TICKET_SECRET),false);
   assert.equal(JSON.stringify(body).includes(bad.TERMINAL_RAILWAY_PASSWORD),false);
   assert.equal((await createTerminalTicket(request('/api/terminal/session'),bad,false)).status,401);
@@ -123,7 +120,6 @@ test('gateway authenticates Railway only server-side and filters browser message
   assert.equal(result.headers['Sec-WebSocket-Protocol'],'wormstar-terminal');
   assert.equal(connectedTo,'https://terminal-production-fb16bd35.up.railway.app/ws');
   assert.equal(headersSeen.Origin,'https://terminal-production-fb16bd35.up.railway.app');
-  assert.equal(headersSeen['X-Star-Edge-Origin'],goodEnv.TERMINAL_EDGE_ORIGIN_SECRET);
   assert.deepEqual(JSON.parse(remote.sent[0]),{type:'auth',password:goodEnv.TERMINAL_RAILWAY_PASSWORD});
   // The browser cannot submit shell input before Railway has verified the server-side password.
   server.emit('message',JSON.stringify({type:'input',data:'echo too-soon\n'}));

@@ -236,3 +236,40 @@ test('Railway close before ready and after ready are different statuses',async()
       : {code:1011,reason:'RAILWAY_CLOSED_BEFORE_READY'});
   }
 });
+
+test('Cloudflare-compatible manual redirect is enforced for health and WebSocket upstreams',async()=>{
+  const modes=[];
+  const upgraded=await createTerminalTicket(request('/api/terminal/session'),goodEnv,true);
+  const ticket=(await upgraded.json()).ticket;
+  const wsRequest=request('/api/terminal/ws','GET',{
+    Upgrade:'websocket',
+    'Sec-WebSocket-Protocol':'wormstar-terminal, ticket.'+ticket
+  });
+  const redirection=async(url,options)=>{
+    modes.push({url,redirect:options.redirect});
+    return {ok:false,status:302,webSocket:null};
+  };
+  const health=await diagnoseTerminalGateway(request('/api/terminal/diagnose'),goodEnv,true,{
+    fetchBackend:redirection
+  });
+  assert.equal(health.status,503);
+  assert.equal((await health.json()).code,'RAILWAY_HEALTH_FAILED');
+  const socket=await openTerminalWebSocket(wsRequest,goodEnv,{
+    fetchBackend:redirection
+  });
+  assert.equal(socket.status,503);
+  assert.equal((await socket.json()).error,'Terminal service rejected connection');
+  const handshake=await diagnoseTerminalGateway(request('/api/terminal/diagnose'),goodEnv,true,{
+    fetchBackend:async(url,options)=>{
+      modes.push({url,redirect:options.redirect});
+      return url.endsWith('/health')
+        ? {ok:true,status:200}
+        : {ok:false,status:302,webSocket:null};
+    }
+  });
+  assert.equal(handshake.status,503);
+  assert.equal((await handshake.json()).code,'BACKEND_WS_UPGRADE_REJECTED');
+  assert.equal(modes.length,4);
+  assert.ok(modes.every(v=>v.redirect==='manual'));
+  assert.ok(modes.every(v=>v.url.startsWith('https://terminal-production-fb16bd35.up.railway.app/')));
+});

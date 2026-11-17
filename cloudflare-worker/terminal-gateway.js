@@ -120,7 +120,7 @@ export async function openTerminalWebSocket(request,env,deps={}) {
   try {
     response=await (deps.fetchBackend||fetch)(BACKEND_ORIGIN+'/ws',{
       headers:{Upgrade:'websocket',Origin:BACKEND_ORIGIN},
-      redirect:'error'
+      redirect:'manual'
     });
   }catch(_) {
     return json({error:'Terminal service is unavailable'},503);
@@ -220,13 +220,13 @@ export async function diagnoseTerminalGateway(request,env,verifiedOwner,deps={})
   const backend=deps.fetchBackend||fetch;
   let health;
   try{
-    health=await backend(BACKEND_ORIGIN+'/health',{method:'GET',redirect:'error',cache:'no-store'});
+    health=await backend(BACKEND_ORIGIN+'/health',{method:'GET',redirect:'manual',cache:'no-store'});
     if(!health.ok)return json({ok:false,stage:'health',code:'RAILWAY_HEALTH_FAILED'},503);
   }catch(_){return json({ok:false,stage:'health',code:'RAILWAY_UNREACHABLE'},503);}
   let handshake;
   try{
     handshake=await backend(BACKEND_ORIGIN+'/ws',{
-      headers:{Upgrade:'websocket',Origin:BACKEND_ORIGIN},redirect:'error'
+      headers:{Upgrade:'websocket',Origin:BACKEND_ORIGIN},redirect:'manual'
     });
   }catch(_){return json({ok:false,stage:'websocket',code:'BACKEND_WS_CONNECT_FAILED'},503);}
   if(handshake.status!==101 || !handshake.webSocket)

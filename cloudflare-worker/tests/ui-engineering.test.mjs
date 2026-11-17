@@ -108,14 +108,15 @@ test('without motion libraries the original page remains readable and usable',()
   assert.equal(context.window.__wormstarUiEngineering,true);
 });
 
-test('Core routes are additive and keep protected API and Railway terminal untouched',()=>{
+test('Core routes preserve protected APIs and owner-ticket terminal',()=>{
   const source=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
   assert.match(source,/import \{enhanceUiPage,serveUiAsset\} from '\.\/ui-engineering\.js'/);
   assert.match(source,/return serveUiAsset\(request,env\)/);
   assert.match(source,/enhanceUiPage\(compactPage\(WORKSPACE_HTML,'workspace'\),'workspace'\)/);
   assert.match(source,/enhanceUiPage\(compactPage\(ACADEMY_HTML,'academy'\),'academy'\)/);
   assert.match(source,/enhanceUiPage\(compactPage\(FUTURE_HTML/);
-  assert.match(source,/return serveRailwayTerminal\(request\)/);
+  assert.doesNotMatch(source,/return serveRailwayTerminal\(request\)/);
+  assert.match(source,/return new Response\(TERMINAL_HTML/);
   assert.match(source,/return serveSentinelModule\(request,env\)/);
   const block=source.slice(source.indexOf("if(request.method==='GET'&&['/workspace'"),source.indexOf("return json({error:'Not found'},404);",source.indexOf("if(request.method==='GET'&&['/workspace'")));
   assert.equal(block.split("script-src 'self' 'unsafe-inline'").length-1,3);

@@ -11,7 +11,7 @@ import REDESIGN_HTML from './redesign-ui.js';
 import {WORKSPACE_HTML,WORKSPACE_SHORTCUT} from './unified-workspace.js';
 import {TERMINAL_HTML} from './terminal-page.js';
 import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway} from './terminal-gateway.js';
-import {serveRailwayTerminal,serveSentinelModule,suiteLanding} from './unified-suite-proxy.js';
+import {serveSentinelModule,suiteLanding} from './unified-suite-proxy.js';
 import ACADEMY_HTML from './academy-page.js';
 import {compactPage} from './compact-layout.js';
 import {enhanceUiPage,serveUiAsset} from './ui-engineering.js';
@@ -708,8 +708,7 @@ export default {
       if(request.method!=='GET')return new Response('Method not allowed',{status:405});
       return suiteLanding();
     }
-    if(url.pathname==='/terminal'||url.pathname.startsWith('/terminal/'))
-      return serveRailwayTerminal(request);
+    // Terminal is owner-authenticated at /terminal/ further below; never proxy an unverified browser WebSocket here.
     if(url.pathname==='/osint'||url.pathname.startsWith('/osint/')||
        url.pathname==='/audit'||url.pathname.startsWith('/audit/'))
       return serveSentinelModule(request,env);

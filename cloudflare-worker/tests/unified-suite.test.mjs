@@ -122,12 +122,13 @@ test('sentinel viewers use service binding but never forward Core owner tokens',
   assert.equal((await serveSentinelModule(request('/osint/'),{})).status,503);
 });
 
-test('Core integrates terminal before legacy ticket page and binds Sentinel internally',()=>{
+test('Core serves owner-gated ticket terminal without shadowing it with public Railway proxy',()=>{
   const worker=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
   const config=readFileSync(new URL('../wrangler.toml',import.meta.url),'utf8');
   const nav=readFileSync(new URL('../redesign-ui.js',import.meta.url),'utf8');
-  assert.ok(worker.indexOf("return serveRailwayTerminal(request)")<
-            worker.indexOf("return new Response(TERMINAL_HTML"));
+  assert.doesNotMatch(worker,/return serveRailwayTerminal\(request\)/);
+  assert.match(worker,/return new Response\(TERMINAL_HTML/);
+  assert.match(worker,/createTerminalTicket\(request,env,await allow\(request,env\)\)/);
   assert.match(worker,/return serveSentinelModule\(request,env\)/);
   assert.match(config,/\[\[services\]\]\s*binding = "SENTINEL_SUITE"\s*service = "wormstar-sentinel-preview"/);
   for(const path of ['/terminal/','/suite/','/osint/','/audit/']){

@@ -170,3 +170,11 @@ sh tools/ish/connect_remote.sh --connect
 ## تدقيق ملفات DMS الموظفين — 8 نوفمبر 2026
 
 أُضيف [تقرير ثابت مفصل لثمانية ملفات مرفقة](reviews/2026-11-08/dms-employee-assets/DETAILED_STATIC_AUDIT_AR.md): صفحة HTML، ثلاث حزم JavaScript، ثلاثة CSS، وملف XLaunch. يشمل التقرير مخاطر تمرير `passRedirect` في عنوان URL، ومعالجة أخطاء Axios، ونسخ Vue وSweetAlert2، وإعداد `DisableAC=True`، وما ينقص من أجزاء Webpack. التقرير **لا يثبت ثغرات خادم** ولم تُرفع الملفات الخام إلى المستودع العام.
+
+## ملفات DMS الجديدة — لوحة الموظف (8 نوفمبر 2026)
+
+أُضيفت دفعة من **8 ملفات** (3 JavaScript، 3 CSS، ملف HTML بامتداد devtools، وملف XLaunch)، مع [شرح كل ملف](research/raw-uploads/2026-11-08/dms-employee-batch/README_AR.md) و[خريطة الترابط](research/raw-uploads/2026-11-08/dms-employee-batch/CHAIN_MAP.json).
+
+ملف `dashboard.devtools` يشير إلى ملفات `employee` و`chunk-common` و`chunk-vendors` من بناء **DMS/Webpack**. أُدرجت روابط إلى الأجزاء السابقة الخاصة بـ`/qrpubliclink` و`/ReadQrWithUR`، مع إبقاء بناء UBOOR/Vite منفصلًا. لم تُجرَ محاولات دخول أو استدعاءات لخوادم خارجية.
+
+**دقة النسخ:** سبعة ملفات محفوظة بمحتوى مطابق في حجم البايت، وCSS واحد تم تطبيع فواصل الأسطر فيه بفارق 4 بايتات أثناء استخراج النص. ملف XLaunch يحتوي `DisableAC="True"` لذلك لا يُنصح بتشغيله كما هو في شبكة غير موثوقة.

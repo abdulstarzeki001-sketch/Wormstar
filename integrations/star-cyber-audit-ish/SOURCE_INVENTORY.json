@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "source_repository": "abdulstarzeki001-sketch/Star-Cyber-Audit-iSH",
-  "source_commit": "e42cc7b14ea4d08402e516340db49256de1f6b05",
-  "total_source_files": 94,
-  "copied_files": 18,
-  "metadata_only_files": 76,
+  "source_commit": "9623827e6e24c6d9db1f7eb664ebac78144dee56",
+  "total_source_files": 153,
+  "copied_files": 50,
+  "metadata_only_files": 103,
   "warning": "Research, OneDrive exports, archived third-party JS, captured QR tokens and raw reports are not copied into the public app. Original user files must stay private.",
   "files": [
     {
@@ -30,15 +30,15 @@
     },
     {
       "path": "README.md",
-      "bytes": 3842,
-      "source_git_blob": "05a25f72cef4c9581e39ac2332c7980d5f4da5dc",
+      "bytes": 23405,
+      "source_git_blob": "d458fa662dbaa292c92f7fd613fa7a2eeef5954b",
       "classification": "copied_source",
       "reason": "safe_source_snapshot"
     },
     {
       "path": "README_AR.md",
-      "bytes": 18201,
-      "source_git_blob": "ef6e54ce9b8a6121f594e34c32596ebda83a27bc",
+      "bytes": 19353,
+      "source_git_blob": "436b735d22e6d3d025fb64be0557f8c9d2f15b91",
       "classification": "copied_source",
       "reason": "safe_source_snapshot"
     },
@@ -67,6 +67,13 @@
       "path": "docs/PHASE2_STATIC_ANALYZER_REMEDIATION_AR.md",
       "bytes": 3312,
       "source_git_blob": "d7dbe5030205e8358111dc6bef0d2eb4754b258c",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "docs/project-memory/QR_UBOOR_UR_RECOVERED_PROJECT_MEMORY_2026-11-08_AR.md",
+      "bytes": 22732,
+      "source_git_blob": "6b29b517dd69e61be45324f282458c1da0cf898a",
       "classification": "copied_source",
       "reason": "safe_source_snapshot"
     },
@@ -400,6 +407,83 @@
       "reason": "restricted_research_or_external_archive"
     },
     {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/CHAIN_MAP.json",
+      "bytes": 4477,
+      "source_git_blob": "f3c522e547209a488bed28f23f44dad4242b90e7",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/MANIFEST_AR.md",
+      "bytes": 742,
+      "source_git_blob": "3702c68fc34c3c0b39ff24dc5c5fc8893c9e3787",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/README_AR.md",
+      "bytes": 12511,
+      "source_git_blob": "d7aea8f6ce48f3e1c5574b473cfb8615a8eb4481",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/chunk-common.04b3f60d(1).css",
+      "bytes": 31029,
+      "source_git_blob": "2de0c31a59862a93fcf9ac80f323199b70fe478b",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/chunk-common.ddcf658a(20261107-215012).js",
+      "bytes": 17425,
+      "source_git_blob": "522f4320ed0954e1427bfbde6f369989ef8b21f1",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/chunk-vendors.1b093cc7(20261107-215012).js",
+      "bytes": 942388,
+      "source_git_blob": "7f1c184216a086a3c901ee4d05d77d34ab9caa0b",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/chunk-vendors.7ac31ae5(1).css",
+      "bytes": 322978,
+      "source_git_blob": "6e6360388a6dd4100e54d518b61cffa273cbb499",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/config(1).xlaunch",
+      "bytes": 395,
+      "source_git_blob": "dc3054c24f7061af42bd343952aab98834cafe6d",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/dashboard(1).devtools",
+      "bytes": 847,
+      "source_git_blob": "128c9597ec6045e03d60e68f5db875f4ae9f1f58",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/employee.21e9f881(20261107-215011).js",
+      "bytes": 33085,
+      "source_git_blob": "45a027208a4928f9a32dd97e85aafc459cbaf355",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "research/raw-uploads/2026-11-08/dms-employee-batch/employee.600a28b0(1).css",
+      "bytes": 26846,
+      "source_git_blob": "cdf8fd55614d8c6118786b4b885a0ea45e8018a0",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
       "path": "research/source-archive/2026-11-07/uboor/AchievementDocument-DEzIzJ3I.js",
       "bytes": 11641,
       "source_git_blob": "3d2ab3d4217437e7b50e97d5c37db17f662d23d0",
@@ -589,9 +673,121 @@
       "reason": "restricted_research_or_external_archive"
     },
     {
+      "path": "reviews/2026-11-08/CompanyOwnerView_deep_review_AR.md",
+      "bytes": 15618,
+      "source_git_blob": "b544de16906c1f87d77850ad779d8c3d3f2e63eb",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/DisableDocument_deep_review_AR.md",
+      "bytes": 13441,
+      "source_git_blob": "f98b5f974d3ff95df89f8ea41490de573fc451b0",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/PrintHealthCertificateView_deep_review_AR.md",
+      "bytes": 15808,
+      "source_git_blob": "f4c5e6d95e7bd643a99cce1f3b9e1484012da2fa",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/QRCheckpoints_deep_review_AR.md",
+      "bytes": 12024,
+      "source_git_blob": "2f149ee14d699f7c81f7d3c98b56197a4407b3a1",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/QRDocument_deep_review_AR.md",
+      "bytes": 11920,
+      "source_git_blob": "9bad03254fbeabd98140fe50b4db1b32d9312585",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/QRHealthCertificate_deep_review_AR.md",
+      "bytes": 11774,
+      "source_git_blob": "87cb15b8cfc4e8fbf678d9f0891c56d19b980aac",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/QRImported_deep_comparison_AR.md",
+      "bytes": 11459,
+      "source_git_blob": "500226065848980726a7b780d3ca791c245d683b",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/QRLocal_revalidation_AR.md",
+      "bytes": 4609,
+      "source_git_blob": "abd2ff45e4a3f4e6be4c6d62d58f8fb1a808cef7",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/QRReadings_deep_comparison_AR.md",
+      "bytes": 12065,
+      "source_git_blob": "1f58c68e87c0bf8848fd1a5419756a04fe00a40f",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/QrControlScan_deep_review_AR.md",
+      "bytes": 12726,
+      "source_git_blob": "23ca7e178b8731c923c18fbb4402ed015b7a2739",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/QrLocalImporter_deep_review_AR.md",
+      "bytes": 6706,
+      "source_git_blob": "a2992a8c3b588d5d6e15a9067e42eb81e395077c",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/RejectedLocalDocuments_deep_review_AR.md",
+      "bytes": 11373,
+      "source_git_blob": "30598ff1326b2763230b6e29d986c48ef7956bd8",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
       "path": "reviews/2026-11-08/dms-employee-assets/DETAILED_STATIC_AUDIT_AR.md",
       "bytes": 12528,
       "source_git_blob": "6c65f9291455d9dcdb331c86d4ef3c5ae31205f5",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/index_gleMzSil_rejected_route_deep_review_AR.md",
+      "bytes": 9572,
+      "source_git_blob": "81a4a2ab50400e9ccd84e087db9860876e0e22d8",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/qrStore_deep_review_AR.md",
+      "bytes": 12616,
+      "source_git_blob": "d738f4371b42cde40656a9d74adb5dfcc09daa4f",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/useHealthCertificate_deep_review_AR.md",
+      "bytes": 14325,
+      "source_git_blob": "4af7320f67c065334959e05ee8772ed733b444f0",
+      "classification": "metadata_only",
+      "reason": "restricted_research_or_external_archive"
+    },
+    {
+      "path": "reviews/2026-11-08/useLocalCompany_deep_review_AR.md",
+      "bytes": 12804,
+      "source_git_blob": "77e257bf5cf3dc74fea352b7427c8625e1f54efa",
       "classification": "metadata_only",
       "reason": "restricted_research_or_external_archive"
     },
@@ -624,9 +820,121 @@
       "reason": "safe_source_snapshot"
     },
     {
+      "path": "tests/test_company_owner_review.py",
+      "bytes": 7350,
+      "source_git_blob": "ef2f990635a0ea565e1395a2f72c4034133c4406",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_disable_document_review.py",
+      "bytes": 4108,
+      "source_git_blob": "0d3a13ffaebb2b0f69dfd86ee3016da649f677f4",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_dms_employee_archive.py",
+      "bytes": 3064,
+      "source_git_blob": "fc635fbc08ce9e39279d588d600f0ed968d9b607",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_health_certificate_print_review.py",
+      "bytes": 4723,
+      "source_git_blob": "5c939712fae1f936e5352d389014eb0fbef057d6",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_index_rejected_route_review.py",
+      "bytes": 4434,
+      "source_git_blob": "be0347f2f0532203270c378bcff2344908aad683",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_qr_checkpoints_review.py",
+      "bytes": 4379,
+      "source_git_blob": "d835b0d809b038b37d21d80eed0b3a2b51c20b3c",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_qr_control_scan_review.py",
+      "bytes": 2572,
+      "source_git_blob": "ab9a4516588b91555786e7cfaab76805806ab160",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_qr_document_review.py",
+      "bytes": 4805,
+      "source_git_blob": "871b5c5efa09080178c07e617e8e346e9ed048fd",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_qr_health_certificate_review.py",
+      "bytes": 2726,
+      "source_git_blob": "3fe2a11f69d73121a9f625bd04c9ba76dfaaacc2",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_qr_imported_review.py",
+      "bytes": 2867,
+      "source_git_blob": "ca57787952446ca4026276da75f7712e32b6b7d1",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_qr_importer_review.py",
+      "bytes": 1262,
+      "source_git_blob": "7dfd4df2f6f795e84f78570d79899a45b8b3e23f",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_qr_readings_offline_review.py",
+      "bytes": 2441,
+      "source_git_blob": "1e3dd115882b9ef1afef8d51f6172593a88e3941",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_qr_store_review.py",
+      "bytes": 4205,
+      "source_git_blob": "56e6db280d5aacf70521018bc8ccdc01ecb63863",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
       "path": "tests/test_regressions.py",
       "bytes": 6108,
       "source_git_blob": "b12380ecadeb34fcf3a737adbd4ef534174ab8d9",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_rejected_local_documents_review.py",
+      "bytes": 3820,
+      "source_git_blob": "7d4e58338e08a7323b0eaf1decb448aef8093aac",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_use_health_certificate_review.py",
+      "bytes": 3078,
+      "source_git_blob": "427166d954b0b3495571786ea50af6478b014976",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tests/test_use_local_company_review.py",
+      "bytes": 1763,
+      "source_git_blob": "5f2d3fd9202ba1ab97b2e1cb60172dc17b846f2c",
       "classification": "copied_source",
       "reason": "safe_source_snapshot"
     },
@@ -638,9 +946,100 @@
       "reason": "safe_source_snapshot"
     },
     {
+      "path": "tools/ish/company_owner_review.py",
+      "bytes": 8306,
+      "source_git_blob": "5307ef5f08f2c227ab76fd20a2b2fd6276bce54b",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
       "path": "tools/ish/connect_remote.sh",
       "bytes": 2966,
       "source_git_blob": "6294d7e91e555ab52808ff4d366642b9b625f847",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/disable_document_review.py",
+      "bytes": 5586,
+      "source_git_blob": "247e0f513ead7fad3081883c41ace0b74e6ea88d",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/health_certificate_print_review.py",
+      "bytes": 5533,
+      "source_git_blob": "48835c21edac355c60180fb5d3bfcf0b7c98fb41",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/index_rejected_route_review.py",
+      "bytes": 4808,
+      "source_git_blob": "141bf474baf5ccfcdf1816a09f0a3a30b8f94ef1",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/qr_checkpoints_review.py",
+      "bytes": 5278,
+      "source_git_blob": "2f399cf975fec7a32888495350effda1057c1cf2",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/qr_control_scan_review.py",
+      "bytes": 4409,
+      "source_git_blob": "68df0c0b91773f39b00581d3c40c92cadf38ade8",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/qr_document_review.py",
+      "bytes": 5720,
+      "source_git_blob": "630ead45cbdb3bba3bc5de3b5beae14fa772ae83",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/qr_health_certificate_review.py",
+      "bytes": 5417,
+      "source_git_blob": "d81507b93eefe7e2f31d0419a55aebc40e4f2243",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/qr_imported_review.py",
+      "bytes": 4586,
+      "source_git_blob": "4f11e8453ea439f755e935ad43d73924a3bc9bb3",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/qr_importer_review.py",
+      "bytes": 2320,
+      "source_git_blob": "0c610cf19357a13b6d8aaab93756b9c073d05521",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/qr_readings_offline_review.py",
+      "bytes": 4436,
+      "source_git_blob": "b06860dbf6f0f1f1ea843ab67722978a91963e1d",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/qr_store_review.py",
+      "bytes": 5629,
+      "source_git_blob": "1799319ca6eb47ef56ddb208327d075afef9f636",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/rejected_local_documents_review.py",
+      "bytes": 4171,
+      "source_git_blob": "4676bac38a6fc7baf14beb3a0d52b16eb232ce1f",
       "classification": "copied_source",
       "reason": "safe_source_snapshot"
     },
@@ -662,6 +1061,20 @@
       "path": "tools/ish/upload_onedrive_archive_private.sh",
       "bytes": 3015,
       "source_git_blob": "e09e49033937bf5d9a8461ee4d65677d3a6d73e7",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/use_health_certificate_review.py",
+      "bytes": 4138,
+      "source_git_blob": "bd65cd0d5ec1d0aa7ba11b751479223efa8c27a5",
+      "classification": "copied_source",
+      "reason": "safe_source_snapshot"
+    },
+    {
+      "path": "tools/ish/use_local_company_review.py",
+      "bytes": 3012,
+      "source_git_blob": "09dcfbba90bc989fc5ddbb2c894c631aa9e235ca",
       "classification": "copied_source",
       "reason": "safe_source_snapshot"
     }

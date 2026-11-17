@@ -171,7 +171,11 @@ export async function openTerminalWebSocket(request,env,deps={}) {
     if(data.type==='ready'){
       ready=true;
       clearTimeout(authTimeout);
-      try{server.send(JSON.stringify({type:'ready',aiEnabled:data.aiEnabled===true}));}
+      // Preserve the legacy ready payload when Railway omits aiEnabled,
+      // while retaining the optional AI state on current Railway builds.
+      const readyMessage={type:'ready'};
+      if(typeof data.aiEnabled==='boolean')readyMessage.aiEnabled=data.aiEnabled;
+      try{server.send(JSON.stringify(readyMessage));}
       catch(_){end(1011,'BROWSER_SEND_FAILED');}
       return;
     }

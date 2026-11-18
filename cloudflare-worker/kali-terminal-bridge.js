@@ -6,7 +6,7 @@
  * browser nor the public Pages bundle receives it. The Railway credentials
  * remain exclusively inside the existing Wormstar Worker.
  */
-import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway} from './terminal-gateway.js';
+import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway,downloadTerminalSnapshot} from './terminal-gateway.js';
 
 const WORKER_ORIGIN='https://wormstar-ai-lab.abdulstarzeki001.workers.dev';
 const INTEGRATION_PREFIX='/api/integrations/kali/terminal/';
@@ -52,6 +52,11 @@ export async function handleKaliTerminalBridge(request,env,deps={}){
     if(request.method!=='POST')return reply('METHOD_NOT_ALLOWED',405);
     return (deps.diagnose||diagnoseTerminalGateway)(
       workerRequest('/api/terminal/diagnose','POST'),env,true,deps.gateway);
+  }
+  if(route==='backup/latest'){
+    if(request.method!=='POST')return reply('METHOD_NOT_ALLOWED',405);
+    return (deps.downloadSnapshot||downloadTerminalSnapshot)(
+      workerRequest('/api/terminal/backup/latest','POST'),env,true,deps.gateway);
   }
   if(route==='ws'){
     if(request.method!=='GET'||request.headers.get('Upgrade')?.toLowerCase()!=='websocket')

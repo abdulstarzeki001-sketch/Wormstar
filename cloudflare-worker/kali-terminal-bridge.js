@@ -90,13 +90,13 @@ export async function handleKaliTerminalBridge(request,env,deps={}){
   // Exact read-only tool operations on the same Railway Linux container.
   // Pages already checked the owner Access JWT and bridge secret; no target
   // addresses, user shell strings or arbitrary subpaths are accepted.
-  if(route==='tools/catalog'||route==='tools/run'||route==='tools/assistant'){
+  if(route==='tools/catalog'||route==='tools/run'||route==='tools/assistant'||route==='tools/install/catalog'){
     if(request.method!=='POST')return reply('METHOD_NOT_ALLOWED',405);
     const secret=env?.TERMINAL_EDGE_ORIGIN_SECRET;
     if(typeof secret!=='string'||secret.length<32)return reply('TOOLS_EDGE_UNAVAILABLE',503);
-    const kind=route.split('/')[1];
+    const kind=route.slice('tools/'.length);
     let body='{}';
-    if(kind!=='catalog'){
+    if(kind!=='catalog'&&kind!=='install/catalog'){
       const declared=Number(request.headers.get('content-length')||0);
       if(declared>2048)return reply('TOOLS_INPUT_TOO_LARGE',413);
       body=await request.text();

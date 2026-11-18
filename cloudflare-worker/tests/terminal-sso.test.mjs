@@ -37,18 +37,29 @@ test('terminal HTML reuses AI Lab owner login without a second password form',()
   assert.doesNotThrow(()=>new Function(match[1]));
 });
 
-test('iPhone terminal controls use compact three-column toolbar without removing actions',()=>{
-  const mobile=TERMINAL_HTML.slice(TERMINAL_HTML.indexOf('/* Compact touch controls:'));
-  assert.match(mobile,/@media\(max-width:600px\)/);
-  assert.match(mobile,/\.buttons\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
-  assert.match(mobile,/\.term-head\{display:grid/);
-  assert.match(mobile,/#output\{height:47dvh;min-height:220px/);
-  assert.match(mobile,/\.hero\{padding:10px 11px;margin-bottom:8px/);
-  for(const id of ['connect','diagnose','interrupt','copy','clear','disconnect','command','send']){
-    assert.match(TERMINAL_HTML,new RegExp('id="'+id+'"'));
+test('iPhone console removes intro text and uses one slim six-button toolbar',()=>{
+  const mobile=TERMINAL_HTML.slice(TERMINAL_HTML.indexOf('/* Full-height mobile terminal:'));
+  assert.ok(mobile.includes('@media(max-width:600px)'));
+  assert.ok(mobile.includes('.buttons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))'));
+  assert.ok(mobile.includes('.wrap{height:100dvh;'));
+  assert.ok(mobile.includes('#output{flex:1 1 0;min-height:0;max-height:none;height:auto;'));
+  assert.ok(mobile.includes('.term-meta .status'));
+  assert.doesNotMatch(TERMINAL_HTML,/<section class="hero">/);
+  assert.doesNotMatch(TERMINAL_HTML,/Linux Terminal — داخل Wormstar/);
+  assert.doesNotMatch(TERMINAL_HTML,/ترمنال بجلسة المالك، بلا كلمة مرور إضافية/);
+  assert.equal(TERMINAL_HTML.split('id="status"').length,2);
+  assert.ok(TERMINAL_HTML.indexOf('id="status"')>TERMINAL_HTML.indexOf('<div class="term-meta">'));
+  assert.ok(TERMINAL_HTML.includes('<details id="warning">'));
+  for(const id of ['connect','diagnose','interrupt','copy','clear','disconnect']){
+    assert.ok(TERMINAL_HTML.includes('id="'+id+'"'));
+    assert.ok(TERMINAL_HTML.includes('aria-label='), 'buttons remain labelled');
   }
-  assert.match(TERMINAL_HTML,/el\('connect'\)\.addEventListener\('click',connect\)/);
-  assert.match(TERMINAL_HTML,/el\('diagnose'\)\.addEventListener\('click',diagnose\)/);
+  for(const id of ['command','send','aiToggle']){
+    assert.ok(TERMINAL_HTML.includes('id="'+id+'"'));
+  }
+  assert.ok(TERMINAL_HTML.includes("el('connect').addEventListener('click',connect)"));
+  assert.ok(TERMINAL_HTML.includes("el('diagnose').addEventListener('click',diagnose)"));
+  assert.ok(TERMINAL_HTML.includes("el('disconnect').addEventListener('click'"));
 });
 
 test('owner must be verified before issuing a short-lived gateway ticket',async()=>{

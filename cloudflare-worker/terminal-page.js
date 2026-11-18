@@ -3,7 +3,7 @@ export const TERMINAL_HTML=String.raw`<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#090e1c">
 <title>Linux Terminal | Wormstar AI Lab</title>
@@ -151,6 +151,52 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
   .buttons .button-symbol{font-size:13px}
   .buttons .button-label{font-size:8.5px}
 }
+
+/* Fixed iPhone app viewport: no page zoom, sideways drift or outer scrolling. */
+html,body{max-width:100%;overflow-x:hidden}
+@media(max-width:600px){
+  html,body{
+    width:100%;height:100%;max-height:100%;
+    margin:0;overflow:hidden;overscroll-behavior:none;
+    touch-action:pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%;
+  }
+  body{position:relative}
+  .wrap{
+    position:relative;width:100%;max-width:100%;
+    height:var(--terminal-visual-height,100dvh);min-height:0;
+    margin:0;display:flex;flex-direction:column;
+    overflow:hidden;overscroll-behavior:none;
+    padding:calc(5px + env(safe-area-inset-top)) calc(6px + env(safe-area-inset-right))
+      calc(5px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
+  }
+  header,.term-shell,.term-head,.term-meta,.buttons,.controls,.ai-shell{max-width:100%;min-width:0}
+  header{width:100%;overflow:hidden}
+  .brand{min-width:0;flex:0 1 auto}
+  .brand>span:last-child{display:block;overflow:hidden;text-overflow:ellipsis}
+  .nav{flex:0 0 auto;max-width:65%;overflow:hidden}
+  .term-shell{flex:1 1 0;min-height:0;width:100%;overflow:hidden}
+  .term-meta{min-width:0}
+  .buttons{min-width:0}
+  .buttons .btn{min-width:0;touch-action:manipulation}
+  #output{
+    display:block;flex:1 1 0;min-height:0;max-width:100%;
+    overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+    touch-action:pan-y;-webkit-overflow-scrolling:touch;
+    overflow-wrap:anywhere;word-break:break-word;
+  }
+  .controls{width:100%;min-width:0;overflow:hidden}
+  #command{min-width:0;width:0;flex:1 1 0;font-size:16px;touch-action:manipulation}
+  .controls .btn{flex:none;touch-action:manipulation}
+  #aiPrompt{font-size:16px;max-width:100%}
+  .ai-shell{flex:0 1 auto;min-height:0;max-height:42dvh;overflow:hidden}
+  #aiPanel{min-height:0;max-height:35dvh;overflow-y:auto;overscroll-behavior:contain}
+  .ai-form{min-width:0}
+  #warning{flex:none;max-width:100%;overflow-wrap:anywhere}
+}
+@media(max-width:380px){
+  .brand{font-size:10px}
+  .nav a{font-size:9px;padding-inline:4px}
+}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
@@ -209,6 +255,24 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
 (()=>{
 'use strict';
 const el=id=>document.getElementById(id);
+// iOS keyboard changes the visual viewport, not always the CSS 100dvh.
+// Keep the app shell inside the visible portion without locking keyboard focus.
+function syncVisibleViewport(){
+ if(!window.matchMedia('(max-width:600px)').matches){
+   document.documentElement.style.removeProperty('--terminal-visual-height');
+   return;
+ }
+ const viewport=window.visualViewport;
+ const height=viewport?viewport.height:window.innerHeight;
+ if(Number.isFinite(height)&&height>0){
+   document.documentElement.style.setProperty('--terminal-visual-height',Math.floor(height)+'px');
+ }
+}
+window.addEventListener('resize',syncVisibleViewport,{passive:true});
+if(window.visualViewport){
+ window.visualViewport.addEventListener('resize',syncVisibleViewport,{passive:true});
+}
+syncVisibleViewport();
 const out=el('output');
 const aiLog=el('aiMessages');
 let aiReady=false,aiBusy=false,aiOpen=false;

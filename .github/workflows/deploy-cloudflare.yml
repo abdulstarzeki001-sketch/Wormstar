@@ -71,14 +71,14 @@ jobs:
           echo "Core post-deployment health verification failed" >&2
           exit 1
 
-      - name: Verify Cloudflare Access protects owner terminal and ticket API
+      - name: Verify Cloudflare Access protects terminal, ticket and backup download
         shell: bash
         run: |
           set -euo pipefail
           BASE="https://wormstar-ai-lab.abdulstarzeki001.workers.dev"
           # Access is configured on the Worker destination. Anonymous requests
           # must redirect to the Cloudflare Access login, never reach a PTY.
-          for entry in "GET /terminal/" "POST /api/terminal/session"; do
+          for entry in "GET /terminal/" "POST /api/terminal/session" "POST /api/terminal/backup/latest"; do
             method="${entry%% *}"
             endpoint="${entry#* }"
             status="$(curl --silent --show-error --max-time 20 \
@@ -102,4 +102,4 @@ jobs:
           }
           NODE
           done
-          echo "Cloudflare Access denies anonymous owner-terminal and ticket API requests"
+          echo "Cloudflare Access denies anonymous owner-terminal, ticket and backup-download requests"

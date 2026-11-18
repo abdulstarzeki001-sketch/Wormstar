@@ -108,7 +108,7 @@ export async function handleKaliTerminalBridge(request,env,deps={}){
       if(kind==='install/execute'){
         if(Object.keys(value).sort().join(',')!=='approval,tool_id'||
            value.approval!=='I_APPROVE_RAILWAY_TOOL_INSTALL'||
-           !['certipy','impacket','frida'].includes(value.tool_id))
+           !['certipy','impacket','frida','aflpp'].includes(value.tool_id))
           return reply('TOOLS_INSTALL_INVALID_APPROVAL',400);
       }else if(kind==='run'){
         if(Object.keys(value).some(k=>!['tool_id','action'].includes(k))||

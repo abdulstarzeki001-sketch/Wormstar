@@ -153,3 +153,20 @@ test('tools bridge blocks arbitrary commands, unknown methods and oversized inpu
  assert.equal((await handleKaliTerminalBridge(bad('run',{tool_id:'frida',action:'inspect',padding:'x'.repeat(3000)}),e,{fetchTools})).status,413);
  assert.equal(calls,0);
 });
+
+test('owner-approved installer bridge refuses unapproved and arbitrary commands',async()=>{
+ const e={...env,TERMINAL_EDGE_ORIGIN_SECRET:'test-railway-edge-private-secret-123456789012345'};
+ let called=0,upstreamUrl='',body='';
+ const fetchTools=async(url,opts)=>{called++;upstreamUrl=url;body=opts.body;return new Response(JSON.stringify({job:{status:'running'}}),{status:202});};
+ const make=payload=>new Request(endpoint+'tools/install/execute',{method:'POST',
+  headers:{'X-Kali-Terminal-Bridge':secret,'Content-Type':'application/json'},
+  body:JSON.stringify(payload)});
+ assert.equal((await handleKaliTerminalBridge(make({tool_id:'mythic',approval:'I_APPROVE_RAILWAY_TOOL_INSTALL'}),e,{fetchTools})).status,400);
+ assert.equal((await handleKaliTerminalBridge(make({tool_id:'impacket',approval:'wrong'}),e,{fetchTools})).status,400);
+ assert.equal((await handleKaliTerminalBridge(make({tool_id:'frida',approval:'I_APPROVE_RAILWAY_TOOL_INSTALL',shell:'bash'}),e,{fetchTools})).status,400);
+ assert.equal(called,0);
+ const res=await handleKaliTerminalBridge(make({tool_id:'frida',approval:'I_APPROVE_RAILWAY_TOOL_INSTALL'}),e,{fetchTools});
+ assert.equal(res.status,202);assert.equal(called,1);
+ assert.match(upstreamUrl,/\/api\/tools\/install\/execute$/);
+ assert.deepEqual(JSON.parse(body),{tool_id:'frida',approval:'I_APPROVE_RAILWAY_TOOL_INSTALL'});
+});

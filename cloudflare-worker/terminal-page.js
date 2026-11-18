@@ -104,6 +104,53 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
   .hero h1{font-size:17px}
   .buttons .btn{font-size:10.5px;padding-inline:2px}
 }
+
+/* Full-height mobile terminal: maximum output space, one compact control strip. */
+.term-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:1;min-width:0}
+.term-meta .status{margin:0;min-width:0;font-size:11px;line-height:1.3;padding:3px 7px}
+.term-meta .status .dot{flex:none}
+.button-symbol{display:none}
+#warning summary{cursor:pointer;color:var(--muted)}
+#warning p{margin:5px 0 0}
+@media(max-width:600px){
+  html,body{min-height:100%;height:100%;overscroll-behavior-y:contain}
+  .wrap{height:100dvh;min-height:400px;max-width:none;display:flex;flex-direction:column;overflow:auto;padding:6px 7px calc(6px + env(safe-area-inset-bottom))}
+  header{flex:none;gap:5px;margin-bottom:5px;flex-wrap:nowrap;align-items:center}
+  .brand{min-width:0;gap:5px;font-size:11px;line-height:1.1;white-space:nowrap}
+  .mark{width:23px;height:23px;font-size:14px;border-radius:7px;flex:none}
+  .crumb{display:none}
+  .nav{gap:4px;flex-wrap:nowrap}
+  .nav a{font-size:10px;min-height:27px;padding:4px 6px;border-radius:7px;white-space:nowrap}
+  .term-shell{flex:1 1 auto;min-height:220px;display:flex;flex-direction:column;border-radius:10px}
+  .term-head{flex:none;display:flex;flex-direction:column;gap:5px;padding:6px 7px}
+  .term-meta{width:100%;gap:5px}
+  .term-meta strong{font-size:10px;white-space:nowrap;line-height:1.2}
+  .term-meta .status{margin:0;flex:0 1 auto;max-width:63%;padding:3px 6px;font-size:10px;gap:4px;line-height:1.25}
+  .term-meta .status #statusText{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .term-meta .status[data-state="error"] #statusText{white-space:normal;overflow-wrap:anywhere}
+  .buttons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;width:100%}
+  .buttons .btn{min-width:0;min-height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:3px 1px;border-radius:6px;line-height:1.1}
+  .buttons .button-symbol{display:block;font-size:14px;font-weight:700;line-height:1.2}
+  .buttons .button-label{font-size:9px;line-height:1.1;white-space:nowrap}
+  #output{flex:1 1 0;min-height:0;max-height:none;height:auto;padding:8px;font-size:12px;line-height:1.45}
+  .controls{flex:none;gap:5px;padding:5px 7px}
+  #command{min-height:36px;padding:6px 7px;font-size:12px;border-radius:7px}
+  .controls .btn{min-height:36px;padding:5px 9px;border-radius:7px;font-size:11px}
+  .ai-shell{flex:none;margin-top:5px;border-radius:10px}
+  .ai-head{padding:5px 7px;gap:5px}
+  .ai-head strong{font-size:12px}
+  .ai-head small{font-size:10px}
+  .ai-head .btn{font-size:10px;min-height:29px;padding:4px 7px}
+  #warning{flex:none;margin:4px 1px 0;font-size:10px;line-height:1.3}
+  #warning summary{display:list-item;list-style-position:inside}
+}
+@media(max-width:360px){
+  .brand{font-size:10px}
+  .nav a{font-size:9px;padding:3px 5px}
+  .term-meta .status{max-width:55%}
+  .buttons .button-symbol{font-size:13px}
+  .buttons .button-label{font-size:8.5px}
+}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
@@ -113,21 +160,19 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
   <div class="brand"><span class="mark">⌘</span><span>WORMSTAR AI LAB <span class="crumb">/ Linux Terminal</span></span></div>
   <nav class="nav" aria-label="التنقل"><a href="/">الرئيسية</a><a href="/workspace">NEXUS Workspace</a></nav>
 </header>
-<section class="hero">
- <h1>Linux Terminal — داخل Wormstar</h1>
- <p>ترمنال بجلسة المالك، بلا كلمة مرور إضافية. الأوامر تعمل على حاوية Railway المعزولة، وليس على جهازك.</p>
- <div id="status" class="status" data-state="idle" role="status" aria-live="polite"><span class="dot"></span><span id="statusText">جارٍ التحقق من الجلسة...</span></div>
-</section>
 <section class="term-shell" aria-label="Linux terminal">
  <div class="term-head">
-   <strong>terminal@wormstar:~</strong>
-   <div class="buttons">
-     <button type="button" id="connect" class="btn primary">اتصال</button>
-     <button type="button" id="diagnose" class="btn">فحص الاتصال</button>
-     <button type="button" id="interrupt" class="btn" disabled>Ctrl+C</button>
-     <button type="button" id="copy" class="btn">نسخ المخرجات</button>
-     <button type="button" id="clear" class="btn">مسح الشاشة</button>
-     <button type="button" id="disconnect" class="btn" disabled>قطع الاتصال</button>
+   <div class="term-meta">
+     <strong>terminal@wormstar:~</strong>
+     <div id="status" class="status" data-state="idle" role="status" aria-live="polite"><span class="dot"></span><span id="statusText">جارٍ التحقق من الجلسة...</span></div>
+   </div>
+   <div class="buttons" role="toolbar" aria-label="أدوات الترمنال">
+     <button type="button" id="connect" class="btn primary" title="اتصال" aria-label="اتصال"><span class="button-symbol" aria-hidden="true">▶</span><span class="button-label">اتصال</span></button>
+     <button type="button" id="diagnose" class="btn" title="فحص الاتصال" aria-label="فحص الاتصال"><span class="button-symbol" aria-hidden="true">⌕</span><span class="button-label">فحص</span></button>
+     <button type="button" id="interrupt" class="btn" title="Ctrl+C" aria-label="إيقاف الأمر Ctrl+C" disabled><span class="button-symbol" aria-hidden="true">⌃C</span><span class="button-label">Ctrl+C</span></button>
+     <button type="button" id="copy" class="btn" title="نسخ المخرجات" aria-label="نسخ المخرجات"><span class="button-symbol" aria-hidden="true">⧉</span><span class="button-label">نسخ</span></button>
+     <button type="button" id="clear" class="btn" title="مسح الشاشة" aria-label="مسح الشاشة"><span class="button-symbol" aria-hidden="true">⌫</span><span class="button-label">مسح</span></button>
+     <button type="button" id="disconnect" class="btn" title="قطع الاتصال" aria-label="قطع الاتصال" disabled><span class="button-symbol" aria-hidden="true">⏻</span><span class="button-label">قطع</span></button>
    </div>
  </div>
  <pre id="output" role="log" aria-label="مخرجات Linux" tabindex="0" aria-live="off">Wormstar Terminal
@@ -158,7 +203,7 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
     <p class="ai-note">إجابات STAR AI استشارية فقط ولا تنفّذ أي أوامر. لا ترسل بيانات خاصة أو مفاتيح API.</p>
   </div>
 </section>
-<p id="warning">عند انتهاء جلسة Wormstar، ارجع إلى <a href="/">الواجهة الرئيسية</a> وسجّل دخولك المعتاد فقط. الوصول إلى الطرفية يتطلب اتصال Cloudflare الآمن بخدمة Railway.</p>
+<details id="warning"><summary>ملاحظة الأمان</summary><p>عند انتهاء جلسة Wormstar، ارجع إلى <a href="/">الواجهة الرئيسية</a> وسجّل دخولك المعتاد فقط. الوصول إلى الطرفية يتطلب اتصال Cloudflare الآمن بخدمة Railway.</p></details>
 </div>
 <script>
 (()=>{

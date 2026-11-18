@@ -35,6 +35,14 @@ function configurationIssues(env) {
     issues.push('TERMINAL_RAILWAY_PASSWORD');
   return issues;
 }
+// An optional second, private credential. Once enabled at Railway, every
+// upstream HTTP/WebSocket request must carry this header. The browser NEVER sees it.
+function backendHeaders(env, extra={}) {
+  const secret=env?.TERMINAL_EDGE_ORIGIN_SECRET;
+  return typeof secret==='string' && secret.length>=32
+    ? {...extra,'X-Star-Edge-Origin':secret} : extra;
+}
+
 function secretsReady(env) {
   return configurationIssues(env).length === 0;
 }
@@ -119,7 +127,7 @@ export async function openTerminalWebSocket(request,env,deps={}) {
   let response;
   try {
     response=await (deps.fetchBackend||fetch)(BACKEND_ORIGIN+'/ws',{
-      headers:{Upgrade:'websocket',Origin:BACKEND_ORIGIN},
+      headers:backendHeaders(env,{Upgrade:'websocket',Origin:BACKEND_ORIGIN}),
       redirect:'manual'
     });
   }catch(_) {
@@ -252,13 +260,13 @@ export async function diagnoseTerminalGateway(request,env,verifiedOwner,deps={})
   const backend=deps.fetchBackend||fetch;
   let health;
   try{
-    health=await backend(BACKEND_ORIGIN+'/health',{method:'GET',redirect:'manual',cache:'no-store'});
+    health=await backend(BACKEND_ORIGIN+'/health',{method:'GET',redirect:'manual',cache:'no-store',headers:backendHeaders(env)});
     if(!health.ok)return json({ok:false,stage:'health',code:'RAILWAY_HEALTH_FAILED'},503);
   }catch(_){return json({ok:false,stage:'health',code:'RAILWAY_UNREACHABLE'},503);}
   let handshake;
   try{
     handshake=await backend(BACKEND_ORIGIN+'/ws',{
-      headers:{Upgrade:'websocket',Origin:BACKEND_ORIGIN},redirect:'manual'
+      headers:backendHeaders(env,{Upgrade:'websocket',Origin:BACKEND_ORIGIN}),redirect:'manual'
     });
   }catch(_){return json({ok:false,stage:'websocket',code:'BACKEND_WS_CONNECT_FAILED'},503);}
   if(handshake.status!==101 || !handshake.webSocket)

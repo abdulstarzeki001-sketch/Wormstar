@@ -183,6 +183,36 @@ test('gateway authenticates Railway only server-side and filters browser message
   server.close();
 });
 
+test('private origin header is forwarded only server-side to Railway health and WebSocket',async()=>{
+  const originSecret='unit-only-origin-secret-0123456789-abcdefghijkl';
+  const env={...goodEnv,TERMINAL_EDGE_ORIGIN_SECRET:originSecret};
+  const ticket=(await (await createTerminalTicket(request('/api/terminal/session'),env,true)).json()).ticket;
+  const remote=new Socket(),client=new Socket(),server=new Socket();
+  let headersSeen;
+  const result=await openTerminalWebSocket(request('/api/terminal/ws','GET',{
+    Upgrade:'websocket','Sec-WebSocket-Protocol':'wormstar-terminal, ticket.'+ticket
+  }),env,{
+    fetchBackend:async(_url,opts)=>{headersSeen=opts.headers;return {status:101,webSocket:remote};},
+    createPair:()=>({0:client,1:server}),
+    makeUpgradeResponse:(socket,headers)=>({status:101,webSocket:socket,headers})
+  });
+  assert.equal(result.status,101);
+  assert.equal(headersSeen['X-Star-Edge-Origin'],originSecret);
+  assert.equal(result.headers['X-Star-Edge-Origin'],undefined);
+  assert.equal(JSON.stringify(await (await createTerminalTicket(request('/api/terminal/session'),env,true)).json()).includes(originSecret),false);
+  server.close();
+  let healthHeaders;
+  const diagnosis=await diagnoseTerminalGateway(request('/api/terminal/diagnose'),env,true,{
+    fetchBackend:async(url,opts)=>{
+      if(url.endsWith('/health')){healthHeaders=opts.headers;return {ok:false,status:503};}
+      throw Error('unexpected websocket');
+    }
+  });
+  assert.equal(diagnosis.status,503);
+  assert.equal(healthHeaders['X-Star-Edge-Origin'],originSecret);
+  assert.equal((await diagnosis.text()).includes(originSecret),false);
+});
+
 test('STAR AI chat is owner-ticket gated, advisory, bounded and never forwarded before Railway auth',async()=>{
   assert.match(TERMINAL_HTML,/id="aiToggle"/);
   assert.match(TERMINAL_HTML,/id="aiForm"/);

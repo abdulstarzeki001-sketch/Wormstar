@@ -69,3 +69,44 @@ test('Wormstar Worker dispatches only its explicit private bridge prefix',()=>{
  assert.match(source,/if\(url\.pathname\.startsWith\('\/api\/integrations\/kali\/terminal\/'\)\)/);
  assert.match(source,/return handleKaliTerminalBridge\(request,env\)/);
 });
+
+test('private KALI training passes only bounded cases to origin-gated Railway',async()=>{
+ const originSecret='unit-only-railway-origin-secret-1234567890abcdef';
+ const e={...env,TERMINAL_EDGE_ORIGIN_SECRET:originSecret};
+ let called=0, upstreamPath='',upstreamOptions;
+ const fetchTraining=async (url,options)=>{
+   called++;upstreamPath=url;upstreamOptions=options;
+   return new Response(JSON.stringify({summary:{schema:1,completed:0,total:8,percent:0,weeks:[]},labs:[]}),{status:200});
+ };
+ const access={'X-Kali-Terminal-Bridge':secret};
+ assert.equal((await handleKaliTerminalBridge(request('training/status'),e)).status,403);
+ assert.equal((await handleKaliTerminalBridge(request('training/status','GET',access),e,{fetchTraining})).status,405);
+ assert.equal(called,0);
+ const status=await handleKaliTerminalBridge(request('training/status','POST',access),e,{fetchTraining});
+ assert.equal(status.status,200);
+ assert.equal(called,1);
+ assert.equal(upstreamPath,'https://terminal-production-fb16bd35.up.railway.app/api/training/status');
+ assert.equal(upstreamOptions.headers['X-Star-Edge-Origin'],originSecret);
+ assert.equal(status.headers.get('X-Star-Edge-Origin'),null);
+ const raw=JSON.stringify({week:'W01',answers:{a:'Linux',b:'debian'}});
+ const verify=new Request(endpoint+'training/verify',{
+   method:'POST',headers:{...access,'Content-Type':'application/json'},body:raw
+ });
+ assert.equal((await handleKaliTerminalBridge(verify,e,{fetchTraining})).status,200);
+ assert.equal(upstreamPath,'https://terminal-production-fb16bd35.up.railway.app/api/training/verify');
+ assert.equal(upstreamOptions.body,raw);
+ assert.equal(JSON.stringify(await (await handleKaliTerminalBridge(request('training/status','POST',access),e,{fetchTraining})).json()).includes(originSecret),false);
+});
+test('KALI training rejects bad payloads before Railway and does not reveal origin secrets',async()=>{
+ const e={...env,TERMINAL_EDGE_ORIGIN_SECRET:'unit-only-railway-origin-secret-1234567890abcdef'};
+ const access={'X-Kali-Terminal-Bridge':secret};
+ let called=false;
+ const fetchTraining=async()=>{called=true;return new Response('{}');};
+ const req=body=>new Request(endpoint+'training/verify',{method:'POST',headers:access,body});
+ assert.equal((await handleKaliTerminalBridge(req('{not-json'),e,{fetchTraining})).status,400);
+ assert.equal((await handleKaliTerminalBridge(req('X'.repeat(3000)),e,{fetchTraining})).status,413);
+ assert.equal(called,false);
+ const noOrigin=await handleKaliTerminalBridge(request('training/status','POST',access),env,{fetchTraining});
+ assert.equal(noOrigin.status,503);
+ assert.equal(called,false);
+});

@@ -62,6 +62,26 @@ test('iPhone console removes intro text and uses one slim six-button toolbar',()
   assert.ok(TERMINAL_HTML.includes("el('disconnect').addEventListener('click'"));
 });
 
+test('iPhone app viewport prevents zoom and sideways page scrolling',()=>{
+  assert.ok(TERMINAL_HTML.includes('width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover'));
+  const locked=TERMINAL_HTML.slice(TERMINAL_HTML.indexOf('/* Fixed iPhone app viewport:'));
+  assert.ok(locked.includes('html,body{max-width:100%;overflow-x:hidden}'));
+  assert.ok(locked.includes('touch-action:pan-y'));
+  assert.ok(locked.includes('overflow:hidden;overscroll-behavior:none;'));
+  assert.ok(locked.includes('height:var(--terminal-visual-height,100dvh);min-height:0;'));
+  assert.ok(locked.includes('#output{'));
+  assert.ok(locked.includes('overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;'));
+  assert.ok(locked.includes('#command{min-width:0;width:0;flex:1 1 0;font-size:16px'));
+  assert.ok(locked.includes('#aiPrompt{font-size:16px'));
+  assert.ok(TERMINAL_HTML.includes('window.visualViewport.addEventListener(\'resize\',syncVisibleViewport'));
+  assert.ok(TERMINAL_HTML.includes("window.addEventListener('resize',syncVisibleViewport"));
+  assert.ok(TERMINAL_HTML.includes('syncVisibleViewport();'));
+  // Only the terminal viewport changes; the authenticated shell/AI events stay wired.
+  for (const id of ['connect','diagnose','interrupt','copy','clear','disconnect','command','send']){
+    assert.ok(TERMINAL_HTML.includes('id="'+id+'"'));
+  }
+});
+
 test('owner must be verified before issuing a short-lived gateway ticket',async()=>{
   assert.equal((await createTerminalTicket(request('/api/terminal/session'),goodEnv,false)).status,401);
   assert.equal((await createTerminalTicket(request('/api/terminal/session'),{},true)).status,503);

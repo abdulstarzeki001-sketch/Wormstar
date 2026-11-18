@@ -90,7 +90,7 @@ export async function handleKaliTerminalBridge(request,env,deps={}){
   // Exact read-only tool operations on the same Railway Linux container.
   // Pages already checked the owner Access JWT and bridge secret; no target
   // addresses, user shell strings or arbitrary subpaths are accepted.
-  if(route==='tools/catalog'||route==='tools/run'||route==='tools/assistant'||route==='tools/install/catalog'){
+  if(route==='tools/catalog'||route==='tools/run'||route==='tools/assistant'||route==='tools/install/catalog'||route==='tools/install/execute'){
     if(request.method!=='POST')return reply('METHOD_NOT_ALLOWED',405);
     const secret=env?.TERMINAL_EDGE_ORIGIN_SECRET;
     if(typeof secret!=='string'||secret.length<32)return reply('TOOLS_EDGE_UNAVAILABLE',503);
@@ -105,7 +105,12 @@ export async function handleKaliTerminalBridge(request,env,deps={}){
       try{value=JSON.parse(body);}catch(_){return reply('TOOLS_BAD_JSON',400);}
       if(!value||typeof value!=='object'||Array.isArray(value))
         return reply('TOOLS_BAD_JSON',400);
-      if(kind==='run'){
+      if(kind==='install/execute'){
+        if(Object.keys(value).sort().join(',')!=='approval,tool_id'||
+           value.approval!=='I_APPROVE_RAILWAY_TOOL_INSTALL'||
+           !['certipy','impacket','frida'].includes(value.tool_id))
+          return reply('TOOLS_INSTALL_INVALID_APPROVAL',400);
+      }else if(kind==='run'){
         if(Object.keys(value).some(k=>!['tool_id','action'].includes(k))||
            typeof value.tool_id!=='string'||!/^[-a-z0-9]{2,32}$/.test(value.tool_id)||
            !['inspect','version'].includes(value.action))return reply('TOOLS_INVALID_ACTION',400);

@@ -87,6 +87,45 @@ export async function handleKaliTerminalBridge(request,env,deps={}){
       }});
     }catch(_){return reply('TRAINING_UPSTREAM_UNAVAILABLE',503);}
   }
+  // Exact read-only tool operations on the same Railway Linux container.
+  // Pages already checked the owner Access JWT and bridge secret; no target
+  // addresses, user shell strings or arbitrary subpaths are accepted.
+  if(route==='tools/catalog'||route==='tools/run'||route==='tools/assistant'){
+    if(request.method!=='POST')return reply('METHOD_NOT_ALLOWED',405);
+    const secret=env?.TERMINAL_EDGE_ORIGIN_SECRET;
+    if(typeof secret!=='string'||secret.length<32)return reply('TOOLS_EDGE_UNAVAILABLE',503);
+    const kind=route.split('/')[1];
+    let body='{}';
+    if(kind!=='catalog'){
+      const declared=Number(request.headers.get('content-length')||0);
+      if(declared>2048)return reply('TOOLS_INPUT_TOO_LARGE',413);
+      body=await request.text();
+      if(new TextEncoder().encode(body).length>2048)return reply('TOOLS_INPUT_TOO_LARGE',413);
+      let value;
+      try{value=JSON.parse(body);}catch(_){return reply('TOOLS_BAD_JSON',400);}
+      if(!value||typeof value!=='object'||Array.isArray(value))
+        return reply('TOOLS_BAD_JSON',400);
+      if(kind==='run'){
+        if(Object.keys(value).some(k=>!['tool_id','action'].includes(k))||
+           typeof value.tool_id!=='string'||!/^[-a-z0-9]{2,32}$/.test(value.tool_id)||
+           !['inspect','version'].includes(value.action))return reply('TOOLS_INVALID_ACTION',400);
+      }else if(typeof value.prompt!=='string'||!value.prompt.trim()||value.prompt.length>400||
+               Object.keys(value).some(k=>k!=='prompt'))
+        return reply('TOOLS_INVALID_PROMPT',400);
+    }
+    try{
+      const response=await (deps.fetchTools||fetch)(RAILWAY_ORIGIN+'/api/tools/'+kind,{
+        method:'POST',redirect:'manual',cache:'no-store',
+        headers:{'X-Star-Edge-Origin':secret,'Content-Type':'application/json'},
+        body
+      });
+      if(response.status<200||response.status>=500)return reply('TOOLS_UPSTREAM_UNAVAILABLE',503);
+      return new Response(response.body,{status:response.status,headers:{
+        'Content-Type':'application/json;charset=utf-8',
+        'Cache-Control':'private, no-store, max-age=0','X-Content-Type-Options':'nosniff'
+      }});
+    }catch(_){return reply('TOOLS_UPSTREAM_UNAVAILABLE',503);}
+  }
   if(route==='ws'){
     if(request.method!=='GET'||request.headers.get('Upgrade')?.toLowerCase()!=='websocket')
       return reply('UPGRADE_REQUIRED',426);

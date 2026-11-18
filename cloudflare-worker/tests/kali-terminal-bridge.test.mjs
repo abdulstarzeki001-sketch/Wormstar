@@ -110,3 +110,46 @@ test('KALI training rejects bad payloads before Railway and does not reveal orig
  assert.equal(noOrigin.status,503);
  assert.equal(called,false);
 });
+
+
+test('owner tools bridge validates request and preserves only bounded upstream JSON',async()=>{
+ const originSecret='unit-only-railway-origin-secret-1234567890abcdef';
+ const e={...env,TERMINAL_EDGE_ORIGIN_SECRET:originSecret};
+ const access={'X-Kali-Terminal-Bridge':secret};
+ let called=0,upstreamUrl,options;
+ const fetchTools=async(url,opts)=>{
+  called++;upstreamUrl=url;options=opts;
+  return new Response(JSON.stringify({result:{tool_id:'frida',installed:false,executed:false}}),{status:200});
+ };
+ assert.equal((await handleKaliTerminalBridge(request('tools/catalog'),e,{fetchTools})).status,403);
+ assert.equal((await handleKaliTerminalBridge(request('tools/catalog','GET',access),e,{fetchTools})).status,405);
+ assert.equal((await handleKaliTerminalBridge(request('tools/catalog','POST',access),env,{fetchTools})).status,503);
+ assert.equal(called,0);
+ const c=await handleKaliTerminalBridge(request('tools/catalog','POST',access),e,{fetchTools});
+ assert.equal(c.status,200);assert.equal(called,1);
+ assert.equal(upstreamUrl,'https://terminal-production-fb16bd35.up.railway.app/api/tools/catalog');
+ assert.equal(options.headers['X-Star-Edge-Origin'],originSecret);
+ assert.equal(options.body,'{}');
+ assert.equal(c.headers.get('X-Star-Edge-Origin'),null);
+ const run=new Request(endpoint+'tools/run',{method:'POST',
+  headers:{...access,'Content-Type':'application/json'},body:JSON.stringify({tool_id:'frida',action:'inspect'})});
+ assert.equal((await handleKaliTerminalBridge(run,e,{fetchTools})).status,200);
+ assert.equal(upstreamUrl,'https://terminal-production-fb16bd35.up.railway.app/api/tools/run');
+ assert.deepEqual(JSON.parse(options.body),{tool_id:'frida',action:'inspect'});
+ const auto=new Request(endpoint+'tools/assistant',{method:'POST',headers:access,
+  body:JSON.stringify({prompt:'افحص Frida'})});
+ assert.equal((await handleKaliTerminalBridge(auto,e,{fetchTools})).status,200);
+ assert.equal(upstreamUrl,'https://terminal-production-fb16bd35.up.railway.app/api/tools/assistant');
+ assert.equal(JSON.parse(options.body).prompt,'افحص Frida');
+});
+test('tools bridge blocks arbitrary commands, unknown methods and oversized input before Railway',async()=>{
+ const e={...env,TERMINAL_EDGE_ORIGIN_SECRET:'unit-only-railway-origin-secret-1234567890abcdef'};
+ const access={'X-Kali-Terminal-Bridge':secret};
+ let calls=0;const fetchTools=async()=>{calls++;return new Response('{}');};
+ const bad=(kind,obj)=>new Request(endpoint+'tools/'+kind,{method:'POST',headers:access,body:JSON.stringify(obj)});
+ assert.equal((await handleKaliTerminalBridge(bad('run',{tool_id:'frida',action:'shell',command:'id'}),e,{fetchTools})).status,400);
+ assert.equal((await handleKaliTerminalBridge(bad('run',{tool_id:'frida',action:'inspect',target:'example.com'}),e,{fetchTools})).status,400);
+ assert.equal((await handleKaliTerminalBridge(bad('assistant',{prompt:'x'.repeat(401)}),e,{fetchTools})).status,400);
+ assert.equal((await handleKaliTerminalBridge(bad('run',{tool_id:'frida',action:'inspect',padding:'x'.repeat(3000)}),e,{fetchTools})).status,413);
+ assert.equal(calls,0);
+});

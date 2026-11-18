@@ -37,6 +37,20 @@ test('terminal HTML reuses AI Lab owner login without a second password form',()
   assert.doesNotThrow(()=>new Function(match[1]));
 });
 
+test('iPhone terminal controls use compact three-column toolbar without removing actions',()=>{
+  const mobile=TERMINAL_HTML.slice(TERMINAL_HTML.indexOf('/* Compact touch controls:'));
+  assert.match(mobile,/@media\\(max-width:600px\\)/);
+  assert.match(mobile,/\\.buttons\\{display:grid;grid-template-columns:repeat\\(3,minmax\\(0,1fr\\)\\)/);
+  assert.match(mobile,/\\.term-head\\{display:grid/);
+  assert.match(mobile,/#output\\{height:47dvh;min-height:220px/);
+  assert.match(mobile,/\\.hero\\{padding:10px 11px;margin-bottom:8px/);
+  for(const id of ['connect','diagnose','interrupt','copy','clear','disconnect','command','send']){
+    assert.match(TERMINAL_HTML,new RegExp('id="'+id+'"'));
+  }
+  assert.match(TERMINAL_HTML,/el\\('connect'\\)\\.addEventListener\\('click',connect\\)/);
+  assert.match(TERMINAL_HTML,/el\\('diagnose'\\)\\.addEventListener\\('click',diagnose\\)/);
+});
+
 test('owner must be verified before issuing a short-lived gateway ticket',async()=>{
   assert.equal((await createTerminalTicket(request('/api/terminal/session'),goodEnv,false)).status,401);
   assert.equal((await createTerminalTicket(request('/api/terminal/session'),{},true)).status,503);

@@ -11,6 +11,7 @@ import REDESIGN_HTML from './redesign-ui.js';
 import {WORKSPACE_HTML,WORKSPACE_SHORTCUT} from './unified-workspace.js';
 import {TERMINAL_HTML} from './terminal-page.js';
 import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway,downloadTerminalSnapshot} from './terminal-gateway.js';
+import {handleKaliTerminalBridge} from './kali-terminal-bridge.js';
 import {serveSentinelModule,suiteLanding} from './unified-suite-proxy.js';
 import ACADEMY_HTML from './academy-page.js';
 import {compactPage} from './compact-layout.js';
@@ -751,6 +752,8 @@ export default {
     }
     // Keep the original Wormstar login as the only user-entered credential.
     // A short-lived ticket is issued only after server-side owner verification.
+    if(url.pathname.startsWith('/api/integrations/kali/terminal/'))
+      return handleKaliTerminalBridge(request,env);
     if(url.pathname==='/api/terminal/session')
       return createTerminalTicket(request,env,await allow(request,env));
     if(url.pathname==='/api/terminal/ws')

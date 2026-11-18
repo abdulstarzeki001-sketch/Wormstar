@@ -63,6 +63,47 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
 #warning{margin:12px 0 0;color:var(--muted);font-size:12px}
 #warning a{color:var(--mint)}
 @media(max-width:600px){.wrap{padding:11px}.hero{padding:15px}.term-head{padding:10px}.controls{padding:9px}.btn{padding:8px}#output{height:48dvh;min-height:270px;padding:11px}}
+
+/* Compact touch controls: reduce vertical chrome without changing terminal behavior. */
+@media(max-width:600px){
+  .wrap{padding:8px 9px 14px}
+  header{gap:7px;margin-bottom:8px}
+  .brand{gap:7px;font-size:12px;line-height:1.3}
+  .mark{width:29px;height:29px;border-radius:9px;font-size:17px;flex:none}
+  .crumb{font-size:10px}
+  .nav{gap:5px}
+  .nav a{display:inline-flex;align-items:center;min-height:34px;padding:5px 9px;border-radius:8px;font-size:11px}
+  .hero{padding:10px 11px;margin-bottom:8px;border-radius:13px}
+  .hero h1{font-size:18px;line-height:1.32;margin:0 0 5px}
+  .hero p{font-size:11px;line-height:1.45}
+  .status{margin-top:8px;max-width:100%;padding:5px 8px;gap:6px;font-size:11px;line-height:1.4;border-radius:8px}
+  .dot{flex:none;width:6px;height:6px}
+  .term-shell{border-radius:13px}
+  .term-head{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;padding:8px 9px}
+  .term-head strong{font-size:11px;line-height:1.25}
+  .buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;width:100%}
+  .buttons .btn{min-width:0;min-height:38px;padding:5px 4px;border-radius:8px;font-size:11px;line-height:1.25;white-space:normal}
+  #output{height:47dvh;min-height:220px;max-height:520px;padding:9px;font-size:12px;line-height:1.44}
+  .controls{gap:6px;padding:7px 9px}
+  .prompt{font-size:13px}
+  #command{min-height:38px;padding:7px 8px;border-radius:8px;font-size:12px}
+  .controls .btn{min-height:38px;padding:5px 10px;font-size:11px}
+  .ai-shell{margin-top:8px;border-radius:13px}
+  .ai-head{padding:8px 10px;gap:6px}
+  .ai-head strong{font-size:14px}
+  .ai-head small{font-size:11px}
+  #aiPanel{padding:0 9px 9px}
+  #aiState{padding:7px 0}
+  .ai-form{gap:6px;margin-top:7px}
+  #aiPrompt{min-height:65px;padding:8px}
+  .ai-actions button{min-height:38px;padding:5px 7px;font-size:11px}
+  #warning{margin:8px 0 0;font-size:10px;line-height:1.45}
+}
+@media(max-width:360px){
+  .brand{font-size:11px}
+  .hero h1{font-size:17px}
+  .buttons .btn{font-size:10.5px;padding-inline:2px}
+}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
@@ -74,7 +115,7 @@ header{display:flex;align-items:center;gap:14px;justify-content:space-between;fl
 </header>
 <section class="hero">
  <h1>Linux Terminal — داخل Wormstar</h1>
- <p>الطرفية تستخدم جلسة المالك التي سجّلت بها الدخول إلى Wormstar AI Lab. لا تحتاج كلمة مرور إضافية. الأوامر تُنفَّذ على حاوية Railway المعزولة، وليست على جهازك.</p>
+ <p>ترمنال بجلسة المالك، بلا كلمة مرور إضافية. الأوامر تعمل على حاوية Railway المعزولة، وليس على جهازك.</p>
  <div id="status" class="status" data-state="idle" role="status" aria-live="polite"><span class="dot"></span><span id="statusText">جارٍ التحقق من الجلسة...</span></div>
 </section>
 <section class="term-shell" aria-label="Linux terminal">
@@ -208,7 +249,7 @@ async function diagnose(){
   });
   const data=await res.json().catch(()=>({}));
   if(data.ok&&data.code==='READY'){
-   status('ready','Railway وWebSocket وكلمة المرور جاهزة — اضغط اتصال');
+   status('ready','الاتصال جاهز — اضغط اتصال');
    log('\n[فحص الاتصال: جميع المراحل ناجحة]\n');
   }else if(data.code) displayFailure(data.code);
   else if(data.invalidSecrets)displayFailure('CLOUDFLARE_SECRET_INVALID');

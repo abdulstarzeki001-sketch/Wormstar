@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway,terminalGatewayInternals} from '../terminal-gateway.js';
+import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway,downloadTerminalSnapshot,terminalGatewayInternals} from '../terminal-gateway.js';
 import {TERMINAL_HTML} from '../terminal-page.js';
 
 const origin='https://wormstar-ai-lab.abdulstarzeki001.workers.dev';
@@ -80,6 +80,52 @@ test('iPhone app viewport prevents zoom and sideways page scrolling',()=>{
   for (const id of ['connect','diagnose','interrupt','copy','clear','disconnect','command','send']){
     assert.ok(TERMINAL_HTML.includes('id="'+id+'"'));
   }
+});
+
+test('owner snapshot download is forbidden anonymously and uses private origin header',async()=>{
+ const secret='unit-test-backup-origin-secret-0123456789-abcde';
+ const env={...goodEnv,TERMINAL_EDGE_ORIGIN_SECRET:secret};
+ const name='star-home-20261118T124500Z-123.tgz';
+ const body=new Uint8Array([31,139,8,0]);
+ let backendCalls=0,upstreamHeaders=null;
+ const fetchBackend=async(_url,opts)=>{
+   backendCalls++;
+   upstreamHeaders=opts.headers;
+   return new Response(body,{status:200,headers:{
+     'X-Star-Snapshot-Name':name,'Content-Length':String(body.length)
+   }});
+ };
+ const path='/api/terminal/backup/latest';
+ assert.equal((await downloadTerminalSnapshot(request(path),env,false,{fetchBackend})).status,401);
+ assert.equal((await downloadTerminalSnapshot(request(path,'GET'),env,true,{fetchBackend})).status,405);
+ assert.equal((await downloadTerminalSnapshot(request(path,'POST',{Origin:'https://other.example'}),env,true,{fetchBackend})).status,403);
+ assert.equal((await downloadTerminalSnapshot(request(path),goodEnv,true,{fetchBackend})).status,503);
+ assert.equal(backendCalls,0);
+ const r=await downloadTerminalSnapshot(request(path),env,true,{fetchBackend});
+ assert.equal(r.status,200);
+ assert.equal(backendCalls,1);
+ assert.equal(upstreamHeaders['X-Star-Edge-Origin'],secret);
+ assert.equal(r.headers.get('Content-Type'),'application/gzip');
+ assert.equal(r.headers.get('Content-Disposition'),'attachment; filename="'+name+'"');
+ assert.equal(r.headers.get('Cache-Control'),'private, no-store, max-age=0');
+ assert.equal(r.headers.get('X-Star-Edge-Origin'),null);
+ assert.deepEqual([...new Uint8Array(await r.arrayBuffer())],[...body]);
+});
+test('backup export refuses arbitrary filenames, oversized files, and bad upstream results',async()=>{
+ const env={...goodEnv,TERMINAL_EDGE_ORIGIN_SECRET:'unit-test-backup-origin-secret-0123456789-abcde'};
+ const path='/api/terminal/backup/latest';
+ const mock=(status,headers={},body='X')=>
+   downloadTerminalSnapshot(request(path),env,true,{
+     fetchBackend:async()=>new Response(body,{status,headers})
+   });
+ assert.equal((await mock(404)).status,404);
+ assert.equal((await mock(422)).status,422);
+ assert.equal((await mock(200,{'X-Star-Snapshot-Name':'../../etc/passwd','Content-Length':'1'})).status,502);
+ assert.equal((await mock(200,{'X-Star-Snapshot-Name':'star-home-20261118T124500Z-123.tgz','Content-Length':String(100*1024*1024)})).status,502);
+ const src=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+ assert.match(src,/downloadTerminalSnapshot\(request,env,await allow\(request,env\)\)/);
+ assert.match(TERMINAL_HTML,/id="downloadBackup"/);
+ assert.match(TERMINAL_HTML,/\/api\/terminal\/backup\/latest/);
 });
 
 test('owner must be verified before issuing a short-lived gateway ticket',async()=>{

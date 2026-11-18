@@ -298,4 +298,43 @@ export async function diagnoseTerminalGateway(request,env,verifiedOwner,deps={})
     outcome==='READY'?200:503);
 }
 
+/**
+ * One owner-authenticated download, never a public static-file route.
+ * Download from the same origin as the terminal, using the already-provisioned
+ * private Worker -> Railway credential. No URL/path comes from the visitor.
+ */
+export async function downloadTerminalSnapshot(request,env,verifiedOwner,deps={}) {
+  if(request.method!=='POST')return json({error:'Method not allowed'},405);
+  if(!sameOrigin(request))return json({error:'Forbidden origin'},403);
+  if(!verifiedOwner)return json({error:'Owner authentication required'},401);
+  if(!secretsReady(env))return configurationError(env);
+  if(typeof env.TERMINAL_EDGE_ORIGIN_SECRET!=='string' ||
+     env.TERMINAL_EDGE_ORIGIN_SECRET.length<32)
+    return json({code:'BACKUP_EDGE_NOT_CONFIGURED'},503);
+
+  let upstream;
+  try {
+    upstream=await (deps.fetchBackend||fetch)(BACKEND_ORIGIN+'/api/snapshots/latest',{
+      method:'GET',headers:backendHeaders(env),redirect:'manual',cache:'no-store'
+    });
+  } catch (_) {return json({code:'BACKUP_UNAVAILABLE'},503);}
+  if(upstream.status===404)return json({code:'BACKUP_NOT_FOUND'},404);
+  if(upstream.status===422)return json({code:'BACKUP_CORRUPT'},422);
+  if(!upstream.ok || upstream.status!==200)return json({code:'BACKUP_UNAVAILABLE'},503);
+
+  const name=upstream.headers.get('X-Star-Snapshot-Name')||'';
+  const size=Number(upstream.headers.get('Content-Length'));
+  if(!/^star-home-[0-9]{8}T[0-9]{6}Z-[0-9]+\.tgz$/.test(name) ||
+     !Number.isSafeInteger(size) || size<1 || size>80*1024*1024)
+    return json({code:'BACKUP_INVALID_RESPONSE'},502);
+  return new Response(upstream.body,{status:200,headers:{
+    'Content-Type':'application/gzip',
+    'Content-Length':String(size),
+    'Content-Disposition':'attachment; filename="'+name+'"',
+    'Cache-Control':'private, no-store, max-age=0',
+    'X-Content-Type-Options':'nosniff',
+    'Referrer-Policy':'no-referrer'
+  }});
+}
+
 export const terminalGatewayInternals={validTicket,secretsReady};

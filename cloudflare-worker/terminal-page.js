@@ -197,6 +197,15 @@ html,body{max-width:100%;overflow-x:hidden}
   .brand{font-size:10px}
   .nav a{font-size:9px;padding-inline:4px}
 }
+
+.backup-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 0 3px}
+.backup-actions .btn{font-size:11px;min-height:34px;padding:6px 9px}
+.backup-actions span{color:var(--muted);font-size:10px}
+@media(max-width:600px){
+ #warning[open]{max-height:28dvh;overflow-y:auto;overscroll-behavior:contain}
+ .backup-actions{gap:5px}
+ .backup-actions .btn{font-size:10px;min-height:32px}
+}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 </head>
@@ -249,7 +258,7 @@ html,body{max-width:100%;overflow-x:hidden}
     <p class="ai-note">إجابات STAR AI استشارية فقط ولا تنفّذ أي أوامر. لا ترسل بيانات خاصة أو مفاتيح API.</p>
   </div>
 </section>
-<details id="warning"><summary>ملاحظة الأمان</summary><p>عند انتهاء جلسة Wormstar، ارجع إلى <a href="/">الواجهة الرئيسية</a> وسجّل دخولك المعتاد فقط. الوصول إلى الطرفية يتطلب اتصال Cloudflare الآمن بخدمة Railway.</p></details>
+<details id="warning"><summary>النسخ الاحتياطي والأمان</summary><div class="backup-actions"><button type="button" id="downloadBackup" class="btn">تنزيل آخر نسخة للآيفون</button><span>شغّل <code>persist backup</code> في الترمنال أولاً. احفظ النسخة في تطبيق الملفات خارج Railway.</span></div><p>عند انتهاء جلسة Wormstar، ارجع إلى <a href="/">الواجهة الرئيسية</a> وسجّل دخولك المعتاد فقط. التنزيل يتطلب مصادقة المالك وحماية Cloudflare.</p></details>
 </div>
 <script>
 (()=>{
@@ -462,6 +471,42 @@ el('disconnect').addEventListener('click',()=>{if(socket)socket.close(1000,'User
 el('interrupt').addEventListener('click',()=>send({type:'input',data:'\x03'}));
 el('clear').addEventListener('click',()=>{out.textContent='';});
 el('copy').addEventListener('click',()=>{if(navigator.clipboard?.writeText)navigator.clipboard.writeText(out.textContent).catch(()=>{});});
+el('downloadBackup').addEventListener('click',async()=>{
+ const token=ownerKey();
+ if(!token){status('error','سجّل دخول المالك أولاً');return;}
+ const button=el('downloadBackup');
+ button.disabled=true;
+ status('idle','جارٍ تجهيز تنزيل النسخة المحفوظة...');
+ try {
+  const response=await fetch('/api/terminal/backup/latest',{
+   method:'POST',
+   headers:{Authorization:'Bearer '+token},
+   cache:'no-store'
+  });
+  if(!response.ok){
+   const result=await response.json().catch(()=>({}));
+   const code=typeof result.code==='string'?result.code:'BACKUP_UNAVAILABLE';
+   if(code==='BACKUP_NOT_FOUND')status('error','ماكو نسخة محفوظة — نفّذ persist backup أولاً');
+   else if(code==='BACKUP_CORRUPT')status('error','ملف النسخة تالف — تحقق منه عبر persist verify');
+   else if(response.status===401)status('error','انتهت جلسة المالك، سجّل الدخول مجدداً');
+   else status('error','تعذّر تنزيل النسخة: '+code);
+   return;
+  }
+  const match=(response.headers.get('Content-Disposition')||'').match(/^attachment; filename="(star-home-[0-9]{8}T[0-9]{6}Z-[0-9]+\.tgz)"$/);
+  if(!match)throw Error('BACKUP_INVALID_NAME');
+  const blob=await response.blob();
+  if(blob.size<1||blob.size>80*1024*1024)throw Error('BACKUP_INVALID_SIZE');
+  const url=URL.createObjectURL(blob);
+  const anchor=document.createElement('a');
+  anchor.href=url;anchor.download=match[1];anchor.style.display='none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  status('ready','تم تجهيز تنزيل النسخة — احفظها في الملفات خارج Railway');
+ }catch(_){status('error','تعذّر تنزيل النسخة — افحص اتصال Cloudflare وRailway')}
+ finally{button.disabled=false;}
+});
 el('form').addEventListener('submit',event=>{
  event.preventDefault();if(!ready)return;
  const value=el('command').value;

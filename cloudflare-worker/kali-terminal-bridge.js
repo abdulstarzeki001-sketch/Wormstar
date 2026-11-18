@@ -10,6 +10,7 @@ import {createTerminalTicket,openTerminalWebSocket,diagnoseTerminalGateway,downl
 
 const WORKER_ORIGIN='https://wormstar-ai-lab.abdulstarzeki001.workers.dev';
 const INTEGRATION_PREFIX='/api/integrations/kali/terminal/';
+const RAILWAY_ORIGIN='https://terminal-production-fb16bd35.up.railway.app';
 
 function reply(code,status=403){
   return new Response(JSON.stringify({code}),{status,headers:{
@@ -57,6 +58,34 @@ export async function handleKaliTerminalBridge(request,env,deps={}){
     if(request.method!=='POST')return reply('METHOD_NOT_ALLOWED',405);
     return (deps.downloadSnapshot||downloadTerminalSnapshot)(
       workerRequest('/api/terminal/backup/latest','POST'),env,true,deps.gateway);
+  }
+  if(route==='training/status'||route==='training/verify'){
+    if(request.method!=='POST')return reply('METHOD_NOT_ALLOWED',405);
+    const secret=env?.TERMINAL_EDGE_ORIGIN_SECRET;
+    if(typeof secret!=='string'||secret.length<32)return reply('TRAINING_EDGE_UNAVAILABLE',503);
+    const verify=route==='training/verify';
+    const declaredSize=Number(request.headers.get('content-length')||0);
+    if(verify && declaredSize>2048)return reply('TRAINING_INPUT_TOO_LARGE',413);
+    let body=null;
+    if(verify){
+      body=await request.text();
+      if(new TextEncoder().encode(body).length>2048)return reply('TRAINING_INPUT_TOO_LARGE',413);
+      try {const value=JSON.parse(body);
+        if(!value||typeof value!=='object'||Array.isArray(value))return reply('TRAINING_BAD_JSON',400);
+      }catch(_){return reply('TRAINING_BAD_JSON',400);}
+    }
+    try{
+      const response=await (deps.fetchTraining||fetch)(RAILWAY_ORIGIN+'/api/training/'+(verify?'verify':'status'),{
+        method:'POST',redirect:'manual',cache:'no-store',
+        headers:{'X-Star-Edge-Origin':secret,'Content-Type':'application/json'},
+        body:verify?body:'{}'
+      });
+      if(response.status<200||response.status>=500)return reply('TRAINING_UPSTREAM_UNAVAILABLE',503);
+      return new Response(response.body,{status:response.status,headers:{
+        'Content-Type':'application/json;charset=utf-8','Cache-Control':'private, no-store',
+        'X-Content-Type-Options':'nosniff'
+      }});
+    }catch(_){return reply('TRAINING_UPSTREAM_UNAVAILABLE',503);}
   }
   if(route==='ws'){
     if(request.method!=='GET'||request.headers.get('Upgrade')?.toLowerCase()!=='websocket')

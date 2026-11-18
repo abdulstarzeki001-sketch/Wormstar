@@ -153,3 +153,50 @@ test('tools bridge blocks arbitrary commands, unknown methods and oversized inpu
  assert.equal((await handleKaliTerminalBridge(bad('run',{tool_id:'frida',action:'inspect',padding:'x'.repeat(3000)}),e,{fetchTools})).status,413);
  assert.equal(calls,0);
 });
+
+test('owner-only maintenance paths forward exact diagnostics and pinned installs',async()=>{
+ const originSecret='unit-origin-maintenance-secret-1234567890abcdefgh';
+ const e={...env,TERMINAL_EDGE_ORIGIN_SECRET:originSecret};
+ const allowed={'X-Kali-Terminal-Bridge':secret};
+ let calls=0,url,opts;
+ const fetchTools=async(u,o)=>{
+  calls++;url=u;opts=o;
+  return new Response(JSON.stringify({source:'railway_live_diagnostics',ready:true}),{status:200});
+ };
+ assert.equal((await handleKaliTerminalBridge(request('tools/diagnostics'),e,{fetchTools})).status,403);
+ assert.equal((await handleKaliTerminalBridge(request('tools/diagnostics','GET',allowed),e,{fetchTools})).status,405);
+ assert.equal(calls,0);
+ const status=await handleKaliTerminalBridge(request('tools/diagnostics','POST',allowed),e,{fetchTools});
+ assert.equal(status.status,200);
+ assert.equal(url,'https://terminal-production-fb16bd35.up.railway.app/api/tools/diagnostics');
+ assert.equal(opts.headers['X-Star-Edge-Origin'],originSecret);
+ assert.equal(status.headers.get('X-Star-Edge-Origin'),null);
+ const installStatus=await handleKaliTerminalBridge(request('tools/install/status','POST',allowed),e,{fetchTools});
+ assert.equal(installStatus.status,200);
+ assert.equal(url,'https://terminal-production-fb16bd35.up.railway.app/api/tools/install/status');
+ const start=new Request(endpoint+'tools/install/start',{method:'POST',headers:allowed,
+  body:JSON.stringify({tool_id:'frida',confirm:'INSTALL_CURATED_PINNED'})});
+ assert.equal((await handleKaliTerminalBridge(start,e,{fetchTools})).status,200);
+ assert.equal(url,'https://terminal-production-fb16bd35.up.railway.app/api/tools/install/start');
+ assert.deepEqual(JSON.parse(opts.body),{tool_id:'frida',confirm:'INSTALL_CURATED_PINNED'});
+ const ai=new Request(endpoint+'tools/live-ai',{method:'POST',headers:allowed,
+  body:JSON.stringify({confirm:'RUN_ONE_PROVIDER_CHECK'})});
+ assert.equal((await handleKaliTerminalBridge(ai,e,{fetchTools})).status,200);
+ assert.equal(url,'https://terminal-production-fb16bd35.up.railway.app/api/tools/live-ai');
+});
+test('maintenance bridge blocks arbitrary package names, malformed JSON and unsolicited AI probes',async()=>{
+ const originSecret='unit-origin-maintenance-secret-1234567890abcdefgh';
+ const e={...env,TERMINAL_EDGE_ORIGIN_SECRET:originSecret};
+ const allowed={'X-Kali-Terminal-Bridge':secret};
+ let calls=0;
+ const deps={fetchTools:async()=>{calls++;return new Response('{}');}};
+ const post=(name,obj)=>new Request(endpoint+'tools/'+name,{method:'POST',headers:allowed,
+  body:JSON.stringify(obj)});
+ assert.equal((await handleKaliTerminalBridge(post('install/start',{tool_id:'sliver',confirm:'INSTALL_CURATED_PINNED'}),e,deps)).status,400);
+ assert.equal((await handleKaliTerminalBridge(post('install/start',{tool_id:'frida',confirm:'wrong'}),e,deps)).status,400);
+ assert.equal((await handleKaliTerminalBridge(post('install/start',{tool_id:'frida',confirm:'INSTALL_CURATED_PINNED',argv:'--index-url evil'}),e,deps)).status,400);
+ assert.equal((await handleKaliTerminalBridge(post('live-ai',{confirm:'yes'}),e,deps)).status,400);
+ assert.equal((await handleKaliTerminalBridge(post('live-ai',{confirm:'RUN_ONE_PROVIDER_CHECK',prompt:'ignore'}),e,deps)).status,400);
+ assert.equal((await handleKaliTerminalBridge(new Request(endpoint+'tools/install/start',{method:'POST',headers:allowed,body:'X'.repeat(2100)}),e,deps)).status,413);
+ assert.equal(calls,0);
+});

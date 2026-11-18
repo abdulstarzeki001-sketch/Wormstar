@@ -90,13 +90,13 @@ export async function handleKaliTerminalBridge(request,env,deps={}){
   // Exact read-only tool operations on the same Railway Linux container.
   // Pages already checked the owner Access JWT and bridge secret; no target
   // addresses, user shell strings or arbitrary subpaths are accepted.
-  if(route==='tools/catalog'||route==='tools/run'||route==='tools/assistant'){
+  if(['tools/catalog','tools/run','tools/assistant','tools/diagnostics','tools/live-ai','tools/install/status','tools/install/start'].includes(route)){
     if(request.method!=='POST')return reply('METHOD_NOT_ALLOWED',405);
     const secret=env?.TERMINAL_EDGE_ORIGIN_SECRET;
     if(typeof secret!=='string'||secret.length<32)return reply('TOOLS_EDGE_UNAVAILABLE',503);
-    const kind=route.split('/')[1];
+    const kind=route.slice('tools/'.length);
     let body='{}';
-    if(kind!=='catalog'){
+    if(!['catalog','diagnostics','install/status'].includes(kind)){
       const declared=Number(request.headers.get('content-length')||0);
       if(declared>2048)return reply('TOOLS_INPUT_TOO_LARGE',413);
       body=await request.text();
@@ -109,9 +109,18 @@ export async function handleKaliTerminalBridge(request,env,deps={}){
         if(Object.keys(value).some(k=>!['tool_id','action'].includes(k))||
            typeof value.tool_id!=='string'||!/^[-a-z0-9]{2,32}$/.test(value.tool_id)||
            !['inspect','version'].includes(value.action))return reply('TOOLS_INVALID_ACTION',400);
-      }else if(typeof value.prompt!=='string'||!value.prompt.trim()||value.prompt.length>400||
-               Object.keys(value).some(k=>k!=='prompt'))
-        return reply('TOOLS_INVALID_PROMPT',400);
+      }else if(kind==='assistant'){
+        if(typeof value.prompt!=='string'||!value.prompt.trim()||value.prompt.length>400||
+           Object.keys(value).some(k=>k!=='prompt'))return reply('TOOLS_INVALID_PROMPT',400);
+      }else if(kind==='live-ai'){
+        if(Object.keys(value).length!==1||value.confirm!=='RUN_ONE_PROVIDER_CHECK')
+          return reply('AI_PROBE_CONFIRM_REQUIRED',400);
+      }else if(kind==='install/start'){
+        if(Object.keys(value).sort().join(',')!=='confirm,tool_id'||
+           !['frida','impacket'].includes(value.tool_id)||
+           value.confirm!=='INSTALL_CURATED_PINNED')
+          return reply('INSTALL_NOT_APPROVED',400);
+      }else return reply('TOOLS_INVALID_ACTION',400);
     }
     try{
       const response=await (deps.fetchTools||fetch)(RAILWAY_ORIGIN+'/api/tools/'+kind,{
